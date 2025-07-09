@@ -6,6 +6,7 @@ import com.popcoclient.exception.business.review.AlreadyReviewedException;
 import com.popcoclient.exception.business.review.NotMyReviewException;
 import com.popcoclient.exception.business.review.ReviewNotFoundException;
 import com.popcoclient.review.dto.request.ReviewCreateRequestDto;
+import com.popcoclient.review.dto.request.ReviewUpdateRequestDto;
 import com.popcoclient.review.dto.response.ReviewCreateResponseDto;
 import com.popcoclient.review.entity.Content;
 import com.popcoclient.review.entity.Review;
@@ -26,7 +27,7 @@ public class ReviewServiceImpl implements ReviewService{
     @Override
     public ReviewCreateResponseDto insertReview(ReviewCreateRequestDto request, long contentId, long userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(UserNotFoundException::new);
+                .orElseThrow(() -> new UserNotFoundException("사용자를 찾을 수 없습니다. userId: " + userId));
 
         Content content = contentRepository.findById(contentId)
                 .orElseThrow(ContentNotFoundException::new);
@@ -35,7 +36,7 @@ public class ReviewServiceImpl implements ReviewService{
             throw new AlreadyReviewedException();
         }
 
-        Review review = Review.createReview(request, contentId, userId);
+        Review review = Review.from(request, contentId, userId);
         reviewRepository.save(review);
 
         return ReviewCreateResponseDto.builder()
@@ -44,12 +45,30 @@ public class ReviewServiceImpl implements ReviewService{
     }
 
     @Override
-    public Void deleteReview(long reviewId, long userId) {
+    public Void updateReview(long reviewId, ReviewUpdateRequestDto request, long userId) {
         Review review = reviewRepository.findById(reviewId)
-                .orElseThrow(ReviewNotFoundException::new);
+                .orElseThrow(() -> new ReviewNotFoundException("리뷰를 찾을 수 없습니다. reviewId: " + reviewId));
 
         User user = userRepository.findById(userId)
-                .orElseThrow(UserNotFoundException::new);
+                .orElseThrow(() -> new UserNotFoundException("사용자를 찾을 수 없습니다. userId: " + userId));
+
+        if(review.getUserId() != userId){
+            throw new NotMyReviewException();
+        }
+
+        review.updateFrom(request);
+        reviewRepository.save(review);
+        return null;
+    }
+
+
+    @Override
+    public Void deleteReview(long reviewId, long userId) {
+        Review review = reviewRepository.findById(reviewId)
+                .orElseThrow(() -> new ReviewNotFoundException("리뷰를 찾을 수 없습니다. reviewId: " + reviewId));
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("사용자를 찾을 수 없습니다. userId: " + userId));
 
         if(review.getUserId() != userId){
             throw new NotMyReviewException();

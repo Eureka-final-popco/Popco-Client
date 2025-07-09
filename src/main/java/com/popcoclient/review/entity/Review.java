@@ -1,6 +1,7 @@
 package com.popcoclient.review.entity;
 
 import com.popcoclient.review.dto.request.ReviewCreateRequestDto;
+import com.popcoclient.review.dto.request.ReviewUpdateRequestDto;
 import com.popcoclient.review.entity.enums.ReviewStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -68,7 +69,13 @@ public class Review {
         updatedAt = LocalDateTime.now();
     }
 
-    public static Review createReview(ReviewCreateRequestDto request, long contentId, long userId) {
+    public void updateFrom(ReviewUpdateRequestDto request) {
+        this.score = request.getScore();
+        this.text = request.getText();
+        this.status = request.getStatus();
+    }
+
+    public static Review from(ReviewCreateRequestDto request, long contentId, long userId) {
         return Review.builder()
                 .userId(userId)
                 .contentId(contentId)
@@ -79,4 +86,5 @@ public class Review {
                 .dislikeCount(0)
                 .build();
     }
+
 }

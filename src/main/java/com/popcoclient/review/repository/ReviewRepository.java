@@ -1,5 +1,6 @@
 package com.popcoclient.review.repository;
 
+import com.popcoclient.review.dto.request.ReviewUpdateRequestDto;
 import com.popcoclient.review.entity.Review;
 import io.lettuce.core.dynamic.annotation.Param;
 import org.springframework.data.jpa.repository.JpaRepository;
