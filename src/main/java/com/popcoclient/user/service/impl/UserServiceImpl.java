@@ -25,26 +25,26 @@ public class UserServiceImpl implements UserService {
     @Override
     public List<UserResponseDto> getAllUsers() {
         return userRepository.findAll().stream()
-                .map(this::convertToResponse).collect(Collectors.toList());
+                .map(UserResponseDto::from).collect(Collectors.toList());
     }
 
     @Override
     public UserResponseDto getUserById(Long id) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException("사용자를 찾을 수 없습니다. ID: " + id));
-        return convertToResponse(user);
+        return UserResponseDto.from(user);
     }
 
     @Override
     public UserResponseDto getUserByEmail(String email) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UserNotFoundException("사용자를 찾을 수 없습니다. Email: " + email));
-        return convertToResponse(user);
+        return UserResponseDto.from(user);
     }
 
     public List<UserResponseDto> searchUsersByName(String name) {
         return userRepository.findByNameContaining(name).stream()
-                .map(this::convertToResponse)
+                .map(UserResponseDto::from)
                 .collect(Collectors.toList());
     }
 
@@ -63,7 +63,7 @@ public class UserServiceImpl implements UserService {
                 .build();
 
         User savedUser = userRepository.save(user);
-        return convertToResponse(savedUser);
+        return UserResponseDto.from(savedUser);
     }
 
     @Override
@@ -82,7 +82,7 @@ public class UserServiceImpl implements UserService {
         user.setEmail(requestDto.getEmail());
 
         User updatedUser = userRepository.save(user);
-        return convertToResponse(updatedUser);
+        return UserResponseDto.from(updatedUser);
     }
 
     @Override
@@ -120,13 +120,4 @@ public class UserServiceImpl implements UserService {
 //        userRepository.save(user);
     }
 
-    private UserResponseDto convertToResponse(User user) {
-        return new UserResponseDto(
-                user.getUserId(),
-                user.getEmail(),
-                user.getName(),
-                user.getCreatedAt(),
-                user.getUpdatedAt()
-        );
-    }
 }
