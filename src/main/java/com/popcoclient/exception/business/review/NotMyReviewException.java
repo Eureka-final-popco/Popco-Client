@@ -1,4 +1,4 @@
-package com.popcoclient.exception.business;
+package com.popcoclient.exception.business.review;
 
 import com.popcoclient.exception.BaseException;
 import com.popcoclient.exception.ErrorCode;
