@@ -3,6 +3,7 @@ package com.popcoclient.review.entity;
 import com.popcoclient.review.dto.request.ReviewCreateRequestDto;
 import com.popcoclient.review.dto.request.ReviewUpdateRequestDto;
 import com.popcoclient.review.entity.enums.ReviewStatus;
+import com.popcoclient.user.entity.User;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -22,42 +23,23 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @EntityListeners(AuditingEntityListener.class)
 public class Review {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "review_id")
     private Long reviewId;
-
-    @Column(name = "user_id", nullable = false)
     private Long userId;
-
-    @Column(name = "content_id", nullable = false)
     private Long contentId;
-
-    @Column(name = "text", columnDefinition = "TEXT")
     private String text;
-
-    @Column(name = "score")
     private Integer score;
-
-    @Column(name = "like_count")
     private Integer likeCount;
-
-    @Column(name = "dislike_count")
     private Integer dislikeCount;
-
-    @Column(name = "report")
     private String report;
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "status", length = 50)
     private ReviewStatus status;
 
     @CreatedDate
-    @Column(name = "created_at")
     private LocalDateTime createdAt;
-
     @LastModifiedDate
-    @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
     @ManyToOne(fetch = FetchType.LAZY)
