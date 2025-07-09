@@ -2,7 +2,7 @@ package com.popcoclient.user.service.impl;
 
 import com.popcoclient.exception.business.EmailAlreadyExistsException;
 import com.popcoclient.exception.business.UserNotFoundException;
-import com.popcoclient.user.domain.User;
+import com.popcoclient.user.entity.User;
 import com.popcoclient.user.dto.request.PasswordChangeRequest;
 import com.popcoclient.user.dto.request.UserRequestDto;
 import com.popcoclient.user.dto.response.UserResponseDto;

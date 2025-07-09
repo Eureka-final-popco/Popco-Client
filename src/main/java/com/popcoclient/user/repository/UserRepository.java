@@ -1,6 +1,6 @@
 package com.popcoclient.user.repository;
 
-import com.popcoclient.user.domain.User;
+import com.popcoclient.user.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;

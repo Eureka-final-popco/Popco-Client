@@ -1,6 +1,6 @@
 package com.popcoclient.user.dto.response;
 
-import com.popcoclient.user.domain.User;
+import com.popcoclient.user.entity.User;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

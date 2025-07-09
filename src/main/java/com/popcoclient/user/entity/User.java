@@ -1,4 +1,4 @@
-package com.popcoclient.user.domain;
+package com.popcoclient.user.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
@@ -8,7 +8,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 
-@Table(name = "users")
+@Table(name = "user")
 @Entity
 @Builder
 @Getter
