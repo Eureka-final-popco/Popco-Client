@@ -33,7 +33,6 @@ public class Review {
     private String text;
     private Double score;
     private Integer likeCount;
-    private Integer dislikeCount;
     private String report;
     private ReviewStatus status;
 
@@ -60,7 +59,6 @@ public class Review {
                 .text(request.getText())
                 .status(request.getStatus())
                 .likeCount(0)
-                .dislikeCount(0)
                 .build();
     }
 
