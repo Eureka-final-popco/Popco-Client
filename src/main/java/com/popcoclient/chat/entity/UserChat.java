@@ -6,6 +6,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.CreatedDate;
 
 import java.time.LocalDateTime;
 
@@ -25,10 +26,11 @@ public class UserChat {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @Column(name = "message", columnDefinition = "TEXT", nullable = false) // 메시지 내용이 길 수 있으므로 TEXT 타입으로 지정
+    @Column(name = "message", columnDefinition = "TEXT", nullable = false)
     private String message;
 
-    @Column(name = "created_at", nullable = false)
+    @CreatedDate
+    @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
     @Column(name = "sender", nullable = false)
