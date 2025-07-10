@@ -30,5 +30,5 @@ public class ContentActor {
     private Actor actor;
 
     @Column(nullable = false)
-    private Integer order;
+    private Integer castOrder;
 }

@@ -11,7 +11,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 
-@Table(name = "option")
+@Table(name = "options")
 @Entity
 @Builder
 @Getter
@@ -20,6 +20,7 @@ import java.time.LocalDateTime;
 @EntityListeners(AuditingEntityListener.class)
 public class Option {
     @Id
+    @Column(name="option_id")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long optionId;
 
