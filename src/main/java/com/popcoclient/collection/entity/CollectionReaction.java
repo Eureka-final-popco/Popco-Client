@@ -1,5 +1,7 @@
 package com.popcoclient.collection.entity;
 
+import com.popcoclient.collection.entity.enums.ReactionType;
+import com.popcoclient.content.entity.Content;
 import com.popcoclient.user.entity.User;
 import jakarta.persistence.*;
 import lombok.*;
@@ -9,7 +11,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 
-@Table(name = "collection")
+@Table(name = "collection_reaction")
 @Entity
 @Builder
 @Getter
@@ -17,24 +19,24 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 @EntityListeners(AuditingEntityListener.class)
-public class Collection {
+public class CollectionReaction {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    public Long collectionId;
+    @Column(name = "content_reaction_id")
+    private Long contentReactionId;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
-    public User user;
+    private User user;
 
-    @Column(nullable = false, length = 255)
-    private String title;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "content_id", nullable = false)
+    private Content content;
 
-    @Column(columnDefinition = "TEXT")
-    private String description;
-
-    @Column(name = "save_count", nullable = false)
-    private Integer saveCount;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 10)
+    private ReactionType reaction;
 
     @CreatedDate
     @Column(name = "created_at", updatable = false)
