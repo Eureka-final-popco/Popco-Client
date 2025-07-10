@@ -13,6 +13,7 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
@@ -35,9 +36,9 @@ public class Review {
 
     private Long contentId;
     private String text;
-    private Double score;
+    private BigDecimal score;
     private Integer likeCount;
-    private String report;
+    private Integer report;
 
     @Enumerated(EnumType.STRING)
     private ReviewStatus status;
@@ -61,6 +62,7 @@ public class Review {
                 .text(request.getText())
                 .status(request.getStatus())
                 .likeCount(0)
+                .report(0)
                 .build();
     }
 

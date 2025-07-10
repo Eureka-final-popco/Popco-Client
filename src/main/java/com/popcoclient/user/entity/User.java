@@ -24,7 +24,7 @@ public class User {
     private String name;
     private String email;
     private String password;
-    private String status;
+    private boolean isActive;
 
     @CreatedDate
     private LocalDateTime createdAt;

@@ -7,7 +7,7 @@ import java.math.BigDecimal;
 
 @Getter
 public class ReviewCreateRequestDto {
-    private Double score;
+    private BigDecimal score;
     private String text;
     private ReviewStatus status;
 }

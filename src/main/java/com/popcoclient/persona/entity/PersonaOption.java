@@ -6,6 +6,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
+
 @Table(name = "persona_option")
 @Entity
 @Builder
@@ -25,5 +27,5 @@ public class PersonaOption {
     @JoinColumn(name = "option_id")
     private Option option;
 
-    private Double score;
+    private Integer score;
 }

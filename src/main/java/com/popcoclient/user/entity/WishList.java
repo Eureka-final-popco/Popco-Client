@@ -1,15 +1,15 @@
 package com.popcoclient.user.entity;
 
+import com.popcoclient.content.entity.Content;
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "WishList")
+@Table(name = "wishlist")
 @Getter
 @Builder
 @NoArgsConstructor
@@ -19,8 +19,14 @@ public class WishList {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long wishlistId;
-    private Long userId;
-    private Long contentId;
+
+    @ManyToOne
+    @JoinColumn(name = "user_id")
+    private User user;
+
+    @ManyToOne
+    @JoinColumn(name = "content_id")
+    private Content content;
 
     @CreatedDate
     private LocalDateTime createdAt;

@@ -5,13 +5,14 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "ReviewReaction")
+@Table(name = "review_reaction")
 @Getter @Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @EntityListeners(AuditingEntityListener.class)
@@ -22,9 +23,8 @@ public class ReviewReaction {
     private Long reviewReactionId;
     private Long reviewId;
     private Long userId;
-    private Boolean isLiked;
 
-    @LastModifiedDate
-    private LocalDateTime reactedAt;
+    @CreatedDate
+    private LocalDateTime createdAt;
 
 }
