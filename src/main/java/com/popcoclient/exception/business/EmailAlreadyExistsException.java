@@ -1,9 +1,9 @@
 package com.popcoclient.exception.business;
 
-import com.popcoclient.exception.BaseException;
+import com.popcoclient.exception.BusinessException;
 import com.popcoclient.exception.ErrorCode;
 
-public class EmailAlreadyExistsException extends BaseException {
+public class EmailAlreadyExistsException extends BusinessException {
   public EmailAlreadyExistsException() {
     super(ErrorCode.EMAIL_ALREADY_EXISTS);
   }
