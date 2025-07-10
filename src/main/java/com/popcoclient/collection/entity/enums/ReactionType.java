@@ -1,5 +1,15 @@
 package com.popcoclient.collection.entity.enums;
 
+import lombok.Getter;
+
+@Getter
 public enum ReactionType {
-    like, dislike
+    LIKE("좋아요"),
+    DISLIKE("싫어요");
+
+    private final String reaction;
+
+    ReactionType(String reaction) {
+        this.reaction = reaction;
+    }
 }
