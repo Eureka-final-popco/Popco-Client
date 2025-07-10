@@ -5,7 +5,7 @@ import lombok.Getter;
 
 @Getter
 public class ReviewUpdateRequestDto {
-    private int score;
+    private Double score;
     private String text;
     private ReviewStatus status;
 }

@@ -22,7 +22,7 @@ public class ReviewReaction {
     private Long reviewReactionId;
     private Long reviewId;
     private Long userId;
-    private Boolean status;
+    private Boolean isLiked;
 
     @LastModifiedDate
     private LocalDateTime reactedAt;

@@ -31,7 +31,7 @@ public class Review {
     private Long userId;
     private Long contentId;
     private String text;
-    private Integer score;
+    private Double score;
     private Integer likeCount;
     private Integer dislikeCount;
     private String report;
