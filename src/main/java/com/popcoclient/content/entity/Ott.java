@@ -1,4 +1,4 @@
-package com.popcoclient.contents.entity;
+package com.popcoclient.content.entity;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -14,9 +14,12 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class Genre {
+public class Ott {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long genreId;
+    private Long ottId;
+
     private String name;
+    private String link;
+    private String profileImage;
 }

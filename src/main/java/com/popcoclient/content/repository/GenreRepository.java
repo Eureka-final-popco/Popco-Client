@@ -1,6 +1,6 @@
-package com.popcoclient.contents.repository;
+package com.popcoclient.content.repository;
 
-import com.popcoclient.contents.entity.Genre;
+import com.popcoclient.content.entity.Genre;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
