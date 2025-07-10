@@ -1,5 +1,7 @@
-package com.popcoclient.persona.entity;
+package com.popcoclient.collection.entity;
 
+import com.popcoclient.collection.entity.enums.ReactionType;
+import com.popcoclient.user.entity.User;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -10,30 +12,31 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
-@Table(name = "persona")
+@Table(name = "collection_reaction")
 @Entity
 @Builder
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
 @EntityListeners(AuditingEntityListener.class)
-public class Persona {
+public class CollectionReaction {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Long collectionReactionId;
 
-    private String name;
-    private String description;
-    private String tag;
-    private String imgPath;
+    @ManyToOne
+    @JoinColumn(name = "user_id")
+    private User user;
+
+    @ManyToOne
+    @JoinColumn(name = "collection_id")
+    private Collection collection;
+
+    private ReactionType reactionType;
 
     @CreatedDate
     private LocalDateTime createdAt;
     @LastModifiedDate
     private LocalDateTime updatedAt;
-
-    @OneToMany
-    List<PersonaGenre> personaGenre;
 }

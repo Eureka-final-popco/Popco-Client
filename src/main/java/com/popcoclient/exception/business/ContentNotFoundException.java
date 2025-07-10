@@ -1,9 +1,9 @@
 package com.popcoclient.exception.business;
 
-import com.popcoclient.exception.BaseException;
+import com.popcoclient.exception.BusinessException;
 import com.popcoclient.exception.ErrorCode;
 
-public class ContentNotFoundException extends BaseException {
+public class ContentNotFoundException extends BusinessException {
     public ContentNotFoundException() {
         super(ErrorCode.CONTENT_NOT_FOUND);
     }

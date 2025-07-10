@@ -1,39 +1,36 @@
-package com.popcoclient.persona.entity;
+package com.popcoclient.collection.entity;
 
+import com.popcoclient.user.entity.User;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
-@Table(name = "persona")
+@Table(name = "marked_collection")
 @Entity
 @Builder
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
 @EntityListeners(AuditingEntityListener.class)
-public class Persona {
+public class MarkedCollection {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Long markedCollectionId;
 
-    private String name;
-    private String description;
-    private String tag;
-    private String imgPath;
+    @ManyToOne
+    @JoinColumn(name = "collection_id")
+    private Collection collection;
+
+    @ManyToOne
+    @JoinColumn(name = "user_id")
+    private User user;
 
     @CreatedDate
     private LocalDateTime createdAt;
-    @LastModifiedDate
-    private LocalDateTime updatedAt;
-
-    @OneToMany
-    List<PersonaGenre> personaGenre;
 }

@@ -2,7 +2,7 @@ package com.popcoclient.exception.handler;
 
 import com.popcoclient.common.response.ApiResponse;
 import com.popcoclient.common.response.ValidationErrorResponse;
-import com.popcoclient.exception.BaseException;
+import com.popcoclient.exception.BusinessException;
 import com.popcoclient.exception.ErrorCode;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
@@ -20,9 +20,9 @@ public class GlobalExceptionHandler {
 
   private final Logger log = LoggerFactory.getLogger(getClass());
 
-  @ExceptionHandler(BaseException.class)
+  @ExceptionHandler(BusinessException.class)
   public ResponseEntity<ApiResponse<Void>> handleBusinessException(
-          BaseException e, HttpServletRequest request) {
+          BusinessException e, HttpServletRequest request) {
 
     log.error("Business error at {}: {}", request.getRequestURI(), e.getMessage(), e);
     return ResponseEntity.ok(ApiResponse.fail(e.getErrorCode()));
