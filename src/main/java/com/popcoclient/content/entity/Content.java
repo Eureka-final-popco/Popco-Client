@@ -18,15 +18,18 @@ import java.time.LocalDateTime;
 public class Content {
 
     @Id
+    @Column(name = "content_id")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long contentId;
 
     private String title;
     private String overview;
-    private Float rating_average;
+    private Double ratingAverage;
     private LocalDateTime releaseDate;
     private Integer ratingCount;
     private String backdropPath;
+
+    @Enumerated(EnumType.STRING)
     private ContentTypes type;
     private String posterPath;
     private String trailerPath;

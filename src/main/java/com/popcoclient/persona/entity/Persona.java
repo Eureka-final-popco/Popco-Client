@@ -21,8 +21,9 @@ import java.util.List;
 @EntityListeners(AuditingEntityListener.class)
 public class Persona {
     @Id
+    @Column(name = "persona_id")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Long personaId;
 
     private String name;
     private String description;
@@ -34,6 +35,6 @@ public class Persona {
     @LastModifiedDate
     private LocalDateTime updatedAt;
 
-    @OneToMany
+    @OneToMany(mappedBy = "persona", cascade = CascadeType.ALL)
     List<PersonaGenre> personaGenre;
 }

@@ -1,6 +1,6 @@
 package com.popcoclient.user.entity;
 
-import com.popcoclient.review.entity.Persona;
+import com.popcoclient.persona.entity.Persona;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

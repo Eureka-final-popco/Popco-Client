@@ -28,12 +28,18 @@ public class Review {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "review_id")
     private Long reviewId;
-    private Long userId;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", insertable = false, updatable = false)
+    private User user;
+
     private Long contentId;
     private String text;
     private Double score;
     private Integer likeCount;
     private String report;
+
+    @Enumerated(EnumType.STRING)
     private ReviewStatus status;
 
     @CreatedDate
@@ -41,19 +47,15 @@ public class Review {
     @LastModifiedDate
     private LocalDateTime updatedAt;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", insertable = false, updatable = false)
-    private User user;
-
     public void updateFrom(ReviewUpdateRequestDto request) {
         this.score = request.getScore();
         this.text = request.getText();
         this.status = request.getStatus();
     }
 
-    public static Review from(ReviewCreateRequestDto request, long contentId, long userId) {
+    public static Review of(ReviewCreateRequestDto request, User user, long contentId) {
         return Review.builder()
-                .userId(userId)
+                .user(user)
                 .contentId(contentId)
                 .score(request.getScore())
                 .text(request.getText())
