@@ -3,9 +3,11 @@ package com.popcoclient.review.dto.request;
 import com.popcoclient.review.entity.enums.ReviewStatus;
 import lombok.Getter;
 
+import java.math.BigDecimal;
+
 @Getter
 public class ReviewCreateRequestDto {
-    private int score;
+    private Double score;
     private String text;
     private ReviewStatus status;
 }

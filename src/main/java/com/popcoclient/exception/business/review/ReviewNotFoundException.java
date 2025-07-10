@@ -9,6 +9,6 @@ public class ReviewNotFoundException extends BaseException {
     }
 
     public ReviewNotFoundException(String message) {
-        super(ErrorCode.ALREADY_REVIEWED, message);
+        super(ErrorCode.REVIEW_NOT_FOUND, message);
     }
 }
