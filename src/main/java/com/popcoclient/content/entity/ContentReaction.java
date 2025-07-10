@@ -1,7 +1,6 @@
-package com.popcoclient.collection.entity;
+package com.popcoclient.content.entity;
 
 import com.popcoclient.collection.entity.enums.ReactionType;
-import com.popcoclient.content.entity.Content;
 import com.popcoclient.user.entity.User;
 import jakarta.persistence.*;
 import lombok.*;
@@ -11,7 +10,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 
-@Table(name = "collection_reaction")
+@Table(name = "Content_reaction")
 @Entity
 @Builder
 @Getter
@@ -19,7 +18,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 @EntityListeners(AuditingEntityListener.class)
-public class CollectionReaction {
+public class ContentReaction {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
