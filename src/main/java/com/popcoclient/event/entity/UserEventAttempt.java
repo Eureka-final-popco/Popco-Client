@@ -1,6 +1,6 @@
 package com.popcoclient.event.entity;
 
-import com.popcoclient.review.entity.User;
+import com.popcoclient.user.entity.User;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
