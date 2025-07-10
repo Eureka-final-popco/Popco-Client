@@ -1,6 +1,6 @@
 package com.popcoclient.content.entity;
 
-import com.popcoclient.collection.entity.enums.ReactionType;
+import com.popcoclient.content.entity.enums.ReactionType;
 import com.popcoclient.user.entity.User;
 import jakarta.persistence.*;
 import lombok.*;
