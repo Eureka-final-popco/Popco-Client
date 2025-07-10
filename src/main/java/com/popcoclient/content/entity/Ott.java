@@ -19,5 +19,5 @@ public class Ott {
 
     private String name;
     private String link;
-    private String profileImage;
+    private String profilePath;
 }

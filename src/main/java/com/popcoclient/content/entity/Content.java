@@ -7,6 +7,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Table(name = "content")
@@ -24,7 +25,7 @@ public class Content {
 
     private String title;
     private String overview;
-    private Double ratingAverage;
+    private BigDecimal ratingAverage;
     private LocalDateTime releaseDate;
     private Integer ratingCount;
     private String backdropPath;

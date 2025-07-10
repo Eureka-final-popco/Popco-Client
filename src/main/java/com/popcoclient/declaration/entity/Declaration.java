@@ -1,6 +1,8 @@
 package com.popcoclient.declaration.entity;
 
 import com.popcoclient.declaration.entity.enums.DeclarationType;
+import com.popcoclient.review.entity.Review;
+import com.popcoclient.user.entity.User;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -13,7 +15,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "Declaration")
+@Table(name = "declaration")
 @Getter
 @Builder
 @AllArgsConstructor
@@ -24,8 +26,17 @@ public class Declaration {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long declarationId;
-    private Long reviewId;
-    private Long userId;
+
+    @ManyToOne
+    @JoinColumn(name = "review_id")
+    private Review review;
+
+    @ManyToOne
+    @JoinColumn(name = "user_id")
+    private User user;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "declaration_type")
     private DeclarationType declarationType;
     private String text;
 
