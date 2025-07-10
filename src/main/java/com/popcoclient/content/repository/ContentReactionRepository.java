@@ -5,5 +5,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface CollectionReactionRepository extends JpaRepository<ContentReaction, Long> {
+public interface ContentReactionRepository extends JpaRepository<ContentReaction, Long> {
 }
