@@ -1,4 +1,4 @@
-package com.popcoclient.contents.entity;
+package com.popcoclient.content.entity;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;

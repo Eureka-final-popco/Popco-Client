@@ -1,6 +1,6 @@
-package com.popcoclient.contents.entity;
+package com.popcoclient.content.entity;
 
-import com.popcoclient.contents.enums.ContentTypes;
+import com.popcoclient.content.entity.enums.ContentTypes;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
