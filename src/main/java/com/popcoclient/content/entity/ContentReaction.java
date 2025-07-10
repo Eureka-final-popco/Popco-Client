@@ -10,7 +10,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 
-@Table(name = "Content_reaction")
+@Table(name = "content_reaction")
 @Entity
 @Builder
 @Getter
