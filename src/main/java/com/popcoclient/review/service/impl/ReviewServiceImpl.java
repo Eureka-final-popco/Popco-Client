@@ -10,34 +10,48 @@ import com.popcoclient.review.dto.request.ReviewCreateRequestDto;
 import com.popcoclient.review.dto.request.ReviewUpdateRequestDto;
 import com.popcoclient.review.dto.response.ReviewCreateResponseDto;
 import com.popcoclient.content.entity.Content;
+import com.popcoclient.review.dto.response.ReviewListResponseDto;
+import com.popcoclient.review.dto.response.ReviewPageResponseDto;
 import com.popcoclient.review.entity.Review;
+import com.popcoclient.review.repository.ReviewReactionRepository;
 import com.popcoclient.review.service.ReviewService;
 import com.popcoclient.user.entity.User;
+import com.popcoclient.user.repository.UserDetailRepository;
 import com.popcoclient.user.repository.UserRepository;
 import com.popcoclient.review.repository.ReviewRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class ReviewServiceImpl implements ReviewService {
     private final ReviewRepository reviewRepository;
+    private final ReviewReactionRepository reviewReactionRepository;
+    private final UserDetailRepository userDetailRepository;
     private final UserRepository userRepository;
     private final ContentRepository contentRepository;
 
     @Override
-    public ReviewCreateResponseDto insertReview(ReviewCreateRequestDto request, long contentId, long userId) {
+    public ReviewCreateResponseDto insertReview(ReviewCreateRequestDto request, Long contentId, Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("사용자를 찾을 수 없습니다. userId: " + userId));
 
         Content content = contentRepository.findById(contentId)
                 .orElseThrow(() -> new ContentNotFoundException("콘텐츠를 찾을 수 없습니다. userId: " + contentId));
 
-        if(reviewRepository.existsReviewByContentIdAndUser_UserId(userId, contentId)){
+        if(reviewRepository.existsReviewByContentAndUser(content, user)){
             throw new AlreadyReviewedException();
         }
 
-        Review review = Review.of(request, user, contentId);
+        Review review = Review.of(request, user, content);
         reviewRepository.save(review);
 
         return ReviewCreateResponseDto.builder()
@@ -46,7 +60,28 @@ public class ReviewServiceImpl implements ReviewService {
     }
 
     @Override
-    public Void updateReview(long reviewId, ReviewUpdateRequestDto request, long userId) {
+    public ReviewPageResponseDto getReviewPage(Integer pageNumber, Integer pageSize, Long userId, Long contentId) {
+        Pageable pageable = PageRequest.of(pageNumber, pageSize);
+
+        // login status check
+        Boolean loginStatus = true;
+
+        Content content = contentRepository.findById(contentId)
+                .orElseThrow(() -> new ContentNotFoundException("콘텐츠를 찾을 수 없습니다. contentId: " + contentId));
+
+        if(loginStatus){
+            Page<ReviewListResponseDto> reviewPage = reviewRepository.findReviewList(userId, contentId, pageable);
+            Double avgScore = reviewRepository.avgStar(contentId);
+
+            return ReviewPageResponseDto.of(reviewPage, avgScore, loginStatus);
+        }
+
+        return null;
+    }
+
+
+    @Override
+    public Void updateReview(Long reviewId, ReviewUpdateRequestDto request, Long userId) {
         Review review = reviewRepository.findById(reviewId)
                 .orElseThrow(() -> new ReviewNotFoundException("리뷰를 찾을 수 없습니다. reviewId: " + reviewId));
 
@@ -54,7 +89,7 @@ public class ReviewServiceImpl implements ReviewService {
                 .orElseThrow(() -> new UserNotFoundException("사용자를 찾을 수 없습니다. userId: " + userId));
 
         if(review.getUser().getUserId() != userId){
-            throw new NotMyReviewException();
+            throw new NotMyReviewException("리뷰 작성자가 아닙니다. userId: " + userId);
         }
 
         review.updateFrom(request);
@@ -64,7 +99,7 @@ public class ReviewServiceImpl implements ReviewService {
 
 
     @Override
-    public Void deleteReview(long reviewId, long userId) {
+    public Void deleteReview(Long reviewId, Long userId) {
         Review review = reviewRepository.findById(reviewId)
                 .orElseThrow(() -> new ReviewNotFoundException("리뷰를 찾을 수 없습니다. reviewId: " + reviewId));
 
@@ -72,7 +107,7 @@ public class ReviewServiceImpl implements ReviewService {
                 .orElseThrow(() -> new UserNotFoundException("사용자를 찾을 수 없습니다. userId: " + userId));
 
         if(review.getUser().getUserId() != userId){
-            throw new NotMyReviewException();
+            throw new NotMyReviewException("리뷰 작성자가 아닙니다. userId: " + userId);
         }
 
         reviewRepository.delete(review);

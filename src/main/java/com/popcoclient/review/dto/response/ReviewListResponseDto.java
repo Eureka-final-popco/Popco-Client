@@ -1,29 +1,31 @@
 package com.popcoclient.review.dto.response;
 
+import com.popcoclient.review.entity.Review;
+import com.popcoclient.user.entity.UserDetail;
+import com.querydsl.core.annotations.QueryProjection;
+import jakarta.persistence.criteria.CriteriaBuilder;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
-
-// 닉네임, 프로필 이미지, 생성일, 페르소나 이름, 로그인 좋아요, 싫어요 상태
 public class ReviewListResponseDto {
-    private long reviewId;
-    private long reviewerId;
+    private Long reviewId;
+    private Long reviewerId;
     private String reviewerName;
     private String reviewerProfile;
     private String reviewerPersona;
-    private String reviewDate;
-    private int score;
-    private String content;
-    private int likeCount;
-
-    private boolean isLiked;
-    private boolean isAuthor;
+    private LocalDateTime reviewDate;
+    private BigDecimal score;
+    private String text;
+    private Integer likeCount;
+    private Boolean isLiked;
+    private Boolean isAuthor;
 }

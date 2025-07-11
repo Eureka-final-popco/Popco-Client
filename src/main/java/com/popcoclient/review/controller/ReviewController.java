@@ -4,6 +4,7 @@ import com.popcoclient.common.response.ApiResponse;
 import com.popcoclient.review.dto.request.ReviewCreateRequestDto;
 import com.popcoclient.review.dto.request.ReviewUpdateRequestDto;
 import com.popcoclient.review.dto.response.ReviewCreateResponseDto;
+import com.popcoclient.review.dto.response.ReviewPageResponseDto;
 import com.popcoclient.review.service.ReviewService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -15,21 +16,30 @@ import org.springframework.web.bind.annotation.*;
 public class ReviewController {
     private final ReviewService reviewService;
 
+    @GetMapping("/{contentId}")
+    public ResponseEntity<ApiResponse<ReviewPageResponseDto>> getReviewPage(
+            @RequestParam(name = "pageNumber", defaultValue = "0") Integer pageNumber,
+            @RequestParam(name = "pageSize", defaultValue = "10") Integer pageSize,
+            @PathVariable("contentId") Long contentId, @RequestParam("userId") Long userId) {
+        ReviewPageResponseDto response = reviewService.getReviewPage(pageNumber, pageSize, userId, contentId);
+        return ResponseEntity.ok(ApiResponse.success("create review success", response));
+    }
+
     @PostMapping("/{contentId}")
     public ResponseEntity<ApiResponse<ReviewCreateResponseDto>> createReview(
-            @RequestBody ReviewCreateRequestDto request, @PathVariable("contentId") long contentId, @RequestParam("userId") long userId) {
+            @RequestBody ReviewCreateRequestDto request, @PathVariable("contentId") Long contentId, @RequestParam("userId") Long userId) {
         ReviewCreateResponseDto response = reviewService.insertReview(request, contentId, userId);
         return ResponseEntity.ok(ApiResponse.success("create review success", response));
     }
 
     @PutMapping("/{reviewId}")
     public ResponseEntity<ApiResponse<Void>> updateReview(
-            @RequestBody ReviewUpdateRequestDto request, @PathVariable("reviewId") long reviewId, @RequestParam("userId") long userId){
+            @RequestBody ReviewUpdateRequestDto request, @PathVariable("reviewId") Long reviewId, @RequestParam("userId") Long userId){
         return ResponseEntity.ok(ApiResponse.success("update review success", reviewService.updateReview(reviewId, request, userId)));
     }
 
     @DeleteMapping("/{reviewId}")
-    public ResponseEntity<ApiResponse<Void>> deleteReview(@PathVariable("reviewId") long reviewId, @RequestParam("userId") long userId) {
+    public ResponseEntity<ApiResponse<Void>> deleteReview(@PathVariable("reviewId") Long reviewId, @RequestParam("userId") Long userId) {
         return ResponseEntity.ok(ApiResponse.success("delete review success", reviewService.deleteReview(reviewId, userId)));
     }
 }

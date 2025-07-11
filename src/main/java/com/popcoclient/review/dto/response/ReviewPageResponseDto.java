@@ -4,8 +4,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.springframework.data.domain.Page;
 
-import java.math.BigDecimal;
 import java.util.List;
 
 @Builder
@@ -13,11 +13,25 @@ import java.util.List;
 @NoArgsConstructor
 @Getter
 public class ReviewPageResponseDto {
-    private int page;
-    private int size;
-    private int totalPages;
-    private int totalReviews;
+    private Integer page;
+    private Integer size;
+    private Integer totalPages;
+    private Long totalReviews;
     private Double reviewAvgScore;
     private List<ReviewListResponseDto> reviewList;
-    private boolean isLogin;
+    private Boolean isLogin;
+
+    public static ReviewPageResponseDto of(Page<ReviewListResponseDto> reviewPage,
+                                           Double avgScore,
+                                           Boolean loginStatus) {
+        return ReviewPageResponseDto.builder()
+                .reviewList(reviewPage.getContent())
+                .page(reviewPage.getNumber() + 1)
+                .size(reviewPage.getSize())
+                .totalPages(reviewPage.getTotalPages())
+                .reviewAvgScore(avgScore)
+                .totalReviews(reviewPage.getTotalElements())
+                .isLogin(loginStatus)
+                .build();
+    }
 }
