@@ -10,7 +10,7 @@ import com.popcoclient.review.dto.request.ReviewCreateRequestDto;
 import com.popcoclient.review.dto.request.ReviewUpdateRequestDto;
 import com.popcoclient.review.dto.response.ReviewCreateResponseDto;
 import com.popcoclient.content.entity.Content;
-import com.popcoclient.review.dto.response.ReviewListResponseDto;
+import com.popcoclient.review.dto.response.ReviewResponseDto;
 import com.popcoclient.review.dto.response.ReviewPageResponseDto;
 import com.popcoclient.review.entity.Review;
 import com.popcoclient.review.repository.ReviewReactionRepository;
@@ -25,9 +25,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -70,7 +67,7 @@ public class ReviewServiceImpl implements ReviewService {
                 .orElseThrow(() -> new ContentNotFoundException("콘텐츠를 찾을 수 없습니다. contentId: " + contentId));
 
         if(loginStatus){
-            Page<ReviewListResponseDto> reviewPage = reviewRepository.findReviewList(userId, contentId, pageable);
+            Page<ReviewResponseDto> reviewPage = reviewRepository.findReviewList(userId, contentId, pageable);
             Double avgScore = reviewRepository.avgStar(contentId);
 
             return ReviewPageResponseDto.of(reviewPage, avgScore, loginStatus);

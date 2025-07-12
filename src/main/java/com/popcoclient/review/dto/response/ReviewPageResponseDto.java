@@ -18,10 +18,10 @@ public class ReviewPageResponseDto {
     private Integer totalPages;
     private Long totalReviews;
     private Double reviewAvgScore;
-    private List<ReviewListResponseDto> reviewList;
+    private List<ReviewResponseDto> reviewList;
     private Boolean isLogin;
 
-    public static ReviewPageResponseDto of(Page<ReviewListResponseDto> reviewPage,
+    public static ReviewPageResponseDto of(Page<ReviewResponseDto> reviewPage,
                                            Double avgScore,
                                            Boolean loginStatus) {
         return ReviewPageResponseDto.builder()

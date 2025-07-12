@@ -6,7 +6,7 @@ import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
-import com.popcoclient.review.dto.response.ReviewListResponseDto;
+import com.popcoclient.review.dto.response.ReviewResponseDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -47,10 +47,10 @@ public class ReviewRepositoryImpl implements ReviewRepositoryCustom {
 
     // 리뷰 조회
     @Override
-    public Page<ReviewListResponseDto> findReviewList(Long userId, Long contentId, Pageable pageable) {
+    public Page<ReviewResponseDto> findReviewList(Long userId, Long contentId, Pageable pageable) {
         // 조회 (페이징)
-        List<ReviewListResponseDto> reviewList = jpaQueryFactory
-                .select(Projections.constructor(ReviewListResponseDto.class,
+        List<ReviewResponseDto> reviewList = jpaQueryFactory
+                .select(Projections.constructor(ReviewResponseDto.class,
                         review.reviewId,
                         review.user.userId,
                         userDetail.nickname,

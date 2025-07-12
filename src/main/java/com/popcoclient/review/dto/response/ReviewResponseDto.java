@@ -1,9 +1,5 @@
 package com.popcoclient.review.dto.response;
 
-import com.popcoclient.review.entity.Review;
-import com.popcoclient.user.entity.UserDetail;
-import com.querydsl.core.annotations.QueryProjection;
-import jakarta.persistence.criteria.CriteriaBuilder;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -16,7 +12,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
-public class ReviewListResponseDto {
+public class ReviewResponseDto {
     private Long reviewId;
     private Long reviewerId;
     private String reviewerName;

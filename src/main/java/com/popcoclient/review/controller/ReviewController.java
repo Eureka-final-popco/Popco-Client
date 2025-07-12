@@ -6,12 +6,14 @@ import com.popcoclient.review.dto.request.ReviewUpdateRequestDto;
 import com.popcoclient.review.dto.response.ReviewCreateResponseDto;
 import com.popcoclient.review.dto.response.ReviewPageResponseDto;
 import com.popcoclient.review.service.ReviewService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/review")
+@Tag(name = "review", description = "리뷰와 관련된 api 요청이 모두 포함되어 있습니다.")
 @RequiredArgsConstructor
 public class ReviewController {
     private final ReviewService reviewService;
