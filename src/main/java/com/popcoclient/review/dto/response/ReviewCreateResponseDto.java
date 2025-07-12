@@ -10,5 +10,5 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Getter
 public class ReviewCreateResponseDto {
-    private long reviewId;
+    private Long reviewId;
 }
