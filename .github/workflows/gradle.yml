@@ -44,11 +44,11 @@ jobs:
     
     - name: Build Docker image
       if: github.event_name != 'pull_request'
-      run: docker build -t ghcr.io/${{ github.repository }}:${{ github.sha }} .
+      run: docker build -t ghcr.io/eureka-final-popco/popco-client:${{ github.sha }} .
     
     - name: Push to GitHub Container Registry
       if: github.event_name != 'pull_request'
-      run: docker push ghcr.io/${{ github.repository }}:${{ github.sha }}
+      run: docker push ghcr.io/eureka-final-popco/popco-client:${{ github.sha }}
 
   dependency-submission:
     runs-on: ubuntu-latest
