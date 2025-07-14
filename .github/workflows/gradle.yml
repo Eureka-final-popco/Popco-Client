@@ -46,6 +46,11 @@ jobs:
     - name: Build and test 
       run: ./gradlew clean build --info
 
+    - name: Run tests
+      run: ./gradlew test
+      env:
+        SPRING_PROFILES_ACTIVE: test
+
   dependency-submission:
     runs-on: ubuntu-latest
     permissions:
