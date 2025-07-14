@@ -1,5 +1,6 @@
 package com.popcoclient.review.entity;
 
+import com.popcoclient.user.entity.User;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -21,8 +22,14 @@ public class ReviewReaction {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long reviewReactionId;
-    private Long reviewId;
-    private Long userId;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "review_id")
+    private Review review;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
+    private User user;
 
     @CreatedDate
     private LocalDateTime createdAt;
