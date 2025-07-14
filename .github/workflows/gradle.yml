@@ -43,6 +43,9 @@ jobs:
       if: github.event_name != 'pull_request'
       run: docker push ghcr.io/${{ github.repository }}:${{ github.sha }}
 
+    - name: Build and test 
+      run: ./gradlew clean build --info
+
   dependency-submission:
     runs-on: ubuntu-latest
     permissions:
