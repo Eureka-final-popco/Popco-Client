@@ -1,5 +1,6 @@
 package com.popcoclient.review.entity;
 
+import com.popcoclient.content.entity.Content;
 import com.popcoclient.review.dto.request.ReviewCreateRequestDto;
 import com.popcoclient.review.dto.request.ReviewUpdateRequestDto;
 import com.popcoclient.review.entity.enums.ReviewStatus;
@@ -9,6 +10,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.BatchSize;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -30,10 +32,13 @@ public class Review {
     private Long reviewId;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", insertable = false, updatable = false)
+    @JoinColumn(name = "user_id")
     private User user;
 
-    private Long contentId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "content_id")
+    private Content content;
+
     private String text;
     private BigDecimal score;
     private Integer likeCount;
@@ -53,10 +58,10 @@ public class Review {
         this.status = request.getStatus();
     }
 
-    public static Review of(ReviewCreateRequestDto request, User user, long contentId) {
+    public static Review of(ReviewCreateRequestDto request, User user, Content content) {
         return Review.builder()
                 .user(user)
-                .contentId(contentId)
+                .content(content)
                 .score(request.getScore())
                 .text(request.getText())
                 .status(request.getStatus())
