@@ -162,7 +162,7 @@ public class ReviewServiceTest {
         testReview = Review.builder()
                 .reviewId(1L)
                 .user(testUsers.get(0))
-                .contentId(testContent.getContentId())
+                .content(testContent)
                 .text("This is a test review for concurrency")
                 .score(BigDecimal.valueOf(5.0))
                 .status(ReviewStatus.COMMON)
