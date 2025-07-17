@@ -4,8 +4,8 @@ import lombok.Getter;
 
 @Getter
 public enum ContentTypes {
-    MOVIE("영화"),
-    SERIES("시리즈");
+    movie("영화"),
+    tv("시리즈");
 
     private final String displayName;
 
