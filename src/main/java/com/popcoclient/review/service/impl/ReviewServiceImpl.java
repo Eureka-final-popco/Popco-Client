@@ -30,6 +30,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -124,18 +126,18 @@ public class ReviewServiceImpl implements ReviewService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("사용자를 찾을 수 없습니다. userId: " + userId));
 
-        ReviewReaction reviewReaction = reviewReactionRepository.findByReviewAndUser(review,user);
+        Optional<ReviewReaction> optionalReaction = reviewReactionRepository.findByReviewAndUser(review, user);
 
-        if (reviewReaction != null) {
+        if (optionalReaction.isPresent()) {
             reviewRepository.decrementReviewLikeCount(reviewId);
-            reviewReactionRepository.delete(reviewReaction);
-            return ReviewLikeResponseDto.of(reviewReaction, false);
-        }
-        else {
+            reviewReactionRepository.delete(optionalReaction.get());
+            return ReviewLikeResponseDto.of(optionalReaction.get(), false);
+        } else {
             reviewRepository.updateReviewLikeCount(reviewId);
             ReviewReaction saveReaction = ReviewReaction.of(user, review);
             reviewReactionRepository.save(saveReaction);
             return ReviewLikeResponseDto.of(saveReaction, true);
         }
+
     }
 }

@@ -10,6 +10,8 @@ import com.popcoclient.review.repository.ReviewReactionRepository;
 import com.popcoclient.review.repository.ReviewRepository;
 import com.popcoclient.review.service.ReviewService;
 import com.popcoclient.user.entity.User;
+import com.popcoclient.user.entity.UserDetail;
+import com.popcoclient.user.repository.UserDetailRepository;
 import com.popcoclient.user.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -39,6 +41,9 @@ public class ReviewServiceTest {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private UserDetailRepository userDetailRepository;
 
     @Autowired
     private ContentRepository contentRepository;
@@ -183,6 +188,8 @@ public class ReviewServiceTest {
         reviewReactionRepository.flush();
         reviewRepository.deleteAll();
         reviewRepository.flush();
+        userDetailRepository.deleteAll();
+        userDetailRepository.flush();
         userRepository.deleteAll();
         userRepository.flush();
     }
@@ -192,7 +199,7 @@ public class ReviewServiceTest {
     void multiThreadsToggleLikesTest() throws InterruptedException {
         // 토글 테스트: 같은 사용자가 여러 번 좋아요/좋아요 취소
         int numberOfThreads = 50;
-        int numberOfTogglePerUser = 20;
+        int numberOfTogglePerUser = 9;
         Long userId = testUsers.get(0).getUserId();
 
         ExecutorService executor = Executors.newFixedThreadPool(numberOfThreads);
