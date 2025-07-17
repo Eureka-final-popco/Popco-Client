@@ -10,21 +10,27 @@ import com.popcoclient.review.dto.request.ReviewCreateRequestDto;
 import com.popcoclient.review.dto.request.ReviewUpdateRequestDto;
 import com.popcoclient.review.dto.response.ReviewCreateResponseDto;
 import com.popcoclient.content.entity.Content;
+import com.popcoclient.review.dto.response.ReviewLikeResponseDto;
 import com.popcoclient.review.dto.response.ReviewResponseDto;
 import com.popcoclient.review.dto.response.ReviewPageResponseDto;
 import com.popcoclient.review.entity.Review;
+import com.popcoclient.review.entity.ReviewReaction;
 import com.popcoclient.review.repository.ReviewReactionRepository;
 import com.popcoclient.review.service.ReviewService;
 import com.popcoclient.user.entity.User;
 import com.popcoclient.user.repository.UserDetailRepository;
 import com.popcoclient.user.repository.UserRepository;
 import com.popcoclient.review.repository.ReviewRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -109,5 +115,29 @@ public class ReviewServiceImpl implements ReviewService {
 
         reviewRepository.delete(review);
         return null;
+    }
+
+    @Override
+    @Transactional
+    public ReviewLikeResponseDto reactionReview(Long reviewId, Long userId) {
+        Review review = reviewRepository.findById(reviewId)
+                .orElseThrow(() -> new ReviewNotFoundException("리뷰를 찾을 수 없습니다. reviewId: " + reviewId));
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("사용자를 찾을 수 없습니다. userId: " + userId));
+
+        Optional<ReviewReaction> optionalReaction = reviewReactionRepository.findByReviewAndUser(review, user);
+
+        if (optionalReaction.isPresent()) {
+            reviewRepository.decrementReviewLikeCount(reviewId);
+            reviewReactionRepository.delete(optionalReaction.get());
+            return ReviewLikeResponseDto.of(optionalReaction.get(), false);
+        } else {
+            reviewRepository.updateReviewLikeCount(reviewId);
+            ReviewReaction saveReaction = ReviewReaction.of(user, review);
+            reviewReactionRepository.save(saveReaction);
+            return ReviewLikeResponseDto.of(saveReaction, true);
+        }
+
     }
 }
