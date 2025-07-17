@@ -1,6 +1,7 @@
 package com.popcoclient.collection.entity;
 
 import com.popcoclient.content.entity.Content;
+import com.popcoclient.content.entity.enums.ContentTypes;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
@@ -8,7 +9,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 
-@Table(name = "collection_content")
+@Table(name = "collection_contents")
 @Entity
 @Builder
 @Getter
@@ -34,4 +35,5 @@ public class CollectionContent {
     @CreatedDate
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
+
 }

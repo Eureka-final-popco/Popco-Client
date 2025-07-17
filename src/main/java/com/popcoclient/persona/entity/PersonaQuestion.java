@@ -11,7 +11,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 
-@Table(name = "persona_question")
+@Table(name = "persona_questions")
 @Entity
 @Builder
 @Getter
