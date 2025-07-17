@@ -59,6 +59,7 @@ dependencies {
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
     testCompileOnly 'org.projectlombok:lombok'
     testAnnotationProcessor 'org.projectlombok:lombok'
+    testImplementation 'com.h2database:h2'
 
     //querydsl
     implementation "com.querydsl:querydsl-jpa:${queryDslVersion}:jakarta"
