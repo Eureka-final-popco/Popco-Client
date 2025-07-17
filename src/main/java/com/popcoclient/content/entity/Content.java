@@ -19,8 +19,7 @@ import java.time.LocalDateTime;
 public class Content {
 
     @Id
-    @Column(name = "content_id")
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+//    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long contentId;
 
     private String title;
