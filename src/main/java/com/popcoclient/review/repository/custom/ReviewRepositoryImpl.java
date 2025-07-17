@@ -48,7 +48,6 @@ public class ReviewRepositoryImpl implements ReviewRepositoryCustom {
     // 리뷰 조회
     @Override
     public Page<ReviewResponseDto> findReviewList(Long userId, Long contentId, Pageable pageable) {
-        // 조회 (페이징)
         List<ReviewResponseDto> reviewList = jpaQueryFactory
                 .select(Projections.constructor(ReviewResponseDto.class,
                         review.reviewId,
@@ -65,11 +64,11 @@ public class ReviewRepositoryImpl implements ReviewRepositoryCustom {
                 ))
                 .from(review)
                 .join(review.user, user)
-                .join(userDetail).on(userDetail.user.eq(user))
+                .leftJoin(userDetail).on(userDetail.user.eq(user))
                 .where(review.content.contentId.eq(contentId))
                 .orderBy(review.createdAt.desc())
                 .limit(pageable.getPageSize())
-                .offset(pageable.getPageNumber())
+                .offset(pageable.getOffset())
                 .fetch();
 
         // 개수 count
