@@ -1,6 +1,6 @@
 package com.popcoclient.review;
 
-import com.popcoclient.common.config.S3TestConfig;
+import com.popcoclient.common.config.S3Config;
 import com.popcoclient.content.entity.Content;
 import com.popcoclient.content.entity.enums.ContentTypes;
 import com.popcoclient.content.repository.ContentRepository;
@@ -29,7 +29,7 @@ import java.util.concurrent.*;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 @SpringBootTest
-@Import(S3TestConfig.class)
+@Import(S3Config.class)
 @Slf4j
 public class ReviewServiceTest {
     @Autowired
