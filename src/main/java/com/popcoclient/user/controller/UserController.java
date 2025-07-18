@@ -1,8 +1,11 @@
 package com.popcoclient.user.controller;
 
+import com.nimbusds.oauth2.sdk.TokenResponse;
+import com.popcoclient.auth.util.JwtToken;
 import com.popcoclient.common.response.ApiResponse;
 import com.popcoclient.user.dto.request.PasswordChangeRequest;
-import com.popcoclient.user.dto.request.UserRequestDto;
+import com.popcoclient.user.dto.request.UserLoginRequestDto;
+import com.popcoclient.user.dto.request.UserRegisterRequestDto;
 import com.popcoclient.user.dto.response.UserResponseDto;
 import com.popcoclient.user.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -13,7 +16,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/users")
@@ -22,6 +24,19 @@ import java.util.Map;
 public class UserController {
 
     private final UserService userService;
+
+    // 사용자 생성
+    @Operation(summary = "사용자 생성", description = "사용자 생성")
+    @PostMapping("/register")
+    public ResponseEntity<ApiResponse<UserResponseDto>> createUser(@Valid @RequestBody UserRegisterRequestDto request) {
+        return ResponseEntity.ok(ApiResponse.success(userService.createUser(request)));
+    }
+
+    @GetMapping("/login")
+    public ResponseEntity<ApiResponse<JwtToken>> login(@Valid @RequestBody UserLoginRequestDto request) {
+        JwtToken token = userService.login(request);
+        return ResponseEntity.ok(ApiResponse.success(token));
+    }
 
     // 모든 사용자 조회
     @Operation(summary = "모든 사용자 조회", description = "모든 사용자 조회")
@@ -51,18 +66,11 @@ public class UserController {
         return ResponseEntity.ok(ApiResponse.success(userService.searchUsersByName(name)));
     }
 
-    // 사용자 생성
-    @Operation(summary = "사용자 생성", description = "사용자 생성")
-    @PostMapping
-    public ResponseEntity<ApiResponse<UserResponseDto>> createUser(@Valid @RequestBody UserRequestDto request) {
-        return ResponseEntity.ok(ApiResponse.success(userService.createUser(request)));
-    }
-
     // 사용자 수정
     @Operation(summary = "사용자 수정", description = "사용자 수정")
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<UserResponseDto>> updateUser(@PathVariable Long id,
-                                                   @Valid @RequestBody UserRequestDto request) {
+                                                   @Valid @RequestBody UserRegisterRequestDto request) {
         return ResponseEntity.ok(ApiResponse.success(userService.updateUser(id, request)));
     }
 

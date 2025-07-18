@@ -54,7 +54,6 @@ public class ReviewRepositoryImpl implements ReviewRepositoryCustom {
                         review.user.userId,
                         userDetail.nickname,
                         userDetail.profilePath,
-                        userDetail.persona.name,
                         review.createdAt,
                         review.score,
                         review.text,

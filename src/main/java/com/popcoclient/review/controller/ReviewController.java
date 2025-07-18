@@ -1,5 +1,6 @@
 package com.popcoclient.review.controller;
 
+import com.popcoclient.auth.util.JwtProvider;
 import com.popcoclient.common.response.ApiResponse;
 import com.popcoclient.review.dto.request.ReviewCreateRequestDto;
 import com.popcoclient.review.dto.request.ReviewUpdateRequestDto;
@@ -19,21 +20,27 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class ReviewController {
     private final ReviewService reviewService;
+    private final JwtProvider jwtProvider;
 
     @Operation(summary = "콘텐츠의 리뷰 목록 조회", description = "contentId로 콘텐츠에 포함된 모든 리뷰 조회")
     @GetMapping("/contents/{contentId}")
     public ResponseEntity<ApiResponse<ReviewPageResponseDto>> getReviewPage(
             @RequestParam(name = "pageNumber", defaultValue = "0") Integer pageNumber,
             @RequestParam(name = "pageSize", defaultValue = "10") Integer pageSize,
-            @PathVariable("contentId") Long contentId, @RequestParam("userId") Long userId) {
+            @PathVariable("contentId") Long contentId) {
+
+        Long userId = jwtProvider.getUserIdFromAuthentication();
+
         ReviewPageResponseDto response = reviewService.getReviewPage(pageNumber, pageSize, userId, contentId);
-        return ResponseEntity.ok(ApiResponse.success("create review success", response));
+        return ResponseEntity.ok(ApiResponse.success("get review page success", response));
     }
 
     @Operation(summary = "콘텐츠에 리뷰 작성", description = "콘텐츠에 리뷰 작성")
     @PostMapping("/contents/{contentId}")
     public ResponseEntity<ApiResponse<ReviewCreateResponseDto>> createReview(
-            @RequestBody ReviewCreateRequestDto request, @PathVariable("contentId") Long contentId, @RequestParam("userId") Long userId) {
+            @RequestBody ReviewCreateRequestDto request, @PathVariable("contentId") Long contentId) {
+        Long userId = jwtProvider.getUserIdFromAuthentication();
+
         ReviewCreateResponseDto response = reviewService.insertReview(request, contentId, userId);
         return ResponseEntity.ok(ApiResponse.success("create review success", response));
     }
@@ -41,19 +48,22 @@ public class ReviewController {
     @Operation(summary = "리뷰 수정", description = "리뷰 작성자만 리뷰를 수정 가능")
     @PutMapping("/{reviewId}")
     public ResponseEntity<ApiResponse<Void>> updateReview(
-            @RequestBody ReviewUpdateRequestDto request, @PathVariable("reviewId") Long reviewId, @RequestParam("userId") Long userId){
+            @RequestBody ReviewUpdateRequestDto request, @PathVariable("reviewId") Long reviewId){
+        Long userId = jwtProvider.getUserIdFromAuthentication();
         return ResponseEntity.ok(ApiResponse.success("update review success", reviewService.updateReview(reviewId, request, userId)));
     }
 
     @Operation(summary = "리뷰 삭제", description = "리뷰 작성자만 리뷰를 삭제 가능")
     @DeleteMapping("/{reviewId}")
-    public ResponseEntity<ApiResponse<Void>> deleteReview(@PathVariable("reviewId") Long reviewId, @RequestParam("userId") Long userId) {
+    public ResponseEntity<ApiResponse<Void>> deleteReview(@PathVariable("reviewId") Long reviewId) {
+        Long userId = jwtProvider.getUserIdFromAuthentication();
         return ResponseEntity.ok(ApiResponse.success("delete review success", reviewService.deleteReview(reviewId, userId)));
     }
 
     @Operation(summary = "리뷰 좋아요/취소", description = "리뷰 좋아요/취소")
     @PostMapping("/{reviewId}/reaction")
-    public ResponseEntity<ApiResponse<ReviewLikeResponseDto>> reactionReview(@PathVariable("reviewId") Long reviewId, @RequestParam("userId") Long userId) {
+    public ResponseEntity<ApiResponse<ReviewLikeResponseDto>> reactionReview(@PathVariable("reviewId") Long reviewId) {
+        Long userId = jwtProvider.getUserIdFromAuthentication();
         ReviewLikeResponseDto response = reviewService.reactionReview(reviewId, userId);
 
         if (response.getIsLiked()) {
