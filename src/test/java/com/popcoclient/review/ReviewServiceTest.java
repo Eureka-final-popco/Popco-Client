@@ -1,6 +1,5 @@
 package com.popcoclient.review;
 
-import com.popcoclient.common.config.S3ConfigTest;
 import com.popcoclient.content.entity.Content;
 import com.popcoclient.content.entity.enums.ContentTypes;
 import com.popcoclient.content.repository.ContentRepository;
