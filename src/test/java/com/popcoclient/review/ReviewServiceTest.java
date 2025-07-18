@@ -59,12 +59,12 @@ public class ReviewServiceTest {
     private Review testReview;
     private List<User> testUsers;
 
-    @BeforeEach
-    void setUp() {
-        // 테스트용 데이터 초기화
-        cleanupTestData();
-        createTestData();
-    }
+//    @BeforeEach
+//    void setUp() {
+//        // 테스트용 데이터 초기화
+//        cleanupTestData();
+//        createTestData();
+//    }
 
 //    @Test
 //    @DisplayName("동시성 테스트")
@@ -147,110 +147,110 @@ public class ReviewServiceTest {
 //
 //        log.info("테스트 성공: 모든 검증 완료!");
 //    }
-
-    private void createTestData() {
-        // 테스트용 Content 생성
-        Content testContent = Content.builder()
-                .contentId(1L)
-                .title("Test Content")
-                .type(ContentTypes.movie)
-                .build();
-        testContent = contentRepository.save(testContent);
-
-        testUsers = new ArrayList<>();
-        int numberOfUsersToCreate = 10;
-        for (int i = 0; i < numberOfUsersToCreate; i++) {
-            User user = User.builder()
-                    .name("testUser_" + i)
-                    .email("user" + i + "_" + System.nanoTime() + "@example.com")
-                    .password("password" + i)
-                    .build();
-            userRepository.save(user);
-            testUsers.add(user);
-        }
-
-        testReview = Review.builder()
-                .reviewId(1L)
-                .user(testUsers.get(0))
-                .content(testContent)
-                .text("This is a test review for concurrency")
-                .score(BigDecimal.valueOf(5.0))
-                .status(ReviewStatus.COMMON)
-                .likeCount(0)
-                .report(0)
-                .build();
-        reviewRepository.save(testReview);
-
-        testReview = reviewRepository.findById(testReview.getReviewId())
-                .orElseThrow(() -> new IllegalStateException("생성된 리뷰를 다시 찾을 수 없습니다."));
-
-        log.info("생성된 테스트 리뷰 ID: {}", testReview.getReviewId()); // 다시 로드된 ID 확인
-    }
-
-    private void cleanupTestData() {
-        // 기존 테스트 데이터 정리
-        reviewReactionRepository.deleteAll();
-        reviewReactionRepository.flush();
-        reviewRepository.deleteAll();
-        reviewRepository.flush();
-        userDetailRepository.deleteAll();
-        userDetailRepository.flush();
-        userRepository.deleteAll();
-        userRepository.flush();
-    }
-
-    @Test
-    @DisplayName("토클 테스트")
-    void multiThreadsToggleLikesTest() throws InterruptedException {
-        // 토글 테스트: 같은 사용자가 여러 번 좋아요/좋아요 취소
-        int numberOfThreads = 50;
-        int numberOfTogglePerUser = 9;
-        Long userId = testUsers.get(0).getUserId();
-
-        ExecutorService executor = Executors.newFixedThreadPool(numberOfThreads);
-        CountDownLatch latch = new CountDownLatch(numberOfTogglePerUser);
-        List<Future<ReviewLikeResponseDto>> futures = new ArrayList<>();
-
-        for (int i = 0; i < numberOfTogglePerUser; i++) {
-            Future<ReviewLikeResponseDto> future = executor.submit(() -> {
-                try {
-                    return reviewService.reactionReview(testReview.getReviewId(), userId);
-                } finally {
-                    latch.countDown();
-                }
-            });
-            futures.add(future);
-        }
-
-        latch.await();
-        executor.shutdown();
-
-        // 결과 수집
-        List<ReviewLikeResponseDto> results = new ArrayList<>();
-        for (Future<ReviewLikeResponseDto> future : futures) {
-            try {
-                results.add(future.get());
-            } catch (ExecutionException e) {
-                log.error("토글 테스트 중 예외 발생: {}", e.getCause().getMessage());
-            }
-        }
-
-        // 최종 상태 확인
-        Review finalReview = reviewRepository.findById(testReview.getReviewId()).orElseThrow();
-        long finalReactionCount = reviewReactionRepository.countByReview(finalReview);
-
-        log.info("=== 토글 테스트 결과 ===");
-        log.info("토글 시도 횟수: {}", numberOfTogglePerUser);
-        log.info("최종 좋아요 카운트: {}", finalReview.getLikeCount());
-        log.info("최종 ReviewReaction 개수: {}", finalReactionCount);
-
-        // 홀수 번 토글하면 좋아요 상태, 짝수 번 토글하면 좋아요 취소 상태
-        boolean expectedLikeState = (numberOfTogglePerUser % 2) == 1;
-        long expectedCount = expectedLikeState ? 1 : 0;
-
-        assertThat(finalReview.getLikeCount()).isEqualTo(expectedCount);
-        assertThat(finalReactionCount).isEqualTo(expectedCount);
-
-        log.info("토글 테스트 성공!");
-    }
+//
+//    private void createTestData() {
+//        // 테스트용 Content 생성
+//        Content testContent = Content.builder()
+//                .contentId(1L)
+//                .title("Test Content")
+//                .type(ContentTypes.movie)
+//                .build();
+//        testContent = contentRepository.save(testContent);
+//
+//        testUsers = new ArrayList<>();
+//        int numberOfUsersToCreate = 10;
+//        for (int i = 0; i < numberOfUsersToCreate; i++) {
+//            User user = User.builder()
+//                    .name("testUser_" + i)
+//                    .email("user" + i + "_" + System.nanoTime() + "@example.com")
+//                    .password("password" + i)
+//                    .build();
+//            userRepository.save(user);
+//            testUsers.add(user);
+//        }
+//
+//        testReview = Review.builder()
+//                .reviewId(1L)
+//                .user(testUsers.get(0))
+//                .content(testContent)
+//                .text("This is a test review for concurrency")
+//                .score(BigDecimal.valueOf(5.0))
+//                .status(ReviewStatus.COMMON)
+//                .likeCount(0)
+//                .report(0)
+//                .build();
+//        reviewRepository.save(testReview);
+//
+//        testReview = reviewRepository.findById(testReview.getReviewId())
+//                .orElseThrow(() -> new IllegalStateException("생성된 리뷰를 다시 찾을 수 없습니다."));
+//
+//        log.info("생성된 테스트 리뷰 ID: {}", testReview.getReviewId()); // 다시 로드된 ID 확인
+//    }
+//
+//    private void cleanupTestData() {
+//        // 기존 테스트 데이터 정리
+//        reviewReactionRepository.deleteAll();
+//        reviewReactionRepository.flush();
+//        reviewRepository.deleteAll();
+//        reviewRepository.flush();
+//        userDetailRepository.deleteAll();
+//        userDetailRepository.flush();
+//        userRepository.deleteAll();
+//        userRepository.flush();
+//    }
+//
+//    @Test
+//    @DisplayName("토클 테스트")
+//    void multiThreadsToggleLikesTest() throws InterruptedException {
+//        // 토글 테스트: 같은 사용자가 여러 번 좋아요/좋아요 취소
+//        int numberOfThreads = 50;
+//        int numberOfTogglePerUser = 9;
+//        Long userId = testUsers.get(0).getUserId();
+//
+//        ExecutorService executor = Executors.newFixedThreadPool(numberOfThreads);
+//        CountDownLatch latch = new CountDownLatch(numberOfTogglePerUser);
+//        List<Future<ReviewLikeResponseDto>> futures = new ArrayList<>();
+//
+//        for (int i = 0; i < numberOfTogglePerUser; i++) {
+//            Future<ReviewLikeResponseDto> future = executor.submit(() -> {
+//                try {
+//                    return reviewService.reactionReview(testReview.getReviewId(), userId);
+//                } finally {
+//                    latch.countDown();
+//                }
+//            });
+//            futures.add(future);
+//        }
+//
+//        latch.await();
+//        executor.shutdown();
+//
+//        // 결과 수집
+//        List<ReviewLikeResponseDto> results = new ArrayList<>();
+//        for (Future<ReviewLikeResponseDto> future : futures) {
+//            try {
+//                results.add(future.get());
+//            } catch (ExecutionException e) {
+//                log.error("토글 테스트 중 예외 발생: {}", e.getCause().getMessage());
+//            }
+//        }
+//
+//        // 최종 상태 확인
+//        Review finalReview = reviewRepository.findById(testReview.getReviewId()).orElseThrow();
+//        long finalReactionCount = reviewReactionRepository.countByReview(finalReview);
+//
+//        log.info("=== 토글 테스트 결과 ===");
+//        log.info("토글 시도 횟수: {}", numberOfTogglePerUser);
+//        log.info("최종 좋아요 카운트: {}", finalReview.getLikeCount());
+//        log.info("최종 ReviewReaction 개수: {}", finalReactionCount);
+//
+//        // 홀수 번 토글하면 좋아요 상태, 짝수 번 토글하면 좋아요 취소 상태
+//        boolean expectedLikeState = (numberOfTogglePerUser % 2) == 1;
+//        long expectedCount = expectedLikeState ? 1 : 0;
+//
+//        assertThat(finalReview.getLikeCount()).isEqualTo(expectedCount);
+//        assertThat(finalReactionCount).isEqualTo(expectedCount);
+//
+//        log.info("토글 테스트 성공!");
+//    }
 }

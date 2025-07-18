@@ -1,14 +1,22 @@
 package com.popcoclient.user.service.impl;
 
+import com.popcoclient.auth.util.JwtProvider;
+import com.popcoclient.auth.util.JwtToken;
+import com.popcoclient.auth.util.JwtUtil;
 import com.popcoclient.exception.business.EmailAlreadyExistsException;
 import com.popcoclient.exception.business.UserNotFoundException;
+import com.popcoclient.user.dto.request.UserLoginRequestDto;
 import com.popcoclient.user.entity.User;
 import com.popcoclient.user.dto.request.PasswordChangeRequest;
-import com.popcoclient.user.dto.request.UserRequestDto;
+import com.popcoclient.user.dto.request.UserRegisterRequestDto;
 import com.popcoclient.user.dto.response.UserResponseDto;
 import com.popcoclient.user.repository.UserRepository;
 import com.popcoclient.user.service.UserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,7 +28,35 @@ import java.util.stream.Collectors;
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
-//    private final PasswordEncoder passwordEncoder;
+    private final PasswordEncoder passwordEncoder;
+    private final AuthenticationManager authenticationManager;
+    private final JwtUtil JwtUtil;
+
+    @Override
+    @Transactional
+    public UserResponseDto createUser(UserRegisterRequestDto requestDto) {
+        if (userRepository.existsByEmail(requestDto.getEmail())) {
+            throw new EmailAlreadyExistsException("이미 존재하는 이메일입니다: " + requestDto.getEmail());
+        }
+
+        User user = User.builder()
+                .name(requestDto.getName())
+                .email(requestDto.getEmail())
+                .password(passwordEncoder.encode(requestDto.getPassword()))
+                .build();
+
+        User savedUser = userRepository.save(user);
+        return UserResponseDto.from(savedUser);
+    }
+
+    @Override
+    @Transactional
+    public JwtToken login(UserLoginRequestDto requestDto) {
+        User user = userRepository.findByEmail(requestDto.getEmail())
+                .orElseThrow(() -> new UserNotFoundException("사용자를 찾을 수 없습니다. Email: " + requestDto.getEmail()));
+
+        return JwtUtil.generateToken(user.getUserId());
+    }
 
     @Override
     public List<UserResponseDto> getAllUsers() {
@@ -50,25 +86,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    public UserResponseDto createUser(UserRequestDto requestDto) {
-        if (userRepository.existsByEmail(requestDto.getEmail())) {
-            throw new EmailAlreadyExistsException("이미 존재하는 이메일입니다: " + requestDto.getEmail());
-        }
-
-        User user = User.builder()
-                .name(requestDto.getName())
-                .email(requestDto.getEmail())
-                .password(requestDto.getPassword())
-//                .password(passwordEncoder.encode(requestDto.getPassword()))
-                .build();
-
-        User savedUser = userRepository.save(user);
-        return UserResponseDto.from(savedUser);
-    }
-
-    @Override
-    @Transactional
-    public UserResponseDto updateUser(Long id, UserRequestDto requestDto) {
+    public UserResponseDto updateUser(Long id, UserRegisterRequestDto requestDto) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException("사용자를 찾을 수 없습니다. ID: " + id));
 
