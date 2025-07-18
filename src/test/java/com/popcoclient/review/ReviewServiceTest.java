@@ -10,7 +10,6 @@ import com.popcoclient.review.repository.ReviewReactionRepository;
 import com.popcoclient.review.repository.ReviewRepository;
 import com.popcoclient.review.service.ReviewService;
 import com.popcoclient.user.entity.User;
-import com.popcoclient.user.entity.UserDetail;
 import com.popcoclient.user.repository.UserDetailRepository;
 import com.popcoclient.user.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -19,6 +18,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import software.amazon.awssdk.services.s3.S3Client;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -30,6 +31,10 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 @SpringBootTest
 @Slf4j
 public class ReviewServiceTest {
+
+    @MockBean
+    private S3Client s3Client;
+
     @Autowired
     private ReviewService reviewService;
 
