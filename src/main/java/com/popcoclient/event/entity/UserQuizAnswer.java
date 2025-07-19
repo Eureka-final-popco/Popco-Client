@@ -1,5 +1,6 @@
 package com.popcoclient.event.entity;
 
+import com.popcoclient.content.entity.Content;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,12 +10,12 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "user_answer")
+@Table(name = "user_quiz_answers")
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class UserAnswer {
+public class UserQuizAnswer {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -23,18 +24,15 @@ public class UserAnswer {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "attempt_id", nullable = false)
-    private UserEventAttempt attempt;
+    private UserQuizAttempt attempt;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "question_id", nullable = false)
-    private EventQuestion question;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "option_id", nullable = false)
-    private EventOption option;
-
-    @Column(name = "is_correct", nullable = false)
-    private Boolean isCorrect;
+    @JoinColumns({
+            @JoinColumn(name = "option_id", referencedColumnName = "option_id", nullable = false),
+            @JoinColumn(name = "question_id", referencedColumnName = "question_id", nullable = false),
+            @JoinColumn(name = "quiz_id", referencedColumnName = "quiz_id", nullable = false)
+    })
+    private QuizOption quizOption;
 
     @Column(name = "answered_at", nullable = false)
     private LocalDateTime answeredAt;
@@ -45,7 +43,7 @@ public class UserAnswer {
     @Column(name = "advanced")
     private Boolean advanced;
 
-    public void setAttempt(UserEventAttempt attempt) {
+    public void setAttempt(UserQuizAttempt attempt) {
         this.attempt = attempt;
     }
 }

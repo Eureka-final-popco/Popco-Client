@@ -37,6 +37,6 @@ public class Persona {
     List<PersonaGenre> personaGenre;
 
     @OneToMany(mappedBy = "persona", cascade = CascadeType.ALL)
-    List<PersonaDetails> personaDetail;
+    List<PersonaDetail> personaDetail;
 
 }

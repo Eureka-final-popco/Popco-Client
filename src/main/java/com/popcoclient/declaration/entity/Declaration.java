@@ -15,7 +15,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "declaration")
+@Table(name = "declarations")
 @Getter
 @Builder
 @AllArgsConstructor
@@ -38,7 +38,7 @@ public class Declaration {
     @Enumerated(EnumType.STRING)
     @Column(name = "declaration_type")
     private DeclarationType declarationType;
-    private String text;
+    private String content;
 
     @CreatedDate
     private LocalDateTime createdAt;

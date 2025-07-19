@@ -15,7 +15,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "user_detail")
+@Table(name = "user_details")
 @Builder
 @Getter
 @NoArgsConstructor
@@ -37,8 +37,4 @@ public class UserDetail {
     @MapsId
     @JoinColumn(name = "user_id")
     private User user;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "persona_id")
-    private Persona persona;
 }

@@ -1,7 +1,6 @@
 package com.popcoclient.collection.entity;
 
 import com.popcoclient.content.entity.Content;
-import com.popcoclient.content.entity.enums.ContentTypes;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
@@ -29,11 +28,13 @@ public class CollectionContent {
     private Collection collection;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "content_id", nullable = false)
+    @JoinColumns({
+            @JoinColumn(name = "content_id", referencedColumnName = "id", nullable = false),
+            @JoinColumn(name = "type", referencedColumnName = "type", nullable = false)
+    })
     private Content content;
 
     @CreatedDate
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
-
 }

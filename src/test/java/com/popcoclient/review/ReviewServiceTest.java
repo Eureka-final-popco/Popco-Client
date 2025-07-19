@@ -2,6 +2,7 @@ package com.popcoclient.review;
 
 import com.popcoclient.content.entity.Content;
 import com.popcoclient.content.entity.enums.ContentTypes;
+import com.popcoclient.content.entity.key.ContentId;
 import com.popcoclient.content.repository.ContentRepository;
 import com.popcoclient.review.dto.response.ReviewLikeResponseDto;
 import com.popcoclient.review.entity.Review;
@@ -145,10 +146,11 @@ public class ReviewServiceTest {
 
     private void createTestData() {
         // 테스트용 Content 생성
+        ContentId contentId = new ContentId(1L, "movie");
+
         Content testContent = Content.builder()
-                .contentId(1L)
+                .contentId(contentId)
                 .title("Test Content")
-                .type(ContentTypes.movie)
                 .build();
         testContent = contentRepository.save(testContent);
 
