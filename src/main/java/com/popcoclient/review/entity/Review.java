@@ -1,6 +1,7 @@
 package com.popcoclient.review.entity;
 
 import com.popcoclient.content.entity.Content;
+import com.popcoclient.content.entity.enums.ContentTypes;
 import com.popcoclient.review.dto.request.ReviewCreateRequestDto;
 import com.popcoclient.review.dto.request.ReviewUpdateRequestDto;
 import com.popcoclient.review.entity.enums.ReviewStatus;
@@ -19,7 +20,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "review")
+@Table(name = "reviews")
 @Builder
 @Getter
 @NoArgsConstructor
@@ -27,7 +28,7 @@ import java.time.LocalDateTime;
 @EntityListeners(AuditingEntityListener.class)
 public class Review {
     @Id
-//    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "review_id")
     private Long reviewId;
 
@@ -36,15 +37,21 @@ public class Review {
     private User user;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "content_id")
+    @JoinColumns({
+            @JoinColumn(name = "content_id", referencedColumnName = "id", nullable = false),
+            @JoinColumn(name = "type", referencedColumnName = "type", nullable = false)
+    })
     private Content content;
 
+    @Column(name = "review_content")
     private String text;
     private BigDecimal score;
     private Integer likeCount;
+    @Column(name = "report_count")
     private Integer report;
 
     @Enumerated(EnumType.STRING)
+    @Column(name = "review_status")
     private ReviewStatus status;
 
     @CreatedDate

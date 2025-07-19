@@ -2,8 +2,6 @@ package com.popcoclient.event.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -13,32 +11,29 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name = "event_question")
+@Table(name = "quizzes")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@ToString(exclude = "questions")
 @EntityListeners(AuditingEntityListener.class)
-public class EventQuestion {
+public class Quiz {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "question_id")
-    private Long questionId;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "event_id", nullable = false)
-    private Event event;
+    @Column(name = "quiz_id")
+    private Long quizId;
 
     @Column(nullable = false)
-    private String text;
+    private String name;
 
-    @Column(name = "sort_order", nullable = false)
-    private Integer sortOrder;
+    @Column(name = "start_at", nullable = false)
+    private LocalDateTime startAt;
 
-    @Column(name = "img_path")
-    private String imgPath;
+    @Column(name = "end_at", nullable = false)
+    private LocalDateTime endAt;
 
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
@@ -48,10 +43,15 @@ public class EventQuestion {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
-    @Column(name = "finished_at")
-    private LocalDateTime finishedAt;
+    @Column(name = "banner_path")
+    private String bannerPath;
 
-    @OneToMany(mappedBy = "question", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<EventOption> options = new ArrayList<>();
+    @Column(name = "round_count")
+    private Integer roundCount;
+
+    @OneToMany(mappedBy = "quiz", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<QuizQuestion> questions = new ArrayList<>();
 
 }
+

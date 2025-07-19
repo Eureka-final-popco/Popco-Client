@@ -1,5 +1,6 @@
 package com.popcoclient.review.service.impl;
 
+import com.popcoclient.content.entity.key.ContentId;
 import com.popcoclient.content.repository.ContentRepository;
 import com.popcoclient.exception.business.ContentNotFoundException;
 import com.popcoclient.exception.business.UserNotFoundException;
@@ -43,11 +44,12 @@ public class ReviewServiceImpl implements ReviewService {
     private final ContentRepository contentRepository;
 
     @Override
-    public ReviewCreateResponseDto insertReview(ReviewCreateRequestDto request, Long contentId, Long userId) {
+    public ReviewCreateResponseDto insertReview(ReviewCreateRequestDto request, Long contentId, Long userId, String type) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("사용자를 찾을 수 없습니다. userId: " + userId));
 
-        Content content = contentRepository.findById(contentId)
+        ContentId contentIds = new ContentId(contentId, type);
+        Content content = contentRepository.findById(contentIds)
                 .orElseThrow(() -> new ContentNotFoundException("콘텐츠를 찾을 수 없습니다. userId: " + contentId));
 
         if(reviewRepository.existsReviewByContentAndUser(content, user)){
@@ -63,18 +65,19 @@ public class ReviewServiceImpl implements ReviewService {
     }
 
     @Override
-    public ReviewPageResponseDto getReviewPage(Integer pageNumber, Integer pageSize, Long userId, Long contentId) {
+    public ReviewPageResponseDto getReviewPage(Integer pageNumber, Integer pageSize, Long userId, Long contentId, String type) {
         Pageable pageable = PageRequest.of(pageNumber, pageSize);
 
         // login status check
         Boolean loginStatus = true;
+        ContentId contentComplex = new ContentId(contentId, type);
 
-        Content content = contentRepository.findById(contentId)
-                .orElseThrow(() -> new ContentNotFoundException("콘텐츠를 찾을 수 없습니다. contentId: " + contentId));
+        Content content = contentRepository.findById(contentComplex)
+                .orElseThrow(() -> new ContentNotFoundException("콘텐츠를 찾을 수 없습니다. contentId: " + contentId + "content Type : " + type));
 
         if(loginStatus){
-            Page<ReviewResponseDto> reviewPage = reviewRepository.findReviewList(userId, contentId, pageable);
-            Double avgScore = reviewRepository.avgStar(contentId);
+            Page<ReviewResponseDto> reviewPage = reviewRepository.findReviewList(userId, content, pageable);
+            Double avgScore = reviewRepository.avgStar(content);
 
             return ReviewPageResponseDto.of(reviewPage, avgScore, loginStatus);
         }

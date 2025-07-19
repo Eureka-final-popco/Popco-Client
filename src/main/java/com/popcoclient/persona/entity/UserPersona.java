@@ -1,6 +1,6 @@
 package com.popcoclient.persona.entity;
 
-import com.popcoclient.content.entity.Genre;
+import com.popcoclient.user.entity.User;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,26 +9,24 @@ import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 
-@Table(name = "persona_genres")
 @Entity
-@Builder
+@Table(name = "user_personas")
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class PersonaGenre {
-
+@Builder
+public class UserPersona {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long personaGenreId;
+    private Long userPersonaId;
+
+    private BigDecimal score;
+
+    @ManyToOne
+    @JoinColumn(name = "user_id")
+    private User user;
 
     @ManyToOne
     @JoinColumn(name = "persona_id")
     private Persona persona;
-
-    @ManyToOne
-    @JoinColumn(name = "genre_id")
-    private Genre genre;
-
-    @Column(name = "score")
-    private BigDecimal score;
 }

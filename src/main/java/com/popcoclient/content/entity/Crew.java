@@ -1,21 +1,23 @@
 package com.popcoclient.content.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
-@Table(name = "content_genres")
 @Entity
-@Builder
+@Table(name = "crews")
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class ContentGenre {
+@Builder
+public class Crew {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long contentGenreId;
+    private Long id;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "crew_member_id", nullable = false)
+    private CrewMember crewMember;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumns({
@@ -24,7 +26,6 @@ public class ContentGenre {
     })
     private Content content;
 
-    @ManyToOne
-    @JoinColumn(name = "genre_id")
-    private Genre genre;
+    private String job;
 }
+

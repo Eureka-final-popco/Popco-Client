@@ -12,7 +12,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import java.time.LocalDateTime;
 import java.util.List;
 
-@Table(name = "persona")
+@Table(name = "personas")
 @Entity
 @Builder
 @Getter
@@ -25,10 +25,8 @@ public class Persona {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long personaId;
 
-    private String name;
     private String description;
     private String tag;
-    private String imgPath;
 
     @CreatedDate
     private LocalDateTime createdAt;
@@ -37,4 +35,8 @@ public class Persona {
 
     @OneToMany(mappedBy = "persona", cascade = CascadeType.ALL)
     List<PersonaGenre> personaGenre;
+
+    @OneToMany(mappedBy = "persona", cascade = CascadeType.ALL)
+    List<PersonaDetail> personaDetail;
+
 }
