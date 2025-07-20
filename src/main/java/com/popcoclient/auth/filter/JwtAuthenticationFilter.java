@@ -1,6 +1,7 @@
 package com.popcoclient.auth.filter;
 
-import com.popcoclient.auth.util.JwtProvider;
+import com.popcoclient.auth.jwt.JwtProvider;
+import com.popcoclient.redis.repository.BlackListRepository;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.ServletRequest;
@@ -22,25 +23,34 @@ import org.springframework.web.filter.GenericFilterBean;
 @Slf4j
 public class JwtAuthenticationFilter extends GenericFilterBean {
     private final JwtProvider jwtTokenProvider;
+    private final BlackListRepository blackListRepository;
 
     @Override
-    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
+    public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain chain)
             throws IOException, ServletException {
+
+        HttpServletResponse response = (HttpServletResponse) servletResponse;
 
         try {
             // 1. Request Header에서 JWT 토큰 추출
-            String token = resolveToken((HttpServletRequest) request);
+            String token = resolveToken((HttpServletRequest) servletRequest);
             // 2. validateToken으로 토큰 유효성 검사
-            if (token != null && jwtTokenProvider.validateToken(token)) {
-                // 토큰이 유효할 경우 토큰에서 Authentication 객체를 가지고 와서 SecurityContext에 저장
-                Authentication authentication = jwtTokenProvider.getAuthentication(token);
-                SecurityContextHolder.getContext().setAuthentication(authentication);
+            if (token != null){
+                if (jwtTokenProvider.validateToken(token) && !blackListRepository.existsById(token)){
+                    Authentication authentication = jwtTokenProvider.getAuthentication(token);
+                    SecurityContextHolder.getContext().setAuthentication(authentication);
+                } else {
+                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                    return;
+                }
             }
         } catch (Exception e) {
-            logger.error(e.getMessage());
+            logger.error(e.getMessage(), e);
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            return;
         }
 
-        chain.doFilter(request, response);
+        chain.doFilter(servletRequest, servletResponse);
     }
 
     // Request Header에서 토큰 정보 추출

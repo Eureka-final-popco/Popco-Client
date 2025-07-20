@@ -1,4 +1,4 @@
-package com.popcoclient.auth.util;
+package com.popcoclient.auth.jwt;
 
 import lombok.Builder;
 import lombok.Data;

@@ -1,10 +1,7 @@
 package com.popcoclient.user.controller;
 
-import com.nimbusds.oauth2.sdk.TokenResponse;
-import com.popcoclient.auth.util.JwtToken;
 import com.popcoclient.common.response.ApiResponse;
 import com.popcoclient.user.dto.request.PasswordChangeRequest;
-import com.popcoclient.user.dto.request.UserLoginRequestDto;
 import com.popcoclient.user.dto.request.UserRegisterRequestDto;
 import com.popcoclient.user.dto.response.UserResponseDto;
 import com.popcoclient.user.service.UserService;
@@ -30,12 +27,6 @@ public class UserController {
     @PostMapping("/register")
     public ResponseEntity<ApiResponse<UserResponseDto>> createUser(@Valid @RequestBody UserRegisterRequestDto request) {
         return ResponseEntity.ok(ApiResponse.success(userService.createUser(request)));
-    }
-
-    @GetMapping("/login")
-    public ResponseEntity<ApiResponse<JwtToken>> login(@Valid @RequestBody UserLoginRequestDto request) {
-        JwtToken token = userService.login(request);
-        return ResponseEntity.ok(ApiResponse.success(token));
     }
 
     // 모든 사용자 조회

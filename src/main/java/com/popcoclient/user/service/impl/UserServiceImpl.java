@@ -1,11 +1,7 @@
 package com.popcoclient.user.service.impl;
 
-import com.popcoclient.auth.util.JwtProvider;
-import com.popcoclient.auth.util.JwtToken;
-import com.popcoclient.auth.util.JwtUtil;
 import com.popcoclient.exception.business.EmailAlreadyExistsException;
 import com.popcoclient.exception.business.UserNotFoundException;
-import com.popcoclient.user.dto.request.UserLoginRequestDto;
 import com.popcoclient.user.entity.User;
 import com.popcoclient.user.dto.request.PasswordChangeRequest;
 import com.popcoclient.user.dto.request.UserRegisterRequestDto;
@@ -13,9 +9,6 @@ import com.popcoclient.user.dto.response.UserResponseDto;
 import com.popcoclient.user.repository.UserRepository;
 import com.popcoclient.user.service.UserService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,8 +22,6 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    private final AuthenticationManager authenticationManager;
-    private final JwtUtil JwtUtil;
 
     @Override
     @Transactional
@@ -47,15 +38,6 @@ public class UserServiceImpl implements UserService {
 
         User savedUser = userRepository.save(user);
         return UserResponseDto.from(savedUser);
-    }
-
-    @Override
-    @Transactional
-    public JwtToken login(UserLoginRequestDto requestDto) {
-        User user = userRepository.findByEmail(requestDto.getEmail())
-                .orElseThrow(() -> new UserNotFoundException("사용자를 찾을 수 없습니다. Email: " + requestDto.getEmail()));
-
-        return JwtUtil.generateToken(user.getUserId());
     }
 
     @Override

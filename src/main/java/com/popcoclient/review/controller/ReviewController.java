@@ -1,6 +1,6 @@
 package com.popcoclient.review.controller;
 
-import com.popcoclient.auth.util.JwtProvider;
+import com.popcoclient.auth.jwt.JwtProvider;
 import com.popcoclient.common.response.ApiResponse;
 import com.popcoclient.review.dto.request.ReviewCreateRequestDto;
 import com.popcoclient.review.dto.request.ReviewUpdateRequestDto;
