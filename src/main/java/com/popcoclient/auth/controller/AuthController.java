@@ -1,12 +1,13 @@
 package com.popcoclient.auth.controller;
 
 import com.popcoclient.auth.dto.request.RefreshRequestDto;
+import com.popcoclient.auth.dto.response.KakaoLoginResponseDto;
+import com.popcoclient.auth.dto.response.KakaoPreSignupResponseDto;
 import com.popcoclient.auth.dto.response.LoginResponseDto;
 import com.popcoclient.auth.dto.response.RefreshResponseDto;
 import com.popcoclient.auth.service.AuthService;
 import com.popcoclient.common.response.ApiResponse;
 import com.popcoclient.auth.dto.request.LoginRequestDto;
-import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -36,8 +37,16 @@ public class AuthController {
         return ResponseEntity.ok(ApiResponse.success("logout success", null));
     }
 
-    @GetMapping("/auth/login/kakao")
-    public ResponseEntity<?> kakaoLogin(@RequestParam("code") String accessCode, HttpServletResponse httpServletResponse) {
+    @PostMapping("/kakao/login")
+    public ResponseEntity<ApiResponse<Object>> kakaoLogin(@RequestParam("code") String accessCode) {
+        KakaoLoginResponseDto response = authService.kakaoLogin(accessCode);
 
+        if (response.isLoginSuccess()) {
+            LoginResponseDto loginData = response.getData();
+            return ResponseEntity.ok(ApiResponse.success("login success", loginData));
+        } else {
+            KakaoPreSignupResponseDto signupData = response.getData();
+            return ResponseEntity.ok(ApiResponse.success("signup required", signupData));
+        }
     }
 }
