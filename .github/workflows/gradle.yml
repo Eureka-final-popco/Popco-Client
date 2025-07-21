@@ -73,7 +73,7 @@ jobs:
         # Infra 레포에 워크플로우 호출용 토큰
         token: ${{ secrets.INFRA_DISPATCH_TOKEN }}
         # 내 GitHub org/user 이름과 Infra 레포 이름
-        repository: your-org/Popco-Infra
+        repository: Eureka-final-popco/Popco-Infra
         # Infra 워크플로우에서 받을 event-type
         event-type: deploy
 #      # 전달하고 싶은 추가 페이로드 (선택)
