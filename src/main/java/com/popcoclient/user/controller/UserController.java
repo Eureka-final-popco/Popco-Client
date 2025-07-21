@@ -2,7 +2,7 @@ package com.popcoclient.user.controller;
 
 import com.popcoclient.common.response.ApiResponse;
 import com.popcoclient.user.dto.request.PasswordChangeRequest;
-import com.popcoclient.user.dto.request.UserRegisterRequestDto;
+import com.popcoclient.user.dto.request.UserSignupRequestDto;
 import com.popcoclient.user.dto.response.UserResponseDto;
 import com.popcoclient.user.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -24,8 +24,8 @@ public class UserController {
 
     // 사용자 생성
     @Operation(summary = "사용자 생성", description = "사용자 생성")
-    @PostMapping("/register")
-    public ResponseEntity<ApiResponse<UserResponseDto>> createUser(@Valid @RequestBody UserRegisterRequestDto request) {
+    @PostMapping("/signup")
+    public ResponseEntity<ApiResponse<UserResponseDto>> createUser(@Valid @RequestBody UserSignupRequestDto request) {
         return ResponseEntity.ok(ApiResponse.success(userService.createUser(request)));
     }
 
@@ -61,7 +61,7 @@ public class UserController {
     @Operation(summary = "사용자 수정", description = "사용자 수정")
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<UserResponseDto>> updateUser(@PathVariable Long id,
-                                                   @Valid @RequestBody UserRegisterRequestDto request) {
+                                                   @Valid @RequestBody UserSignupRequestDto request) {
         return ResponseEntity.ok(ApiResponse.success(userService.updateUser(id, request)));
     }
 

@@ -4,7 +4,7 @@ import com.popcoclient.exception.business.EmailAlreadyExistsException;
 import com.popcoclient.exception.business.UserNotFoundException;
 import com.popcoclient.user.entity.User;
 import com.popcoclient.user.dto.request.PasswordChangeRequest;
-import com.popcoclient.user.dto.request.UserRegisterRequestDto;
+import com.popcoclient.user.dto.request.UserSignupRequestDto;
 import com.popcoclient.user.dto.response.UserResponseDto;
 import com.popcoclient.user.repository.UserRepository;
 import com.popcoclient.user.service.UserService;
@@ -25,19 +25,16 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    public UserResponseDto createUser(UserRegisterRequestDto requestDto) {
+    public UserResponseDto createUser(UserSignupRequestDto requestDto) {
         if (userRepository.existsByEmail(requestDto.getEmail())) {
             throw new EmailAlreadyExistsException("이미 존재하는 이메일입니다: " + requestDto.getEmail());
         }
 
-        User user = User.builder()
-                .name(requestDto.getName())
-                .email(requestDto.getEmail())
-                .password(passwordEncoder.encode(requestDto.getPassword()))
-                .build();
+        String encodedPassword = passwordEncoder.encode(requestDto.getPassword());
 
-        User savedUser = userRepository.save(user);
-        return UserResponseDto.from(savedUser);
+        User user = User.of(requestDto, encodedPassword);
+        userRepository.save(user);
+        return UserResponseDto.from(user);
     }
 
     @Override
@@ -68,7 +65,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    public UserResponseDto updateUser(Long id, UserRegisterRequestDto requestDto) {
+    public UserResponseDto updateUser(Long id, UserSignupRequestDto requestDto) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException("사용자를 찾을 수 없습니다. ID: " + id));
 

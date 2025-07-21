@@ -1,6 +1,7 @@
 package com.popcoclient.auth.filter;
 
 import com.popcoclient.auth.jwt.JwtProvider;
+import com.popcoclient.exception.business.auth.TokenExpiredException;
 import com.popcoclient.redis.repository.BlackListRepository;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -44,9 +45,13 @@ public class JwtAuthenticationFilter extends GenericFilterBean {
                     return;
                 }
             }
-        } catch (Exception e) {
+        } catch (TokenExpiredException e) {
             logger.error(e.getMessage(), e);
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.setStatus(e.getErrorCode().getStatus().value());
+            response.setContentType("application/json");
+            response.getWriter().write(
+                    String.format("{\"code\":\"%s\"}",
+                            e.getErrorCode().getCode()));
             return;
         }
 
