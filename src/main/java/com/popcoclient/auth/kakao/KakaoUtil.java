@@ -2,6 +2,8 @@ package com.popcoclient.auth.kakao;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.popcoclient.exception.business.auth.KakaoTokenParsingFailed;
+import com.popcoclient.exception.business.auth.KakaoTokenRequestFailed;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
@@ -26,6 +28,8 @@ public class KakaoUtil {
     public KakaoToken requestToken(String accessCode) {
         RestTemplate restTemplate = new RestTemplate();
         HttpHeaders headers = new HttpHeaders();
+        KakaoToken oAuthToken = null;
+
         headers.add("Content-type", "application/x-www-form-urlencoded;charset=utf-8");
 
         MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
@@ -44,13 +48,11 @@ public class KakaoUtil {
 
         ObjectMapper objectMapper = new ObjectMapper();
 
-        KakaoToken oAuthToken = null;
-
         try {
             oAuthToken = objectMapper.readValue(response.getBody(), KakaoToken.class);
             log.info("oAuthToken : " + oAuthToken.getAccess_token());
         } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
+            throw new KakaoTokenRequestFailed(e.getMessage());
         }
         return oAuthToken;
     }
@@ -58,7 +60,7 @@ public class KakaoUtil {
     public KakaoProfile requestProfile(KakaoToken kakaoToken) {
         RestTemplate restTemplate2 = new RestTemplate();
         HttpHeaders headers2 = new HttpHeaders();
-        KakaoProfile kakaoProfile;
+        KakaoProfile kakaoProfile = null;
 
         headers2.add("Content-type", "application/x-www-form-urlencoded;charset=utf-8");
         headers2.add("Authorization", "Bearer " + kakaoToken.getAccess_token());
@@ -77,7 +79,7 @@ public class KakaoUtil {
             kakaoProfile = objectMapper.readValue(response2.getBody(), KakaoProfile.class);
         } catch (JsonProcessingException e) {
             log.info(Arrays.toString(e.getStackTrace()));
-            throw new RuntimeException();
+            throw new KakaoTokenParsingFailed(e.getMessage());
         }
 
         return kakaoProfile;
