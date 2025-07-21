@@ -17,7 +17,6 @@ public class ReviewResponseDto {
     private Long reviewerId;
     private String reviewerName;
     private String reviewerProfile;
-    private String reviewerPersona;
     private LocalDateTime reviewDate;
     private BigDecimal score;
     private String text;
