@@ -1,9 +1,14 @@
 package com.popcoclient.user.controller;
 
+import com.popcoclient.auth.jwt.JwtProvider;
 import com.popcoclient.common.response.ApiResponse;
 import com.popcoclient.user.dto.request.PasswordChangeRequest;
-import com.popcoclient.user.dto.request.UserRegisterRequestDto;
+import com.popcoclient.user.dto.request.UserDetailCreateRequestDto;
+import com.popcoclient.user.dto.request.UserDetailUpdateRequestDto;
+import com.popcoclient.user.dto.request.UserSignupRequestDto;
+import com.popcoclient.user.dto.response.UserDetailResponseDto;
 import com.popcoclient.user.dto.response.UserResponseDto;
+import com.popcoclient.user.service.UserDetailService;
 import com.popcoclient.user.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -19,14 +24,40 @@ import java.util.List;
 @RequiredArgsConstructor
 @Tag(name = "User API", description = "유저 관련 CRUD")
 public class UserController {
-
     private final UserService userService;
+    private final UserDetailService userDetailService;
+    private final JwtProvider jwtProvider;
 
     // 사용자 생성
-    @Operation(summary = "사용자 생성", description = "사용자 생성")
-    @PostMapping("/register")
-    public ResponseEntity<ApiResponse<UserResponseDto>> createUser(@Valid @RequestBody UserRegisterRequestDto request) {
+    @Operation(summary = "회원가입", description = "회원가입(사용자 생성)")
+    @PostMapping("/signup")
+    public ResponseEntity<ApiResponse<UserResponseDto>> createUser(@Valid @RequestBody UserSignupRequestDto request) {
         return ResponseEntity.ok(ApiResponse.success(userService.createUser(request)));
+    }
+
+    // ID로 사용자 조회
+    @Operation(summary = "userId로 사용자 상세 조회", description = "userId로 사용자 정보 조회")
+    @GetMapping("/detail")
+    public ResponseEntity<ApiResponse<UserDetailResponseDto>> getUserDetail() {
+        Long userId = jwtProvider.getUserIdFromAuthentication();
+        UserDetailResponseDto response = userDetailService.getUserDetail(userId);
+        return ResponseEntity.ok(ApiResponse.success("Get UserDetail Success",response));
+    }
+
+    @Operation(summary = "userId로 사용자 상세 입력", description = "userId로 사용자 상세 입력")
+    @PostMapping("/detail")
+    public ResponseEntity<ApiResponse<Void>> createUserDetail(@Valid @RequestBody UserDetailCreateRequestDto request) {
+        Long userId = jwtProvider.getUserIdFromAuthentication();
+        userDetailService.createUserDetail(request, userId);
+        return ResponseEntity.ok(ApiResponse.success("Create UserDetail Success", null));
+    }
+
+    @Operation(summary = "userId로 사용자 상세 수정", description = "userId로 사용자 상세 수정")
+    @PutMapping("/detail")
+    public ResponseEntity<ApiResponse<Void>> updateUserDetail(@Valid @RequestBody UserDetailUpdateRequestDto request) {
+        Long userId = jwtProvider.getUserIdFromAuthentication();
+        userDetailService.updateUserDetail(request, userId);
+        return ResponseEntity.ok(ApiResponse.success("Update UserDetail Success", null));
     }
 
     // 모든 사용자 조회
@@ -34,13 +65,6 @@ public class UserController {
     @GetMapping
     public ResponseEntity<ApiResponse<List<UserResponseDto>>> getAllUsers() {
         return ResponseEntity.ok(ApiResponse.success(userService.getAllUsers()));
-    }
-
-    // ID로 사용자 조회
-    @Operation(summary = "ID로 사용자 조회", description = "ID로 사용자 조회")
-    @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<UserResponseDto>> getUserById(@PathVariable Long id) {
-        return ResponseEntity.ok(ApiResponse.success(userService.getUserById(id)));
     }
 
     // 이메일로 사용자 조회
@@ -61,7 +85,7 @@ public class UserController {
     @Operation(summary = "사용자 수정", description = "사용자 수정")
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<UserResponseDto>> updateUser(@PathVariable Long id,
-                                                   @Valid @RequestBody UserRegisterRequestDto request) {
+                                                   @Valid @RequestBody UserSignupRequestDto request) {
         return ResponseEntity.ok(ApiResponse.success(userService.updateUser(id, request)));
     }
 

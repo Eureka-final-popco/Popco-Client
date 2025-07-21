@@ -1,6 +1,6 @@
 package com.popcoclient.persona.entity;
 
-import com.popcoclient.persona.enums.Type;
+import com.popcoclient.persona.entity.enums.PersonaType;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -19,8 +19,8 @@ public class PersonaDetail {
     private Long personaDetailId;
 
     @Enumerated(EnumType.STRING)
-    private Type type;
-    private String name;
+    @Column(name = "type")
+    private PersonaType personaType;
     private String imgPath;
 
     @ManyToOne

@@ -31,8 +31,11 @@ public enum ErrorCode {
   INVALID_REFRESH_TOKEN(HttpStatus.UNAUTHORIZED, "INVALID_REFRESH_TOKEN", "유효하지 않은 리프레시 토큰입니다."),
   REFRESH_TOKEN_MISMATCH(HttpStatus.UNAUTHORIZED, "REFRESH_TOKEN_MISMATCH", "저장된 리프레시 토큰과 일치하지 않습니다."),
   KAKAO_TOKEN_REQUEST_FAILED(HttpStatus.BAD_GATEWAY, "KAKAO_TOKEN_REQUEST_FAILED", "카카오 토큰 요청 실패"),
-  KAKAO_TOKEN_PARSING_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "KAKAO_TOKEN_PARSING_FAILED", "카카오 토큰 JSON 파싱 실패");
+  KAKAO_TOKEN_PARSING_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "KAKAO_TOKEN_PARSING_FAILED", "카카오 토큰 JSON 파싱 실패"),
 
+
+  // Persona
+  QUESTION_NOT_FOUND(HttpStatus.NOT_FOUND, "QUESTION_NOT_FOUND", "해당 순서의 질문을 찾을 수 없습니다.");
 
   private final HttpStatus status;
   private final String code;
