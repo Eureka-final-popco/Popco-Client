@@ -1,5 +1,6 @@
 package com.popcoclient.content.entity;
 
+import com.popcoclient.content.entity.enums.ContentTypes;
 import com.popcoclient.content.entity.enums.ReactionType;
 import com.popcoclient.user.entity.User;
 import jakarta.persistence.*;
@@ -10,7 +11,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 
-@Table(name = "content_reaction")
+@Table(name = "content_reactions")
 @Entity
 @Builder
 @Getter
@@ -30,7 +31,10 @@ public class ContentReaction {
     private User user;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "content_id", nullable = false)
+    @JoinColumns({
+            @JoinColumn(name = "content_id", referencedColumnName = "id", nullable = false),
+            @JoinColumn(name = "type", referencedColumnName = "type", nullable = false)
+    })
     private Content content;
 
     @Enumerated(EnumType.STRING)

@@ -1,5 +1,6 @@
 package com.popcoclient.review.repository.custom;
 
+import com.popcoclient.content.entity.Content;
 import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.Expressions;
@@ -47,14 +48,13 @@ public class ReviewRepositoryImpl implements ReviewRepositoryCustom {
 
     // 리뷰 조회
     @Override
-    public Page<ReviewResponseDto> findReviewList(Long userId, Long contentId, Pageable pageable) {
+    public Page<ReviewResponseDto> findReviewList(Long userId, Content contentId, Pageable pageable) {
         List<ReviewResponseDto> reviewList = jpaQueryFactory
                 .select(Projections.constructor(ReviewResponseDto.class,
                         review.reviewId,
                         review.user.userId,
                         userDetail.nickname,
                         userDetail.profilePath,
-                        userDetail.persona.name,
                         review.createdAt,
                         review.score,
                         review.text,
@@ -65,7 +65,7 @@ public class ReviewRepositoryImpl implements ReviewRepositoryCustom {
                 .from(review)
                 .join(review.user, user)
                 .leftJoin(userDetail).on(userDetail.user.eq(user))
-                .where(review.content.contentId.eq(contentId))
+                .where(review.content.eq(contentId))
                 .orderBy(review.createdAt.desc())
                 .limit(pageable.getPageSize())
                 .offset(pageable.getOffset())
@@ -75,18 +75,18 @@ public class ReviewRepositoryImpl implements ReviewRepositoryCustom {
         JPAQuery<Long> count = jpaQueryFactory
                 .select(review.count())
                 .from(review)
-                .where(review.content.contentId.eq(contentId));
+                .where(review.content.eq(contentId));
 
         return PageableExecutionUtils.getPage(reviewList, pageable, count::fetchOne);
     }
 
     // 별점 평균
     @Override
-    public Double avgStar(Long contentId) {
+    public Double avgStar(Content contentId) {
         return jpaQueryFactory
                 .select(review.score.avg())
                 .from(review)
-                .where(review.content.contentId.eq(contentId))
+                .where(review.content.eq(contentId))
                 .fetchOne();
     }
 

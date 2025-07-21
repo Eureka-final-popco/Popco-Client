@@ -21,20 +21,21 @@ public class ReviewController {
     private final ReviewService reviewService;
 
     @Operation(summary = "콘텐츠의 리뷰 목록 조회", description = "contentId로 콘텐츠에 포함된 모든 리뷰 조회")
-    @GetMapping("/contents/{contentId}")
+    @GetMapping("/contents/{contentId}/types/{type}")
     public ResponseEntity<ApiResponse<ReviewPageResponseDto>> getReviewPage(
             @RequestParam(name = "pageNumber", defaultValue = "0") Integer pageNumber,
             @RequestParam(name = "pageSize", defaultValue = "10") Integer pageSize,
-            @PathVariable("contentId") Long contentId, @RequestParam("userId") Long userId) {
-        ReviewPageResponseDto response = reviewService.getReviewPage(pageNumber, pageSize, userId, contentId);
+            @PathVariable("contentId") Long contentId, @PathVariable("types") String type,
+            @RequestParam("userId") Long userId) {
+        ReviewPageResponseDto response = reviewService.getReviewPage(pageNumber, pageSize, userId, contentId, type);
         return ResponseEntity.ok(ApiResponse.success("create review success", response));
     }
 
     @Operation(summary = "콘텐츠에 리뷰 작성", description = "콘텐츠에 리뷰 작성")
-    @PostMapping("/contents/{contentId}")
+    @PostMapping("/contents/{contentId}/types/{type}")
     public ResponseEntity<ApiResponse<ReviewCreateResponseDto>> createReview(
-            @RequestBody ReviewCreateRequestDto request, @PathVariable("contentId") Long contentId, @RequestParam("userId") Long userId) {
-        ReviewCreateResponseDto response = reviewService.insertReview(request, contentId, userId);
+            @RequestBody ReviewCreateRequestDto request, @PathVariable("contentId") Long contentId, @PathVariable("type") String type, @RequestParam("userId") Long userId) {
+        ReviewCreateResponseDto response = reviewService.insertReview(request, contentId, userId, type);
         return ResponseEntity.ok(ApiResponse.success("create review success", response));
     }
 

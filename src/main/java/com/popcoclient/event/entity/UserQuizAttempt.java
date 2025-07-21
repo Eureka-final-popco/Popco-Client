@@ -12,12 +12,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name = "user_event_attempt")
+@Table(name = "user_quiz_attempts")
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class UserEventAttempt {
+public class UserQuizAttempt {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -25,8 +25,8 @@ public class UserEventAttempt {
     private Long attemptId;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "event_id", nullable = false)
-    private Event event;
+    @JoinColumn(name = "quiz_id", nullable = false)
+    private Quiz quiz;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
@@ -43,9 +43,9 @@ public class UserEventAttempt {
 
     @OneToMany(mappedBy = "attempt", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
-    private List<UserAnswer> answers = new ArrayList<>();
+    private List<UserQuizAnswer> answers = new ArrayList<>();
 
-    public void addAnswer(UserAnswer answer) {
+    public void addAnswer(UserQuizAnswer answer) {
         this.answers.add(answer);
         answer.setAttempt(this);
     }

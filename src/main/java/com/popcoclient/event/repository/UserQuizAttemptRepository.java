@@ -1,9 +1,9 @@
 package com.popcoclient.event.repository;
 
-import com.popcoclient.event.entity.Event;
+import com.popcoclient.event.entity.UserQuizAttempt;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface EventRepository extends JpaRepository<Event, Long> {
+public interface UserQuizAttemptRepository extends JpaRepository<UserQuizAttempt, Long> {
 }

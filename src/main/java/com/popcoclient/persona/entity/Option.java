@@ -1,5 +1,6 @@
 package com.popcoclient.persona.entity;
 
+import com.popcoclient.persona.entity.key.OptionsId;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -19,13 +20,12 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @EntityListeners(AuditingEntityListener.class)
 public class Option {
-    @Id
-    @Column(name="option_id")
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long optionId;
 
-    @ManyToOne
-    @JoinColumn(name = "question_id")
+    @EmbeddedId
+    private OptionsId optionsId;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "question_id", insertable = false, updatable = false)
     private PersonaQuestion personaQuestion;
 
     private String content;
