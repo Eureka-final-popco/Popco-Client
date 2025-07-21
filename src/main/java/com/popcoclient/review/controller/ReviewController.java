@@ -23,7 +23,7 @@ public class ReviewController {
     private final JwtProvider jwtProvider;
 
     @Operation(summary = "콘텐츠의 리뷰 목록 조회", description = "contentId로 콘텐츠에 포함된 모든 리뷰 조회")
-    @GetMapping("/contents/{contentId}")
+    @GetMapping("/contents/{contentId}/types/{type}")
     public ResponseEntity<ApiResponse<ReviewPageResponseDto>> getReviewPage(
             @RequestParam(name = "pageNumber", defaultValue = "0") Integer pageNumber,
             @RequestParam(name = "pageSize", defaultValue = "10") Integer pageSize,
@@ -36,7 +36,7 @@ public class ReviewController {
     }
 
     @Operation(summary = "콘텐츠에 리뷰 작성", description = "콘텐츠에 리뷰 작성")
-    @PostMapping("/contents/{contentId}")
+    @PostMapping("/contents/{contentId}/types/{type}")
     public ResponseEntity<ApiResponse<ReviewCreateResponseDto>> createReview(
             @RequestBody ReviewCreateRequestDto request, @PathVariable("contentId") Long contentId) {
         Long userId = jwtProvider.getUserIdFromAuthentication();

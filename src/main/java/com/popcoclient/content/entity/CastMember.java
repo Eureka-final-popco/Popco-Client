@@ -2,32 +2,32 @@ package com.popcoclient.content.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.LastModifiedDate;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
-
-import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "content_actor")
+@Table(name = "cast_members")
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class ContentActor {
+public class CastMember {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "content_actor_id")
-    private Long contentActorId;
+    private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "content_id", nullable = false)
+    @JoinColumns({
+            @JoinColumn(name = "content_id", referencedColumnName = "id", nullable = false),
+            @JoinColumn(name = "type", referencedColumnName = "type", nullable = false)
+    })
     private Content content;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "actor_id", nullable = false)
     private Actor actor;
+
+    @Column(name = "character_name", length = 100)
+    private String characterName;
 
     @Column(nullable = false)
     private Integer castOrder;

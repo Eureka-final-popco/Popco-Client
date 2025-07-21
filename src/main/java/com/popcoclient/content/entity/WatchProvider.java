@@ -6,16 +6,16 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-@Table(name = "content_genres")
+@Table(name = "watch_providers")
 @Entity
 @Builder
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class ContentGenre {
+public class WatchProvider {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long contentGenreId;
+    private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumns({
@@ -25,6 +25,6 @@ public class ContentGenre {
     private Content content;
 
     @ManyToOne
-    @JoinColumn(name = "genre_id")
-    private Genre genre;
+    @JoinColumn(name = "provider_id")
+    private Provider provider;
 }

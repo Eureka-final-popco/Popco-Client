@@ -1,34 +1,29 @@
 package com.popcoclient.persona.entity;
 
+import com.popcoclient.persona.enums.Type;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.math.BigDecimal;
-
-@Table(name = "persona_options")
+@Table(name = "persona_details")
 @Entity
 @Builder
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class PersonaOption {
+public class PersonaDetail {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long personaOptionId;
+    private Long personaDetailId;
+
+    @Enumerated(EnumType.STRING)
+    private Type type;
+    private String name;
+    private String imgPath;
 
     @ManyToOne
     @JoinColumn(name = "persona_id")
     private Persona persona;
-
-    @ManyToOne
-    @JoinColumns({
-            @JoinColumn (name = "option_id", referencedColumnName = "option_id"),
-            @JoinColumn (name = "question_id", referencedColumnName = "question_id")
-    })
-    private Option option;
-
-    private BigDecimal score;
 }

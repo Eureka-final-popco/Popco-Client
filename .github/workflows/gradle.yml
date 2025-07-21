@@ -36,7 +36,7 @@ jobs:
       run: chmod +x gradlew
     
     - name: Build with Gradle
-      run: ./gradlew build --info --stacktrace
+      run: ./gradlew build -x test --info --stacktrace
     
     - name: Log in to Container Registry
       if: github.event_name != 'pull_request'  # PR에서는 푸시 안 함

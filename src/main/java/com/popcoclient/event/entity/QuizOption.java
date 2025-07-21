@@ -1,9 +1,11 @@
 package com.popcoclient.event.entity;
 
+import com.popcoclient.content.entity.Content;
+import com.popcoclient.event.entity.key.QuizOptionId;
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -11,26 +13,20 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "event_option")
+@Table(name = "quiz_options")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 @EntityListeners(AuditingEntityListener.class)
-public class EventOption {
+public class QuizOption {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "option_id")
-    private Long optionId;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "question_id", nullable = false)
-    private EventQuestion question;
+    @EmbeddedId
+    private QuizOptionId optionId;
 
     @Column(nullable = false)
-    private String text;
+    private String content;
 
     @Column(name = "is_correct", nullable = false)
     private Boolean isCorrect;

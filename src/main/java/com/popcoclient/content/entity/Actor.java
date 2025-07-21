@@ -2,6 +2,7 @@ package com.popcoclient.content.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.apache.logging.log4j.util.Cast;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.springframework.data.annotation.CreatedDate;
@@ -13,25 +14,25 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name = "actor")
+@Table(name = "actors")
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@ToString(exclude = {"castRoles"})
 public class Actor {
-
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "actor_id")
-    private Long actorId;
+    private Long id; // TMDB person ID
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 500)
     private String name;
 
-    @Column(name = "profile_path")
+    @Column(name = "profile_path", length = 500)
     private String profilePath;
 
-    @OneToMany(mappedBy = "actor", cascade = CascadeType.ALL, orphanRemoval = true)
-    @Builder.Default
-    private List<ContentActor> contentActors = new ArrayList<>();
+    @Column(name = "gender")
+    private Integer gender; // 0: Not specified, 1: Female, 2: Male, 3: Non-binary
+
+    @OneToMany(mappedBy = "actor", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<CastMember> castRoles = new ArrayList<>();
 }

@@ -1,6 +1,7 @@
 package com.popcoclient.user.entity;
 
 import com.popcoclient.content.entity.Content;
+import com.popcoclient.content.entity.enums.ContentTypes;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
@@ -9,7 +10,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "wishlist")
+@Table(name = "wishlists")
 @Getter
 @Builder
 @NoArgsConstructor
@@ -25,7 +26,10 @@ public class WishList {
     private User user;
 
     @ManyToOne
-    @JoinColumn(name = "content_id")
+    @JoinColumns({
+            @JoinColumn(name = "content_id", referencedColumnName = "id", nullable = false),
+            @JoinColumn(name = "type", referencedColumnName = "type", nullable = false)
+    })
     private Content content;
 
     @CreatedDate
