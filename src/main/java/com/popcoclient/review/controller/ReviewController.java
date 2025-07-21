@@ -27,21 +27,21 @@ public class ReviewController {
     public ResponseEntity<ApiResponse<ReviewPageResponseDto>> getReviewPage(
             @RequestParam(name = "pageNumber", defaultValue = "0") Integer pageNumber,
             @RequestParam(name = "pageSize", defaultValue = "10") Integer pageSize,
-            @PathVariable("contentId") Long contentId) {
+            @PathVariable("contentId") Long contentId, @PathVariable("type") String type) {
 
         Long userId = jwtProvider.getUserIdFromAuthentication();
 
-        ReviewPageResponseDto response = reviewService.getReviewPage(pageNumber, pageSize, userId, contentId);
+        ReviewPageResponseDto response = reviewService.getReviewPage(pageNumber, pageSize, userId, contentId, type);
         return ResponseEntity.ok(ApiResponse.success("get review page success", response));
     }
 
     @Operation(summary = "콘텐츠에 리뷰 작성", description = "콘텐츠에 리뷰 작성")
     @PostMapping("/contents/{contentId}/types/{type}")
     public ResponseEntity<ApiResponse<ReviewCreateResponseDto>> createReview(
-            @RequestBody ReviewCreateRequestDto request, @PathVariable("contentId") Long contentId) {
+            @RequestBody ReviewCreateRequestDto request, @PathVariable("contentId") Long contentId, @PathVariable("type") String type) {
         Long userId = jwtProvider.getUserIdFromAuthentication();
 
-        ReviewCreateResponseDto response = reviewService.insertReview(request, contentId, userId);
+        ReviewCreateResponseDto response = reviewService.insertReview(request, contentId, userId, type);
         return ResponseEntity.ok(ApiResponse.success("create review success", response));
     }
 
