@@ -64,18 +64,18 @@ jobs:
         file: ./Dockerfile
         push: true
         tags: |
-          ${{ secrets.DOCKER_HUB_USERNAME }}/popco-${{ github.event.repository.name | split: '-' | last }}:${{ github.sha }}
-          ${{ secrets.DOCKER_HUB_USERNAME }}/popco-${{ github.event.repository.name | split: '-' | last }}:latest
+          ${{ secrets.DOCKER_HUB_USERNAME }}/popco-client:${{ github.sha }}
+          ${{ secrets.DOCKER_HUB_USERNAME }}/popco-client:latest
 
     - name: Trigger Popco-Infra Deploy
-    uses: peter-evans/repository-dispatch@v2
-    with:
-      # Infra 레포에 워크플로우 호출용 토큰
-      token: ${{ secrets.INFRA_DISPATCH_TOKEN }}
-      # 내 GitHub org/user 이름과 Infra 레포 이름
-      repository: your-org/Popco-Infra
-      # Infra 워크플로우에서 받을 event-type
-      event-type: deploy
+      uses: peter-evans/repository-dispatch@v2
+      with:
+        # Infra 레포에 워크플로우 호출용 토큰
+        token: ${{ secrets.INFRA_DISPATCH_TOKEN }}
+        # 내 GitHub org/user 이름과 Infra 레포 이름
+        repository: your-org/Popco-Infra
+        # Infra 워크플로우에서 받을 event-type
+        event-type: deploy
 #      # 전달하고 싶은 추가 페이로드 (선택)
 #      client-payload: |
 #        {"service":"popco-client","tag":"latest"}
