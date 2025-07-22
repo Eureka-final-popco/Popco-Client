@@ -1,5 +1,6 @@
 package com.popcoclient.user.service.impl;
 
+import com.popcoclient.common.s3.service.S3Service;
 import com.popcoclient.exception.business.UserNotFoundException;
 import com.popcoclient.user.dto.request.UserDetailCreateRequestDto;
 import com.popcoclient.user.dto.request.UserDetailUpdateRequestDto;
@@ -18,13 +19,15 @@ public class UserDetailServiceImpl implements UserDetailService {
 
     private final UserRepository userRepository;
     private final UserDetailRepository userDetailRepository;
+    private final S3Service s3Service;
 
     @Override
     public UserDetailResponseDto getUserDetail(Long userId) {
         UserDetail userDetail = userDetailRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("사용자 정보를 찾을 수 없습니다. userId: " + userId));
 
-        return UserDetailResponseDto.from(userDetail);
+        String profileImageUrl = s3Service.getFileUrl(userDetail.getProfilePath());
+        return UserDetailResponseDto.of(userDetail, profileImageUrl);
     }
 
     @Override
@@ -41,7 +44,10 @@ public class UserDetailServiceImpl implements UserDetailService {
         UserDetail userDetail = userDetailRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("사용자 정보를 찾을 수 없습니다. userId: " + userId));
 
-        userDetail.updateFrom(request);
+        s3Service.deleteFile(userDetail.getProfilePath());
+
+        String uploadFile = s3Service.uploadFile(request.getProfileImageUrl());
+        userDetail.updateOf(request.getNickname(), uploadFile);
         userDetailRepository.save(userDetail);
     }
 }

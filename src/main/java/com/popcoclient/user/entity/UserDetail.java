@@ -38,9 +38,9 @@ public class UserDetail {
     @JoinColumn(name = "user_id")
     private User user;
 
-    public void updateFrom(UserDetailUpdateRequestDto request) {
-        this.nickname = request.getNickname();
-        this.profilePath = request.getProfileImageUrl();
+    public void updateOf(String nickname, String profilePath) {
+        this.nickname = nickname;
+        this.profilePath = profilePath;
     }
 
     public static UserDetail of(UserDetailCreateRequestDto request, User user) {

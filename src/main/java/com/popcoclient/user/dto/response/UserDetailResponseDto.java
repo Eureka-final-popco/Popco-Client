@@ -17,12 +17,12 @@ public class UserDetailResponseDto {
     private String nickname;
     private String profileImageUrl;
 
-    public static UserDetailResponseDto from(UserDetail userDetail) {
+    public static UserDetailResponseDto of(UserDetail userDetail, String profileImageUrl) {
         return UserDetailResponseDto.builder()
                 .userId(userDetail.getUserId())
                 .email(userDetail.getUser().getEmail())
                 .nickname(userDetail.getNickname())
-                .profileImageUrl(userDetail.getProfilePath())
+                .profileImageUrl(profileImageUrl)
                 .build();
     }
 }
