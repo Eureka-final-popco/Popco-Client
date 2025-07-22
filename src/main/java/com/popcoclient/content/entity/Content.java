@@ -24,6 +24,8 @@ public class Content {
     private ContentId contentId;
 
     private String title;
+
+    @Column(columnDefinition = "TEXT")
     private String overview;
     private BigDecimal ratingAverage;
     private LocalDate releaseDate;
