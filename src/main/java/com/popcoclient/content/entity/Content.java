@@ -38,7 +38,7 @@ public class Content {
             name = "content_genres",
             joinColumns = {
                     @JoinColumn(name = "content_id",   referencedColumnName = "id"),
-                    @JoinColumn(name = "type", referencedColumnName = "type")
+                    @JoinColumn(name = "content_type", referencedColumnName = "type")
             }
     )
     @Column(name = "genre_id")
