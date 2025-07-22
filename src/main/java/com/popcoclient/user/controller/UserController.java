@@ -11,6 +11,7 @@ import com.popcoclient.user.dto.response.UserResponseDto;
 import com.popcoclient.user.service.UserDetailService;
 import com.popcoclient.user.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -37,6 +38,7 @@ public class UserController {
 
     // ID로 사용자 조회
     @Operation(summary = "userId로 사용자 상세 조회", description = "userId로 사용자 정보 조회")
+    @SecurityRequirement(name = "bearerAuth")
     @GetMapping("/details")
     public ResponseEntity<ApiResponse<UserDetailResponseDto>> getUserDetail() {
         Long userId = jwtProvider.getUserIdFromAuthentication();
@@ -45,6 +47,7 @@ public class UserController {
     }
 
     @Operation(summary = "userId로 사용자 상세 입력", description = "userId로 사용자 상세 입력")
+    @SecurityRequirement(name = "bearerAuth")
     @PostMapping("/details")
     public ResponseEntity<ApiResponse<Void>> createUserDetail(@Valid @RequestBody UserDetailCreateRequestDto request) {
         Long userId = jwtProvider.getUserIdFromAuthentication();
@@ -53,6 +56,7 @@ public class UserController {
     }
 
     @Operation(summary = "userId로 사용자 상세 수정", description = "userId로 사용자 상세 수정")
+    @SecurityRequirement(name = "bearerAuth")
     @PutMapping("/details")
     public ResponseEntity<ApiResponse<Void>> updateUserDetail(@Valid @RequestBody UserDetailUpdateRequestDto request) {
         Long userId = jwtProvider.getUserIdFromAuthentication();
