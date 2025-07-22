@@ -8,6 +8,8 @@ import java.util.List;
 
 public interface UserService {
     UserResponseDto createUser(UserSignupRequestDto requestDto);
+    boolean existUserByEmail(String email);
+
     List<UserResponseDto> getAllUsers();
     UserResponseDto getUserById(Long id);
     UserResponseDto getUserByEmail(String email);
