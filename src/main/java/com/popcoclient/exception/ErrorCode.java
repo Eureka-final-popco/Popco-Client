@@ -37,7 +37,7 @@ public enum ErrorCode {
   TOKEN_EXPIRED(HttpStatus.UNAUTHORIZED, "TOKEN_EXPIRED", "만료된 토큰입니다."),
   INVALID_SIGNATURE(HttpStatus.UNAUTHORIZED, "INVALID_SIGNATURE", "서명이 올바르지 않은 JWT 토큰입니다."),
   UNSUPPORTED_TOKEN(HttpStatus.UNAUTHORIZED, "UNSUPPORTED_TOKEN", "지원하지 않는 JWT 토큰 형식입니다."),
-  EMPTY_TOKEN(HttpStatus.UNAUTHORIZED, "EMPTY_TOKEN", "JWT 토큰이 비어 있거나 잘못되었습니다.");
+  EMPTY_TOKEN(HttpStatus.UNAUTHORIZED, "EMPTY_TOKEN", "JWT 토큰이 비어 있거나 잘못되었습니다."),
 
   // Persona
   QUESTION_NOT_FOUND(HttpStatus.NOT_FOUND, "QUESTION_NOT_FOUND", "해당 순서의 질문을 찾을 수 없습니다.");
