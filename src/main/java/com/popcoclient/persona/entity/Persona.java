@@ -1,5 +1,6 @@
 package com.popcoclient.persona.entity;
 
+import com.popcoclient.persona.entity.enums.PersonaType;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -11,6 +12,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 
 @Table(name = "personas")
 @Entity
@@ -24,7 +26,6 @@ public class Persona {
     @Column(name = "persona_id")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long personaId;
-
     private String name;
     private String description;
     private String tag;
@@ -35,9 +36,35 @@ public class Persona {
     private LocalDateTime updatedAt;
 
     @OneToMany(mappedBy = "persona", cascade = CascadeType.ALL)
-    List<PersonaGenre> personaGenre;
+    private List<PersonaGenre> personaGenre;
 
     @OneToMany(mappedBy = "persona", cascade = CascadeType.ALL)
-    List<PersonaDetail> personaDetail;
+    private List<PersonaDetail> personaDetail;
+
+    public String getMainDescription() {
+        if (description == null) return "";
+        int delimiterIndex = description.indexOf("|");
+        return delimiterIndex != -1
+                ? description.substring(0, delimiterIndex).trim()
+                : description.trim();
+    }
+
+    public String getBabyImgPath() {
+        return personaDetail.stream()
+                .filter(detail -> detail.getPersonaType() == PersonaType.BABY)
+                .map(PersonaDetail::getImgPath)
+                .filter(Objects::nonNull) // null이 아닌 이미지 경로만 필터링
+                .findFirst()
+                .orElse(""); // 최종적으로 값이 없으면 빈 문자열 반환
+    }
+
+    public String getAdultImgPath() {
+        return personaDetail.stream()
+                .filter(detail -> detail.getPersonaType() == PersonaType.ADULT)
+                .map(PersonaDetail::getImgPath)
+                .filter(Objects::nonNull) // null이 아닌 이미지 경로만 필터링
+                .findFirst()
+                .orElse(""); // 최종적으로 값이 없으면 빈 문자열 반환
+    }
 
 }

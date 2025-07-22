@@ -1,15 +1,15 @@
-package com.popcoclient.persona.enums;
+package com.popcoclient.persona.entity.enums;
 
 import lombok.Getter;
 
 @Getter
-public enum Type {
+public enum PersonaType {
     BABY("아기"),
     ADULT("어른");
 
     private final String displayName;
 
-    Type(String displayName) {
+    PersonaType(String displayName) {
         this.displayName = displayName;
     }
 }
