@@ -8,10 +8,10 @@
 name: Java CI with Gradle
 
 on:
-  push:
-    branches: [ "dev" ]
-#  pull_request:
+#  push:
 #    branches: [ "dev" ]
+  pull_request:
+    branches: [ "dev" ]
 
 jobs:
   build:
@@ -37,48 +37,6 @@ jobs:
     
     - name: Build with Gradle
       run: ./gradlew build -x test --info --stacktrace
-    
-#    - name: Log in to Container Registry
-#      if: github.event_name != 'pull_request'  # PR에서는 푸시 안 함
-#      run: echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-#
-#    - name: Build Docker image
-#      if: github.event_name != 'pull_request'
-#      run: docker build -t ghcr.io/eureka-final-popco/popco-client:${{ github.sha }} .
-#
-#    - name: Push to GitHub Container Registry
-#      if: github.event_name != 'pull_request'
-#      run: docker push ghcr.io/eureka-final-popco/popco-client:${{ github.sha }}
-
-    - name: Login to Docker Hub
-      uses: docker/login-action@v2
-      with:
-        registry: docker.io
-        username: ${{ secrets.DOCKER_HUB_USERNAME }}
-        password: ${{ secrets.DOCKER_HUB_TOKEN }}
-
-    - name: Build & Push
-      uses: docker/build-push-action@v4
-      with:
-        context: .
-        file: ./Dockerfile
-        push: true
-        tags: |
-          ${{ secrets.DOCKER_HUB_USERNAME }}/popco-client:${{ github.sha }}
-          ${{ secrets.DOCKER_HUB_USERNAME }}/popco-client:latest
-
-    - name: Trigger Popco-Infra Deploy
-      uses: peter-evans/repository-dispatch@v2
-      with:
-        # Infra 레포에 워크플로우 호출용 토큰
-        token: ${{ secrets.INFRA_DISPATCH_TOKEN }}
-        # 내 GitHub org/user 이름과 Infra 레포 이름
-        repository: Eureka-final-popco/Popco-Infra
-        # Infra 워크플로우에서 받을 event-type
-        event-type: deploy
-#      # 전달하고 싶은 추가 페이로드 (선택)
-#      client-payload: |
-#        {"service":"popco-client","tag":"latest"}
 
   dependency-submission:
     runs-on: ubuntu-latest
