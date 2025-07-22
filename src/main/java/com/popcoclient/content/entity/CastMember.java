@@ -26,7 +26,7 @@ public class CastMember {
     @JoinColumn(name = "actor_id", nullable = false)
     private Actor actor;
 
-    @Column(name = "character_name", length = 100)
+    @Column(name = "character_name", length = 1000)
     private String characterName;
 
     @Column(nullable = false)
