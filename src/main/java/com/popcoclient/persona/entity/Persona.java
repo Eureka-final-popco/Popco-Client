@@ -25,6 +25,7 @@ public class Persona {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long personaId;
 
+    private String name;
     private String description;
     private String tag;
 

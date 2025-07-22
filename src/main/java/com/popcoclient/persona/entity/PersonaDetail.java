@@ -20,7 +20,6 @@ public class PersonaDetail {
 
     @Enumerated(EnumType.STRING)
     private Type type;
-    private String name;
     private String imgPath;
 
     @ManyToOne
