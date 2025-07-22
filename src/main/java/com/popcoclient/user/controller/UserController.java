@@ -23,7 +23,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/users")
 @RequiredArgsConstructor
-@Tag(name = "User API", description = "유저 관련 CRUD")
+@Tag(name = "사용자 API", description = "유저 관련 CRUD")
 public class UserController {
     private final UserService userService;
     private final UserDetailService userDetailService;
@@ -34,6 +34,13 @@ public class UserController {
     @PostMapping("/signup")
     public ResponseEntity<ApiResponse<UserResponseDto>> createUser(@Valid @RequestBody UserSignupRequestDto request) {
         return ResponseEntity.ok(ApiResponse.success(userService.createUser(request)));
+    }
+
+    // 중복 이메일 확인
+    @Operation(summary = "이메일 중복 확인", description = "이미 사용중인 이메일이면 true, 사용 가능하면 false")
+    @GetMapping("/email")
+    public ResponseEntity<ApiResponse<Boolean>> existUserByEmail(@RequestParam String email) {
+        return ResponseEntity.ok(ApiResponse.success(userService.existUserByEmail(email)));
     }
 
     // ID로 사용자 조회
@@ -62,13 +69,6 @@ public class UserController {
         Long userId = jwtProvider.getUserIdFromAuthentication();
         userDetailService.updateUserDetail(request, userId);
         return ResponseEntity.ok(ApiResponse.success("Update UserDetail Success", null));
-    }
-
-    // 중복 이메일 확인
-    @Operation(summary = "이메일 중복 확인", description = "이미 사용중인 이메일이면 true, 사용 가능하면 false")
-    @GetMapping("/email")
-    public ResponseEntity<ApiResponse<Boolean>> existUserByEmail(@RequestParam String email) {
-        return ResponseEntity.ok(ApiResponse.success(userService.existUserByEmail(email)));
     }
 
 //    // 이메일로 사용자 조회
