@@ -11,15 +11,16 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Getter
 public class LoginResponseDto {
-    private String grantType;
-    private String accessToken;
-    private String refreshToken;
+    private UserResponseDto userResponseDto;
+    private JwtResponseDto jwtResponseDto;
+    private boolean isProfileComplete;
 
-    public static LoginResponseDto from(JwtToken jwtToken) {
+    public static LoginResponseDto of(
+            UserResponseDto userResponse, JwtResponseDto jwtResponse, boolean isProfileComplete) {
         return LoginResponseDto.builder()
-                .grantType(jwtToken.getGrantType())
-                .accessToken(jwtToken.getAccessToken())
-                .refreshToken(jwtToken.getRefreshToken())
+                .userResponseDto(userResponse)
+                .jwtResponseDto(jwtResponse)
+                .isProfileComplete(isProfileComplete)
                 .build();
     }
 }

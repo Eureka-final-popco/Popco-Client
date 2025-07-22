@@ -2,10 +2,7 @@ package com.popcoclient.auth.service.impl;
 
 import com.popcoclient.auth.dto.request.LoginRequestDto;
 import com.popcoclient.auth.dto.request.RefreshRequestDto;
-import com.popcoclient.auth.dto.response.KakaoLoginResponseDto;
-import com.popcoclient.auth.dto.response.KakaoPreSignupResponseDto;
-import com.popcoclient.auth.dto.response.LoginResponseDto;
-import com.popcoclient.auth.dto.response.RefreshResponseDto;
+import com.popcoclient.auth.dto.response.*;
 import com.popcoclient.auth.kakao.KakaoProfile;
 import com.popcoclient.auth.kakao.KakaoToken;
 import com.popcoclient.auth.kakao.KakaoUtil;
@@ -14,6 +11,8 @@ import com.popcoclient.auth.jwt.JwtToken;
 import com.popcoclient.auth.jwt.JwtUtil;
 import com.popcoclient.exception.business.UserNotFoundException;
 import com.popcoclient.user.entity.User;
+import com.popcoclient.user.entity.UserDetail;
+import com.popcoclient.user.repository.UserDetailRepository;
 import com.popcoclient.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -26,9 +25,9 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
     private final UserRepository userRepository;
+    private final UserDetailRepository userDetailRepository;
     private final JwtUtil jwtUtil;
     private final KakaoUtil kakaoUtil;
-    private final PasswordEncoder passwordEncoder;
 
     @Override
     @Transactional
@@ -36,8 +35,7 @@ public class AuthServiceImpl implements AuthService {
         User user = userRepository.findByEmail(loginRequestDto.getEmail())
                 .orElseThrow(() -> new UserNotFoundException("사용자를 찾을 수 없습니다. Email: " + loginRequestDto.getEmail()));
 
-        JwtToken token = jwtUtil.generateToken(user.getUserId());
-        return LoginResponseDto.from(token);
+        return buildLoginResponse(user);
     }
 
     @Override
@@ -64,13 +62,28 @@ public class AuthServiceImpl implements AuthService {
 
         if (userOpt.isPresent()) {
             // ✅ 로그인 완료 → JWT 발급
-            User user = userOpt.get();
-            JwtToken jwtToken = jwtUtil.generateToken(user.getUserId());
-            return KakaoLoginResponseDto.loginSuccess(LoginResponseDto.from(jwtToken));
+            LoginResponseDto loginResponse = buildLoginResponse(userOpt.get());
+            return KakaoLoginResponseDto.loginSuccess(loginResponse);
         } else {
             // ❗아직 회원가입 안됨 → 추가 정보 필요
             KakaoPreSignupResponseDto preSignup = KakaoPreSignupResponseDto.of(email,nickname);
             return KakaoLoginResponseDto.signupRequired(preSignup);
         }
     }
+
+    private LoginResponseDto buildLoginResponse(User user) {
+        JwtToken token = jwtUtil.generateToken(user.getUserId());
+
+        Optional<UserDetail> userDetailOpt = userDetailRepository.findById(user.getUserId());
+        UserResponseDto userResponseDto = null;
+        boolean isProfileComplete = false;
+
+        if (userDetailOpt.isPresent()) {
+            userResponseDto = UserResponseDto.from(userDetailOpt.get());
+            isProfileComplete = true;
+        }
+
+        return LoginResponseDto.of(userResponseDto, JwtResponseDto.from(token), isProfileComplete);
+    }
+
 }
