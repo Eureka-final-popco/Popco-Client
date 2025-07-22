@@ -22,7 +22,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/users")
 @RequiredArgsConstructor
-@Tag(name = "User API", description = "유저 관련 CRUD")
+@Tag(name = "사용자 API", description = "유저 관련 CRUD")
 public class UserController {
     private final UserService userService;
     private final UserDetailService userDetailService;
@@ -35,6 +35,13 @@ public class UserController {
         return ResponseEntity.ok(ApiResponse.success(userService.createUser(request)));
     }
 
+    // 중복 이메일 확인
+    @Operation(summary = "이메일 중복 확인", description = "이미 사용중인 이메일이면 true, 사용 가능하면 false")
+    @GetMapping("/email")
+    public ResponseEntity<ApiResponse<Boolean>> existUserByEmail(@RequestParam String email) {
+        return ResponseEntity.ok(ApiResponse.success(userService.existUserByEmail(email)));
+    }
+
     // ID로 사용자 조회
     @Operation(summary = "userId로 사용자 상세 조회", description = "userId로 사용자 정보 조회")
     @GetMapping("/details")
@@ -44,7 +51,7 @@ public class UserController {
         return ResponseEntity.ok(ApiResponse.success("Get UserDetail Success",response));
     }
 
-    @Operation(summary = "userId로 사용자 상세 입력", description = "userId로 사용자 상세 입력")
+    @Operation(summary = "userId로 사용자 상세 입력", description = "userId로 사용자 프로필 입력")
     @PostMapping("/details")
     public ResponseEntity<ApiResponse<Void>> createUserDetail(@Valid @RequestBody UserDetailCreateRequestDto request) {
         Long userId = jwtProvider.getUserIdFromAuthentication();
@@ -52,19 +59,12 @@ public class UserController {
         return ResponseEntity.ok(ApiResponse.success("Create UserDetail Success", null));
     }
 
-    @Operation(summary = "userId로 사용자 상세 수정", description = "userId로 사용자 상세 수정")
+    @Operation(summary = "userId로 사용자 상세 수정", description = "userId로 사용자 프로필 수정")
     @PutMapping("/details")
     public ResponseEntity<ApiResponse<Void>> updateUserDetail(@Valid @RequestBody UserDetailUpdateRequestDto request) {
         Long userId = jwtProvider.getUserIdFromAuthentication();
         userDetailService.updateUserDetail(request, userId);
         return ResponseEntity.ok(ApiResponse.success("Update UserDetail Success", null));
-    }
-
-    // 중복 이메일 확인
-    @Operation(summary = "이메일 중복 확인", description = "이미 사용중인 이메일이면 true, 사용 가능하면 false")
-    @GetMapping("/email")
-    public ResponseEntity<ApiResponse<Boolean>> existUserByEmail(@RequestParam String email) {
-        return ResponseEntity.ok(ApiResponse.success(userService.existUserByEmail(email)));
     }
 
 //    // 이메일로 사용자 조회
