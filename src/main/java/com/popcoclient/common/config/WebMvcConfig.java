@@ -13,7 +13,8 @@ public class WebMvcConfig implements WebMvcConfigurer {
                 .allowedOrigins(
                         "http://localhost:5173",
                         "http://popco.site",
-                        "http://localhost:3000"
+                        "http://localhost",
+                        "http://127.0.0.1"
                         )
                 .allowedHeaders("*")
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD")
