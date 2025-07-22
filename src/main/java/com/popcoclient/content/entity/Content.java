@@ -32,7 +32,6 @@ public class Content {
     private Integer ratingCount;
     private String backdropPath;
     private String posterPath;
-    private String trailerPath;
     private Integer runtime;
 
     @ElementCollection
