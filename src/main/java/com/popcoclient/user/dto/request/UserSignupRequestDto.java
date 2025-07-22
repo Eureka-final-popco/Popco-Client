@@ -3,7 +3,7 @@ package com.popcoclient.user.dto.request;
 import lombok.Data;
 
 @Data
-public class UserRegisterRequestDto {
+public class UserSignupRequestDto {
     private String email;
     private String name;
     private String password;

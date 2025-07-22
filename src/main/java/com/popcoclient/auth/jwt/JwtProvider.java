@@ -1,5 +1,7 @@
 package com.popcoclient.auth.jwt;
 
+import com.popcoclient.exception.ErrorCode;
+import com.popcoclient.exception.business.auth.TokenExpiredException;
 import com.popcoclient.redis.entity.Token;
 import com.popcoclient.redis.repository.TokenRepository;
 import com.popcoclient.exception.business.auth.UnauthorizedUserException;
@@ -67,15 +69,14 @@ public class JwtProvider {
                     .parseClaimsJws(token);
             return true;
         } catch (SecurityException | MalformedJwtException e) {
-            log.info("Invalid JWT Token", e);
+            throw new TokenExpiredException(ErrorCode.EXPIRED_TOKEN, e.getMessage());
         } catch (ExpiredJwtException e) {
-            log.info("Expired JWT Token", e);
+            throw new TokenExpiredException(ErrorCode.INVALID_SIGNATURE, e.getMessage());
         } catch (UnsupportedJwtException e) {
-            log.info("Unsupported JWT Token", e);
+            throw new TokenExpiredException(ErrorCode.UNSUPPORTED_TOKEN, e.getMessage());
         } catch (IllegalArgumentException e) {
-            log.info("JWT claims string is empty.", e);
+            throw new TokenExpiredException(ErrorCode.EMPTY_TOKEN, e.getMessage());
         }
-        return false;
     }
 
     public Claims parseClaims(String token) {

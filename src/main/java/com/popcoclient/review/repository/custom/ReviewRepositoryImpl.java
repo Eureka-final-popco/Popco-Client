@@ -48,7 +48,7 @@ public class ReviewRepositoryImpl implements ReviewRepositoryCustom {
 
     // 리뷰 조회
     @Override
-    public Page<ReviewResponseDto> findReviewList(Long userId, Content contentId, Pageable pageable) {
+    public Page<ReviewResponseDto> findReviewList(Long userId, Content content, Pageable pageable) {
         List<ReviewResponseDto> reviewList = jpaQueryFactory
                 .select(Projections.constructor(ReviewResponseDto.class,
                         review.reviewId,
@@ -65,7 +65,7 @@ public class ReviewRepositoryImpl implements ReviewRepositoryCustom {
                 .from(review)
                 .join(review.user, user)
                 .leftJoin(userDetail).on(userDetail.user.eq(user))
-                .where(review.content.eq(contentId))
+                .where(review.content.eq(content))
                 .orderBy(review.createdAt.desc())
                 .limit(pageable.getPageSize())
                 .offset(pageable.getOffset())
@@ -75,18 +75,18 @@ public class ReviewRepositoryImpl implements ReviewRepositoryCustom {
         JPAQuery<Long> count = jpaQueryFactory
                 .select(review.count())
                 .from(review)
-                .where(review.content.eq(contentId));
+                .where(review.content.eq(content));
 
         return PageableExecutionUtils.getPage(reviewList, pageable, count::fetchOne);
     }
 
     // 별점 평균
     @Override
-    public Double avgStar(Content contentId) {
+    public Double avgStar(Content content) {
         return jpaQueryFactory
                 .select(review.score.avg())
                 .from(review)
-                .where(review.content.eq(contentId))
+                .where(review.content.eq(content))
                 .fetchOne();
     }
 
