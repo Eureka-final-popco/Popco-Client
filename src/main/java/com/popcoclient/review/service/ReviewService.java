@@ -10,8 +10,8 @@ public interface ReviewService {
     ReviewCreateResponseDto insertReview(ReviewCreateRequestDto request, Long contentId, Long userId, String type);
     ReviewPageResponseDto getReviewPage(
             Integer pageNumber, Integer pageSize, Long userId, Long contentId, String type);
-    Void updateReview(Long reviewId, ReviewUpdateRequestDto request, Long userId);
-    Void deleteReview(Long reviewId, Long userId);
+    void updateReview(Long reviewId, ReviewUpdateRequestDto request, Long userId);
+    void deleteReview(Long reviewId, Long userId);
 
     ReviewLikeResponseDto reactionReview(Long reviewId, Long userId);
 }

@@ -39,6 +39,8 @@ public enum ErrorCode {
   UNSUPPORTED_TOKEN(HttpStatus.UNAUTHORIZED, "UNSUPPORTED_TOKEN", "지원하지 않는 JWT 토큰 형식입니다."),
   EMPTY_TOKEN(HttpStatus.UNAUTHORIZED, "EMPTY_TOKEN", "JWT 토큰이 비어 있거나 잘못되었습니다.");
 
+  // Persona
+  QUESTION_NOT_FOUND(HttpStatus.NOT_FOUND, "QUESTION_NOT_FOUND", "해당 순서의 질문을 찾을 수 없습니다.");
 
   private final HttpStatus status;
   private final String code;

@@ -87,7 +87,7 @@ public class ReviewServiceImpl implements ReviewService {
 
 
     @Override
-    public Void updateReview(Long reviewId, ReviewUpdateRequestDto request, Long userId) {
+    public void updateReview(Long reviewId, ReviewUpdateRequestDto request, Long userId) {
         Review review = reviewRepository.findById(reviewId)
                 .orElseThrow(() -> new ReviewNotFoundException("리뷰를 찾을 수 없습니다. reviewId: " + reviewId));
 
@@ -100,12 +100,11 @@ public class ReviewServiceImpl implements ReviewService {
 
         review.updateFrom(request);
         reviewRepository.save(review);
-        return null;
     }
 
 
     @Override
-    public Void deleteReview(Long reviewId, Long userId) {
+    public void deleteReview(Long reviewId, Long userId) {
         Review review = reviewRepository.findById(reviewId)
                 .orElseThrow(() -> new ReviewNotFoundException("리뷰를 찾을 수 없습니다. reviewId: " + reviewId));
 
@@ -117,7 +116,6 @@ public class ReviewServiceImpl implements ReviewService {
         }
 
         reviewRepository.delete(review);
-        return null;
     }
 
     @Override

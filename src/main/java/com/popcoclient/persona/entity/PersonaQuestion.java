@@ -33,5 +33,6 @@ public class PersonaQuestion {
     private LocalDateTime updatedAt;
 
     @OneToMany(mappedBy = "personaQuestion", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Option> options = new ArrayList<>();
+    private List<Option> options;
+
 }
