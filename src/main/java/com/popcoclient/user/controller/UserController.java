@@ -67,7 +67,6 @@ public class UserController {
         return ResponseEntity.ok(ApiResponse.success(userService.existUserByEmail(email)));
     }
 
-
 //    // 이메일로 사용자 조회
 //    @Operation(summary = "이메일로 사용자 조회", description = "이메일로 사용자 조회")
 //    @GetMapping("/email/{email}")

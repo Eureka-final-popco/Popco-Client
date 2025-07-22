@@ -30,14 +30,11 @@ public class UserServiceImpl implements UserService {
             throw new EmailAlreadyExistsException("이미 존재하는 이메일입니다: " + requestDto.getEmail());
         }
 
-        User user = User.builder()
-                .name(requestDto.getName())
-                .email(requestDto.getEmail())
-                .password(passwordEncoder.encode(requestDto.getPassword()))
-                .build();
+        String encodedPassword = passwordEncoder.encode(requestDto.getPassword());
 
-        User savedUser = userRepository.save(user);
-        return UserResponseDto.from(savedUser);
+        User user = User.of(requestDto, encodedPassword);
+        userRepository.save(user);
+        return UserResponseDto.from(user);
     }
 
     @Override

@@ -50,7 +50,7 @@ public class ReviewServiceImpl implements ReviewService {
 
         ContentId contentIds = new ContentId(contentId, type);
         Content content = contentRepository.findById(contentIds)
-                .orElseThrow(() -> new ContentNotFoundException("콘텐츠를 찾을 수 없습니다. userId: " + contentId));
+                .orElseThrow(() -> new ContentNotFoundException("콘텐츠를 찾을 수 없습니다. contentId: " + contentId + "content Type : " + type));
 
         if(reviewRepository.existsReviewByContentAndUser(content, user)){
             throw new AlreadyReviewedException();
