@@ -41,6 +41,11 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public boolean existUserByEmail(String email) {
+        return userRepository.existsByEmail(email);
+    }
+
+    @Override
     public List<UserResponseDto> getAllUsers() {
         return userRepository.findAll().stream()
                 .map(UserResponseDto::from).collect(Collectors.toList());

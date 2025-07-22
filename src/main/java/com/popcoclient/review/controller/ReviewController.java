@@ -50,14 +50,16 @@ public class ReviewController {
     public ResponseEntity<ApiResponse<Void>> updateReview(
             @RequestBody ReviewUpdateRequestDto request, @PathVariable("reviewId") Long reviewId){
         Long userId = jwtProvider.getUserIdFromAuthentication();
-        return ResponseEntity.ok(ApiResponse.success("update review success", reviewService.updateReview(reviewId, request, userId)));
+        reviewService.updateReview(reviewId, request, userId);
+        return ResponseEntity.ok(ApiResponse.success("update review success", null));
     }
 
     @Operation(summary = "리뷰 삭제", description = "리뷰 작성자만 리뷰를 삭제 가능")
     @DeleteMapping("/{reviewId}")
     public ResponseEntity<ApiResponse<Void>> deleteReview(@PathVariable("reviewId") Long reviewId) {
         Long userId = jwtProvider.getUserIdFromAuthentication();
-        return ResponseEntity.ok(ApiResponse.success("delete review success", reviewService.deleteReview(reviewId, userId)));
+        reviewService.deleteReview(reviewId, userId);
+        return ResponseEntity.ok(ApiResponse.success("delete review success", null));
     }
 
     @Operation(summary = "리뷰 좋아요/취소", description = "리뷰 좋아요/취소")
