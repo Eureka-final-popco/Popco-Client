@@ -9,9 +9,11 @@ import com.popcoclient.review.dto.response.ReviewLikeResponseDto;
 import com.popcoclient.review.dto.response.ReviewPageResponseDto;
 import com.popcoclient.review.service.ReviewService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -36,6 +38,7 @@ public class ReviewController {
     }
 
     @Operation(summary = "콘텐츠에 리뷰 작성", description = "콘텐츠에 리뷰 작성")
+    @SecurityRequirement(name = "bearerAuth")
     @PostMapping("/contents/{contentId}/types/{type}")
     public ResponseEntity<ApiResponse<ReviewCreateResponseDto>> createReview(
             @RequestBody ReviewCreateRequestDto request, @PathVariable("contentId") Long contentId, @PathVariable("type") String type) {
@@ -46,6 +49,7 @@ public class ReviewController {
     }
 
     @Operation(summary = "리뷰 수정", description = "리뷰 작성자만 리뷰를 수정 가능")
+    @SecurityRequirement(name = "bearerAuth")
     @PutMapping("/{reviewId}")
     public ResponseEntity<ApiResponse<Void>> updateReview(
             @RequestBody ReviewUpdateRequestDto request, @PathVariable("reviewId") Long reviewId){
@@ -55,6 +59,7 @@ public class ReviewController {
     }
 
     @Operation(summary = "리뷰 삭제", description = "리뷰 작성자만 리뷰를 삭제 가능")
+    @SecurityRequirement(name = "bearerAuth")
     @DeleteMapping("/{reviewId}")
     public ResponseEntity<ApiResponse<Void>> deleteReview(@PathVariable("reviewId") Long reviewId) {
         Long userId = jwtProvider.getUserIdFromAuthentication();
@@ -63,6 +68,7 @@ public class ReviewController {
     }
 
     @Operation(summary = "리뷰 좋아요/취소", description = "리뷰 좋아요/취소")
+    @SecurityRequirement(name = "bearerAuth")
     @PostMapping("/{reviewId}/reaction")
     public ResponseEntity<ApiResponse<ReviewLikeResponseDto>> reactionReview(@PathVariable("reviewId") Long reviewId) {
         Long userId = jwtProvider.getUserIdFromAuthentication();
