@@ -69,20 +69,24 @@ public class ReviewServiceImpl implements ReviewService {
         Pageable pageable = PageRequest.of(pageNumber, pageSize);
 
         // login status check
-        Boolean loginStatus = true;
+        Boolean loginStatus;
+        Page<ReviewResponseDto> reviewPage;
         ContentId contentComplex = new ContentId(contentId, type);
 
         Content content = contentRepository.findById(contentComplex)
                 .orElseThrow(() -> new ContentNotFoundException("콘텐츠를 찾을 수 없습니다. contentId: " + contentId + "content Type : " + type));
 
-        if(loginStatus){
-            Page<ReviewResponseDto> reviewPage = reviewRepository.findReviewList(userId, content, pageable);
-            Double avgScore = reviewRepository.avgStar(content);
-
-            return ReviewPageResponseDto.of(reviewPage, avgScore, loginStatus);
+        if(userId != null){
+            loginStatus = true;
+            reviewPage = reviewRepository.findReviewList(userId, content, pageable);
+        } else {
+            loginStatus = false;
+            reviewPage = reviewRepository.findReviewList(null, content, pageable);
         }
 
-        return null;
+        Double avgScore = reviewRepository.avgStar(content);
+
+        return ReviewPageResponseDto.of(reviewPage, avgScore, loginStatus);
     }
 
 

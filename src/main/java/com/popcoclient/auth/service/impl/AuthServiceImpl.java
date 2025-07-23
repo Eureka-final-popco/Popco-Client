@@ -15,7 +15,6 @@ import com.popcoclient.user.entity.UserDetail;
 import com.popcoclient.user.repository.UserDetailRepository;
 import com.popcoclient.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -75,15 +74,15 @@ public class AuthServiceImpl implements AuthService {
         JwtToken token = jwtUtil.generateToken(user.getUserId());
 
         Optional<UserDetail> userDetailOpt = userDetailRepository.findById(user.getUserId());
-        UserResponseDto userResponseDto = null;
+        LoginUserResponseDto loginUserResponseDto = null;
         boolean isProfileComplete = false;
 
         if (userDetailOpt.isPresent()) {
-            userResponseDto = UserResponseDto.from(userDetailOpt.get());
+            loginUserResponseDto = LoginUserResponseDto.from(userDetailOpt.get());
             isProfileComplete = true;
         }
 
-        return LoginResponseDto.of(userResponseDto, JwtResponseDto.from(token), isProfileComplete);
+        return LoginResponseDto.of(loginUserResponseDto, JwtResponseDto.from(token), isProfileComplete);
     }
 
 }

@@ -32,7 +32,7 @@ public class UserServiceImpl implements UserService {
 
         String encodedPassword = passwordEncoder.encode(requestDto.getPassword());
 
-        User user = User.of(requestDto, encodedPassword);
+        User user = User.of(requestDto.getEmail(), encodedPassword);
         userRepository.save(user);
         return UserResponseDto.from(user);
     }
@@ -80,7 +80,7 @@ public class UserServiceImpl implements UserService {
             throw new EmailAlreadyExistsException("이미 존재하는 이메일입니다: " + requestDto.getEmail());
         }
 
-        user.setName(requestDto.getName());
+//        user.setName(requestDto.getName());
         user.setEmail(requestDto.getEmail());
 
         User updatedUser = userRepository.save(user);
