@@ -57,7 +57,12 @@ public class JwtProvider {
         }
 
         String principal = authentication.getName();
-        return Long.parseLong(principal);
+
+        if ("anonymousUser".equals(principal)) {
+            return null; // ❗ 비회원일 경우 null 리턴
+        }
+
+        return Long.parseLong(principal); // 회원일 경우
     }
 
     // 토큰 정보를 검증하는 메서드
