@@ -36,6 +36,14 @@ public class User {
 
     private LocalDateTime unbanAt;
 
+    @OneToOne(mappedBy = "user", fetch = FetchType.LAZY)
+    private UserDetail userDetail;
+
+    // 닉네임 getter 메소드 추가
+    public String getNickname() {
+        return userDetail != null ? userDetail.getNickname() : null;
+    }
+
     public static User of(UserSignupRequestDto dto, String encodedPassword) {
         return User.builder()
                 .email(dto.getEmail())
