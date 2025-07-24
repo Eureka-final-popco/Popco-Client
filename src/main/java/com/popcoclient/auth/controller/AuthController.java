@@ -1,22 +1,18 @@
 package com.popcoclient.auth.controller;
 
-import com.popcoclient.auth.dto.request.RefreshRequestDto;
 import com.popcoclient.auth.dto.response.KakaoLoginResponseDto;
 import com.popcoclient.auth.dto.response.KakaoPreSignupResponseDto;
 import com.popcoclient.auth.dto.response.LoginResponseDto;
 import com.popcoclient.auth.dto.response.RefreshResponseDto;
-import com.popcoclient.auth.jwt.JwtUtil;
 import com.popcoclient.auth.service.AuthService;
 import com.popcoclient.common.response.ApiResponse;
 import com.popcoclient.auth.dto.request.LoginRequestDto;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -27,7 +23,7 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController {
     private final AuthService authService;
 
-    @Operation(summary = "로그인", description = "사용자 ID와 비밀번호를 사용하여 로그인하고 JWT 토큰을 발급받습니다.")
+    @Operation(summary = "로그인", description = "사용자 이메일과 비밀번호를 사용하여 로그인하고 JWT 토큰을 발급받습니다.")
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<LoginResponseDto>> login(
             @Valid @RequestBody LoginRequestDto request, HttpServletResponse response) {
@@ -36,14 +32,8 @@ public class AuthController {
         return ResponseEntity.ok().body(loginResponseDto);
     }
 
-//    @Operation(summary = "토큰 갱신", description = "만료된 Access Token과 Refresh Token을 사용하여 새로운 Access Token과 Refresh Token을 발급받습니다.")
-//    @PostMapping("/refresh")
-//    public ResponseEntity<ApiResponse<RefreshResponseDto>> refreshToken(@Valid @RequestBody RefreshRequestDto request) {
-//        RefreshResponseDto response = authService.refreshToken(request);
-//        return ResponseEntity.ok(ApiResponse.success("Refresh Token Success", response));
-//    }
-
-    @Operation(summary = "토큰 갱신", description = "만료된 Access Token과 Refresh Token을 사용하여 새로운 Access Token과 Refresh Token을 발급받습니다.")
+    @Operation(summary = "토큰 갱신", description = "헤더에 X-Refresh-Token로 Refresh Token 값을 넣어 사용하여 새로운 Access Token을 발급받습니다.")
+    @SecurityRequirement(name = "bearerAuth")
     @PostMapping("/refresh")
     public ResponseEntity<ApiResponse<RefreshResponseDto>> refreshToken(
             @RequestHeader("X-Refresh-Token") String refreshTokenHeader, HttpServletResponse response) {

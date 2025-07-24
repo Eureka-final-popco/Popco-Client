@@ -87,25 +87,6 @@ public class JwtProvider {
         }
     }
 
-    // 토큰 정보를 검증하는 메서드
-//    public boolean validateToken(String token) {
-//        try {
-//            Jwts.parser()
-//                    .setSigningKey(key)
-//                    .build()
-//                    .parseClaimsJws(token);
-//            return true;
-//        } catch (SecurityException | MalformedJwtException e) {
-//            throw new TokenExpiredException(ErrorCode.EXPIRED_TOKEN, e.getMessage());
-//        } catch (ExpiredJwtException e) {
-//            throw new TokenExpiredException(ErrorCode.INVALID_SIGNATURE, e.getMessage());
-//        } catch (UnsupportedJwtException e) {
-//            throw new TokenExpiredException(ErrorCode.UNSUPPORTED_TOKEN, e.getMessage());
-//        } catch (IllegalArgumentException e) {
-//            throw new TokenExpiredException(ErrorCode.EMPTY_TOKEN, e.getMessage());
-//        }
-//    }
-
     public Claims parseClaims(String token) {
         try {
             return Jwts.parser()

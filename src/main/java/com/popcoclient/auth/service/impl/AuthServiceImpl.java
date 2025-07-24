@@ -102,7 +102,7 @@ public class AuthServiceImpl implements AuthService {
             isProfileComplete = true;
         }
 
-        return LoginResponseDto.of(loginUserResponseDto, JwtResponseDto.from(token), isProfileComplete);
+        return LoginResponseDto.of(userResponseDto, JwtResponseDto.from(token), isProfileComplete);
     }
 
 }
