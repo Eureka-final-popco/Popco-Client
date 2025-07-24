@@ -10,6 +10,7 @@ import com.popcoclient.auth.service.AuthService;
 import com.popcoclient.auth.jwt.JwtToken;
 import com.popcoclient.auth.jwt.JwtUtil;
 import com.popcoclient.common.response.ApiResponse;
+import com.popcoclient.exception.business.InvalidPasswordException;
 import com.popcoclient.exception.business.UserNotFoundException;
 import com.popcoclient.user.entity.User;
 import com.popcoclient.user.entity.UserDetail;
@@ -32,12 +33,17 @@ public class AuthServiceImpl implements AuthService {
     private final UserDetailRepository userDetailRepository;
     private final JwtUtil jwtUtil;
     private final KakaoUtil kakaoUtil;
+    private final PasswordEncoder passwordEncoder;
 
     @Override
     @Transactional
     public ApiResponse<LoginResponseDto> login(LoginRequestDto loginRequestDto, HttpServletResponse response) {
         User user = userRepository.findByEmail(loginRequestDto.getEmail())
                 .orElseThrow(() -> new UserNotFoundException("사용자를 찾을 수 없습니다. Email: " + loginRequestDto.getEmail()));
+
+        if (!passwordEncoder.matches(loginRequestDto.getPassword(), user.getPassword())) {
+            throw new InvalidPasswordException("비밀번호가 올바르지 않습니다.");
+        }
 
         JwtToken token = jwtUtil.generateToken(user.getUserId());
 
