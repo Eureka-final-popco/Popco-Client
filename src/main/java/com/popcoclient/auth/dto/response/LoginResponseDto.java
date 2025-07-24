@@ -14,10 +14,11 @@ public class LoginResponseDto {
     private JwtResponseDto jwtResponseDto;
     private boolean isProfileComplete;
 
+
     public static LoginResponseDto of(
-            LoginUserResponseDto userResponse, JwtResponseDto jwtResponse, boolean isProfileComplete) {
+            LoginUserResponseDto loginUserResponseDto, JwtResponseDto jwtResponse, boolean isProfileComplete) {
         return LoginResponseDto.builder()
-                .loginUserResponseDto(userResponse)
+                .loginUserResponseDto(loginUserResponseDto)
                 .jwtResponseDto(jwtResponse)
                 .isProfileComplete(isProfileComplete)
                 .build();

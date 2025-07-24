@@ -65,18 +65,21 @@ public class JwtProvider {
         return Long.parseLong(principal); // 회원일 경우
     }
 
-    // 토큰 정보를 검증하는 메서드
-    public boolean validateToken(String token) {
+    public boolean validateToken(String token, String tokenType) {
         try {
             Jwts.parser()
                     .setSigningKey(key)
                     .build()
                     .parseClaimsJws(token);
             return true;
-        } catch (SecurityException | MalformedJwtException e) {
-            throw new TokenExpiredException(ErrorCode.EXPIRED_TOKEN, e.getMessage());
-        } catch (ExpiredJwtException e) {
+        } catch (SignatureException | SecurityException | MalformedJwtException e) {
             throw new TokenExpiredException(ErrorCode.INVALID_SIGNATURE, e.getMessage());
+        } catch (ExpiredJwtException e) {
+            if (tokenType.equals("REFRESH")) {
+                throw new TokenExpiredException(ErrorCode.REFRESH_TOKEN_EXPIRED, e.getMessage());
+            } else {
+                throw new TokenExpiredException(ErrorCode.ACCESS_TOKEN_EXPIRED, e.getMessage());
+            }
         } catch (UnsupportedJwtException e) {
             throw new TokenExpiredException(ErrorCode.UNSUPPORTED_TOKEN, e.getMessage());
         } catch (IllegalArgumentException e) {
@@ -98,7 +101,7 @@ public class JwtProvider {
 
     public boolean validateRefreshToken(String token) {
         // 기본적인 JWT 검증
-        if (!validateToken(token)) return false;
+        if (!validateToken(token, "REFRESH")) return false;
         String redisToken = "";
 
         try {
