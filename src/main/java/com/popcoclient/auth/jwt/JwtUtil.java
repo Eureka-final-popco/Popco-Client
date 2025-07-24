@@ -163,7 +163,7 @@ public class JwtUtil {
         refreshTokenCookie.setSecure(false);            // HTTPS 환경에서만 전송 (운영환경에서 true 권장)
         refreshTokenCookie.setPath("/");                // 쿠키를 보낼 경로 설정 (전체 경로 "/" 권장)
         refreshTokenCookie.setMaxAge(REFRESH_TOKEN_EXPIRE_TIME);   // 쿠키 만료시간 설정 (초 단위)
-        refreshTokenCookie.setAttribute("SameSite", "None");
+        refreshTokenCookie.setAttribute("SameSite", "Lax");
 
         return refreshTokenCookie;
     }
