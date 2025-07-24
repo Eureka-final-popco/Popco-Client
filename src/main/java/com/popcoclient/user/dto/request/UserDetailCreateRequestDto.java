@@ -8,4 +8,5 @@ import java.time.LocalDate;
 public class UserDetailCreateRequestDto {
     private String nickname;
     private LocalDate birthday;
+    private String gender;
 }

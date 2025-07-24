@@ -48,7 +48,9 @@ public class UserDetail {
         return UserDetail.builder()
                 .user(user)
                 .nickname(request.getNickname())
+                .profilePath("/default")
                 .birthdate(request.getBirthday())
+                .gender(request.getGender())
                 .build();
     }
 }
