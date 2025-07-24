@@ -32,8 +32,8 @@ public class JwtUtil {
     @Value("${jwt.access-token.expire-time}")
     private int ACCESS_TOKEN_EXPIRE_TIME;
 
-    @Value("${jwt.refresh-token.expire-time}")
-    private int REFRESH_TOKEN_EXPIRE_TIME;
+//    @Value("${jwt.refresh-token.expire-time}") 테스트를 위한 하드코딩
+    private int REFRESH_TOKEN_EXPIRE_TIME = 604800;
 
     @Value("${jwt.threshold-time}")
     private int THRESHOLD_TIME;
