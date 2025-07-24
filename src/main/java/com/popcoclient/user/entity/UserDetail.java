@@ -26,6 +26,7 @@ public class UserDetail {
     private Long userId;
     private String nickname;
     private String profilePath;
+    private String gender;
     private LocalDate birthdate;
 
     @CreatedDate
