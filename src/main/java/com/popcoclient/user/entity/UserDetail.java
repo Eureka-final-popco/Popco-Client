@@ -26,6 +26,7 @@ public class UserDetail {
     private Long userId;
     private String nickname;
     private String profilePath;
+    private String gender;
     private LocalDate birthdate;
 
     @CreatedDate
@@ -47,7 +48,9 @@ public class UserDetail {
         return UserDetail.builder()
                 .user(user)
                 .nickname(request.getNickname())
+                .profilePath("/default")
                 .birthdate(request.getBirthday())
+                .gender(request.getGender())
                 .build();
     }
 }

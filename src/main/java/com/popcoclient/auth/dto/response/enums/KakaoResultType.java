@@ -1,5 +1,5 @@
 package com.popcoclient.auth.dto.response.enums;
 
 public enum KakaoResultType {
-    LOGIN_SUCCESS, SIGNUP_REQUIRED
+    LOGIN_SUCCESS, SIGNUP_REQUIRED, USER_PROFILE_REQUIRED
 }
