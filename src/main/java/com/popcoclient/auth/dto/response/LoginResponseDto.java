@@ -5,18 +5,20 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import net.minidev.json.annotate.JsonIgnore;
 
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
 public class LoginResponseDto {
-    private UserResponseDto userResponseDto;
+    private LoginUserResponseDto userResponseDto;
     private JwtResponseDto jwtResponseDto;
     private boolean isProfileComplete;
 
+
     public static LoginResponseDto of(
-            UserResponseDto userResponse, JwtResponseDto jwtResponse, boolean isProfileComplete) {
+            LoginUserResponseDto userResponse, JwtResponseDto jwtResponse, boolean isProfileComplete) {
         return LoginResponseDto.builder()
                 .userResponseDto(userResponse)
                 .jwtResponseDto(jwtResponse)
