@@ -4,6 +4,7 @@ import com.popcoclient.content.entity.Content;
 import com.popcoclient.content.entity.key.ContentId;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.Tuple;
+import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.Expressions;
@@ -56,7 +57,15 @@ public class ReviewRepositoryImpl implements ReviewRepositoryCustom {
 
     // 리뷰 조회
     @Override
-    public Page<ReviewResponseDto> findReviewList(Long userId, Content content, Pageable pageable) {
+    public Page<ReviewResponseDto> findReviewList(Long userId, Content content, Pageable pageable, String sort) {
+        OrderSpecifier<?> orderSpecifier;
+
+        if ("popular".equalsIgnoreCase(sort)) {
+            orderSpecifier = review.likeCount.desc();
+        } else {
+            orderSpecifier = review.createdAt.desc(); // 기본값: 최근순
+        }
+
         List<ReviewResponseDto> reviewList = jpaQueryFactory
                 .select(Projections.constructor(ReviewResponseDto.class,
                         review.reviewId,
@@ -74,7 +83,7 @@ public class ReviewRepositoryImpl implements ReviewRepositoryCustom {
                 .join(review.user, user)
                 .leftJoin(userDetail).on(userDetail.user.eq(user))
                 .where(review.content.eq(content))
-                .orderBy(review.createdAt.desc())
+                .orderBy(orderSpecifier)
                 .limit(pageable.getPageSize())
                 .offset(pageable.getOffset())
                 .fetch();

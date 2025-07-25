@@ -32,11 +32,12 @@ public class ReviewController {
     public ResponseEntity<ApiResponse<ReviewPageResponseDto>> getReviewPage(
             @RequestParam(name = "pageNumber", defaultValue = "0") Integer pageNumber,
             @RequestParam(name = "pageSize", defaultValue = "10") Integer pageSize,
+            @RequestParam(name = "sort", defaultValue = "recent") String sort,
             @PathVariable("contentId") Long contentId, @PathVariable("type") String type) {
 
         Long userId = jwtProvider.getUserIdFromAuthentication();
 
-        ReviewPageResponseDto response = reviewService.getReviewPage(pageNumber, pageSize, userId, contentId, type);
+        ReviewPageResponseDto response = reviewService.getReviewPage(pageNumber, pageSize, sort, userId, contentId, type);
         return ResponseEntity.ok(ApiResponse.success("get review page success", response));
     }
 

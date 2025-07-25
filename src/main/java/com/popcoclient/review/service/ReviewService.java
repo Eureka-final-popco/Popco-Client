@@ -12,7 +12,7 @@ import java.util.List;
 public interface ReviewService {
     ReviewCreateResponseDto insertReview(ReviewCreateRequestDto request, Long contentId, Long userId, String type);
     ReviewPageResponseDto getReviewPage(
-            Integer pageNumber, Integer pageSize, Long userId, Long contentId, String type);
+            Integer pageNumber, Integer pageSize, String sort, Long userId, Long contentId, String type);
     void updateReview(Long reviewId, ReviewUpdateRequestDto request, Long userId);
     void deleteReview(Long reviewId, Long userId);
 
