@@ -40,7 +40,10 @@ public class JwtAuthenticationFilter extends GenericFilterBean {
                 || requestURI.startsWith("/auth/login")
                 || requestURI.startsWith("/users/register")
                 || requestURI.startsWith("/auth/refresh")
-                || requestURI.startsWith("/auth/kakao"))
+                || requestURI.startsWith("/auth/kakao")
+                || requestURI.startsWith("/swagger-ui")
+                || requestURI.startsWith("/v3/api-docs")
+        )
         {
             chain.doFilter(servletRequest, servletResponse);
             return;
