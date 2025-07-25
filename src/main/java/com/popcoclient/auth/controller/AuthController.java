@@ -43,7 +43,11 @@ public class AuthController {
 //        return ResponseEntity.ok(refreshToken);
 //    }
 
-    @Operation(summary = "토큰 갱신", description = "헤더에 X-Refresh-Token로 Refresh Token 값을 넣어 사용하여 새로운 Access Token을 발급받습니다.")
+    @Operation(
+            summary = "토큰 갱신",
+            description = "HttpOnly 쿠키에 저장된 Refresh Token을 사용하여 새로운 Access Token을 발급받습니다.\n\n" +
+                    "브라우저는 쿠키를 자동으로 전송하므로, 별도의 헤더 설정 없이도 요청 가능합니다."
+    )
     @SecurityRequirement(name = "bearerAuth")
     @PostMapping("/refresh")
     public ResponseEntity<ApiResponse<RefreshResponseDto>> refreshToken(

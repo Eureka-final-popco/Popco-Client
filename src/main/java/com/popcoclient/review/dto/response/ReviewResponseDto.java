@@ -1,5 +1,6 @@
 package com.popcoclient.review.dto.response;
 
+import com.popcoclient.review.entity.enums.ReviewStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -18,6 +19,7 @@ public class ReviewResponseDto {
     private String reviewerName;
     private String reviewerProfile;
     private LocalDateTime reviewDate;
+    private ReviewStatus reviewStatus;
     private BigDecimal score;
     private String text;
     private Integer likeCount;
