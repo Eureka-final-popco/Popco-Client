@@ -39,7 +39,6 @@ import java.util.Optional;
 public class ReviewServiceImpl implements ReviewService {
     private final ReviewRepository reviewRepository;
     private final ReviewReactionRepository reviewReactionRepository;
-    private final UserDetailRepository userDetailRepository;
     private final UserRepository userRepository;
     private final ContentRepository contentRepository;
 

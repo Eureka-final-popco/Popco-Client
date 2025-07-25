@@ -24,4 +24,5 @@ public interface ReviewRepository extends JpaRepository<Review, Long>, ReviewRep
     @Modifying
     @Query("update Review SET likeCount = likeCount - 1 WHERE reviewId = :reviewId")
     void decrementReviewLikeCount(@Param("reviewId") Long reviewId);
+
 }

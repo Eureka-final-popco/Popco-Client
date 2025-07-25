@@ -6,7 +6,12 @@ import com.popcoclient.review.dto.response.ReviewResponseDto;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.math.BigDecimal;
+import java.util.Map;
+import java.util.Set;
+
 public interface ReviewRepositoryCustom {
     Page<ReviewResponseDto> findReviewList(Long userId, Content content, Pageable pageable);
     Double avgStar(Content content);
+    Map<ContentId, Double> findAverageScoreByContents(Set<ContentId> contentIds);
 }
