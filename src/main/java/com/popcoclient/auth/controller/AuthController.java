@@ -33,16 +33,6 @@ public class AuthController {
         return ResponseEntity.ok().body(loginResponseDto);
     }
 
-//    @Operation(summary = "토큰 갱신", description = "헤더에 X-Refresh-Token로 Refresh Token 값을 넣어 사용하여 새로운 Access Token을 발급받습니다.")
-//    @SecurityRequirement(name = "bearerAuth")
-//    @PostMapping("/refresh")
-//    public ResponseEntity<ApiResponse<RefreshResponseDto>> refreshToken(
-//            @RequestHeader("X-Refresh-Token") String refreshTokenHeader, HttpServletResponse response) {
-//        ApiResponse<RefreshResponseDto> refreshToken = authService.refreshToken(refreshTokenHeader, response);
-//
-//        return ResponseEntity.ok(refreshToken);
-//    }
-
     @Operation(
             summary = "토큰 갱신",
             description = "HttpOnly 쿠키에 저장된 Refresh Token을 사용하여 새로운 Access Token을 발급받습니다.\n\n" +

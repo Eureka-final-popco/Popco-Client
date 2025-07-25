@@ -32,58 +32,44 @@ public class JwtAuthenticationFilter extends GenericFilterBean {
 
         HttpServletRequest request = (HttpServletRequest) servletRequest;
         HttpServletResponse response = (HttpServletResponse) servletResponse;
-        String requestURI = ((HttpServletRequest) servletRequest).getRequestURI();
 
-        if ((request.getMethod().equals("GET") &&
-                (requestURI.startsWith("/reviews/contents") ||
-                        requestURI.startsWith("/contents/popular")))
-                || requestURI.startsWith("/auth/login")
-                || requestURI.startsWith("/auth/refresh")
-                || requestURI.startsWith("/auth/kakao")
-                || requestURI.startsWith("/users/signup")
-                || requestURI.startsWith("/users/email")
-                || requestURI.startsWith("/swagger-ui")
-                || requestURI.startsWith("/v3/api-docs")
-        )
-        {
-            chain.doFilter(servletRequest, servletResponse);
-            return;
-        }
+//        if ((request.getMethod().equals("GET") &&
+//                (
+//                        requestURI.startsWith("/reviews/contents") ||
+//                        requestURI.startsWith("/contents/popular")))
+//                || requestURI.startsWith("/auth/login")
+//                || requestURI.startsWith("/users/register")
+//                || requestURI.startsWith("/auth/refresh")
+//                || requestURI.startsWith("/auth/kakao"))
+//        {
+//            chain.doFilter(servletRequest, servletResponse);
+//            return;
+//        }
 
         try {
             String accessToken = resolveAccessToken(request);
             String refreshToken = resolveRefreshToken(request);
 
-            // access token 유효하면 인증 처리
             if (accessToken != null && jwtTokenProvider.validateToken(accessToken, "ACCESS")) {
                 if (!blackListRepository.existsById(accessToken)) {
                     Authentication authentication = jwtTokenProvider.getAuthentication(accessToken);
                     SecurityContextHolder.getContext().setAuthentication(authentication);
-                    chain.doFilter(request, response);
-                    return;
                 } else {
-                    // 블랙리스트 처리
+                    // 블랙리스트 된 토큰일 경우 401 응답 후 종료
                     response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                     response.setContentType("application/json");
                     response.getWriter().write("{\"code\":\"BLACKLISTED_TOKEN\"}");
                     return;
                 }
-            }
-
-            // access가 유효하지 않다면 refresh를 검사해보자 (여기서 validateToken이 예외 던지면 catch로 감)
-            if (refreshToken != null && jwtTokenProvider.validateToken(refreshToken, "REFRESH")) {
-                // refresh 유효하니 access 재발급 필요
+            } else if (refreshToken != null && jwtTokenProvider.validateToken(refreshToken, "REFRESH")) {
+                // 리프레시 토큰 유효하지만 액세스 토큰 만료된 경우 - 재발급 필요 표시
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 response.setContentType("application/json");
                 response.getWriter().write("{\"code\":\"ACCESS_TOKEN_EXPIRED\"}");
                 return;
             }
-
-            // 둘 다 null이면 그냥 로그인 안 된 요청
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.setContentType("application/json");
-            response.getWriter().write("{\"code\":\"UNAUTHORIZED\"}");
-            return;
+            // 토큰 없거나 유효하지 않아도 인증 정보 없이 그냥 다음 필터/컨트롤러로 진행
+            chain.doFilter(request, response);
 
         } catch (TokenExpiredException e) {
             logger.error(e.getMessage(), e);

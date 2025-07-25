@@ -59,7 +59,7 @@ public class JwtProvider {
         String principal = authentication.getName();
 
         if ("anonymousUser".equals(principal)) {
-            return null; // ❗ 비회원일 경우 null 리턴
+            return null; // 비회원일 경우 null 리턴
         }
 
         return Long.parseLong(principal); // 회원일 경우
