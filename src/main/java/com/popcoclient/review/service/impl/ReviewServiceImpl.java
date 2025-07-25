@@ -71,7 +71,7 @@ public class ReviewServiceImpl implements ReviewService {
     }
 
     @Override
-    public ReviewPageResponseDto getReviewPage(Integer pageNumber, Integer pageSize, Long userId, Long contentId, String type) {
+    public ReviewPageResponseDto getReviewPage(Integer pageNumber, Integer pageSize, String sort, Long userId, Long contentId, String type) {
         Pageable pageable = PageRequest.of(pageNumber, pageSize);
 
         // login status check
@@ -84,10 +84,10 @@ public class ReviewServiceImpl implements ReviewService {
 
         if(userId != null){
             loginStatus = true;
-            reviewPage = reviewRepository.findReviewList(userId, content, pageable);
+            reviewPage = reviewRepository.findReviewList(userId, content, pageable, sort);
         } else {
             loginStatus = false;
-            reviewPage = reviewRepository.findReviewList(null, content, pageable);
+            reviewPage = reviewRepository.findReviewList(null, content, pageable, sort);
         }
 
         Double avgScore = reviewRepository.avgStar(content);
