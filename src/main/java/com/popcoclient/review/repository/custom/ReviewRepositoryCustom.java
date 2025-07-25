@@ -11,7 +11,7 @@ import java.util.Map;
 import java.util.Set;
 
 public interface ReviewRepositoryCustom {
-    Page<ReviewResponseDto> findReviewList(Long userId, Content content, Pageable pageable);
+    Page<ReviewResponseDto> findReviewList(Long userId, Content content, Pageable pageable, String sort);
     Double avgStar(Content content);
     Map<ContentId, Double> findAverageScoreByContents(Set<ContentId> contentIds);
 }
