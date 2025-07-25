@@ -159,11 +159,11 @@ public class JwtUtil {
     public Cookie setRefreshTokenCookie(String refreshToken) {
         Cookie refreshTokenCookie = new Cookie("refreshToken", refreshToken);
 
-        refreshTokenCookie.setHttpOnly(true);          // JavaScript 접근 불가
-        refreshTokenCookie.setSecure(false);            // HTTPS 환경에서만 전송 (운영환경에서 true 권장)
-        refreshTokenCookie.setPath("/");                // 쿠키를 보낼 경로 설정 (전체 경로 "/" 권장)
-        refreshTokenCookie.setMaxAge(REFRESH_TOKEN_EXPIRE_TIME);   // 쿠키 만료시간 설정 (초 단위)
-        refreshTokenCookie.setAttribute("SameSite", "Lax");
+        refreshTokenCookie.setHttpOnly(true);
+        refreshTokenCookie.setSecure(true); // 프로덕션에서는 반드시 true
+        refreshTokenCookie.setPath("/");
+        refreshTokenCookie.setMaxAge(REFRESH_TOKEN_EXPIRE_TIME);
+        refreshTokenCookie.setAttribute("SameSite", "None"); // CORS 대응을 위해 반드시 None
 
         return refreshTokenCookie;
     }
