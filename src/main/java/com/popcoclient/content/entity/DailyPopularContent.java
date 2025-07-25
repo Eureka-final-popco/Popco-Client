@@ -40,4 +40,6 @@ public class DailyPopularContent {
     @Column(name = "ranking", nullable = false)
     private Integer ranking;
 
+    @Column(name = "batch_type", nullable = false)
+    private String batchContentType;
 }

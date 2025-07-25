@@ -34,13 +34,14 @@ public class JwtAuthenticationFilter extends GenericFilterBean {
         HttpServletResponse response = (HttpServletResponse) servletResponse;
         String requestURI = ((HttpServletRequest) servletRequest).getRequestURI();
 
-        if (requestURI.startsWith("/auth/login") ||
-                requestURI.startsWith("/auth/refresh") ||
-                requestURI.startsWith("/auth/kakao") ||
-                requestURI.startsWith("/users/signup") ||
-                requestURI.startsWith("/swagger-ui") ||
-                requestURI.startsWith("/v3/api-docs")
-        ) {
+        if ((request.getMethod().equals("GET") &&
+                (requestURI.startsWith("/reviews/contents") ||
+                        requestURI.startsWith("/contents/popular")))
+                || requestURI.startsWith("/auth/login")
+                || requestURI.startsWith("/users/register")
+                || requestURI.startsWith("/auth/refresh")
+                || requestURI.startsWith("/auth/kakao"))
+        {
             chain.doFilter(servletRequest, servletResponse);
             return;
         }

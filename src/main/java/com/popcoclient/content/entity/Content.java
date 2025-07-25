@@ -3,6 +3,7 @@ package com.popcoclient.content.entity;
 import com.popcoclient.content.entity.key.ContentId;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.BatchSize;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -35,6 +36,7 @@ public class Content {
     private Integer runtime;
 
     @ElementCollection
+    @BatchSize(size = 50)
     @CollectionTable(
             name = "content_genres",
             joinColumns = {

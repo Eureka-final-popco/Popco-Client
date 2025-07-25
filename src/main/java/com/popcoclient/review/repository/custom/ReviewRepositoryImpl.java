@@ -1,6 +1,9 @@
 package com.popcoclient.review.repository.custom;
 
 import com.popcoclient.content.entity.Content;
+import com.popcoclient.content.entity.key.ContentId;
+import com.querydsl.core.BooleanBuilder;
+import com.querydsl.core.Tuple;
 import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.Expressions;
@@ -14,7 +17,12 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.support.PageableExecutionUtils;
 import org.springframework.stereotype.Repository;
 
+import java.math.BigDecimal;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import static com.popcoclient.review.entity.QReview.review;
 import static com.popcoclient.review.entity.QReviewReaction.reviewReaction;
@@ -89,5 +97,38 @@ public class ReviewRepositoryImpl implements ReviewRepositoryCustom {
                 .where(review.content.eq(content))
                 .fetchOne();
     }
+
+    @Override
+    public Map<ContentId, Double> findAverageScoreByContents(Set<ContentId> contentIds) {
+        if (contentIds.isEmpty()) return Collections.emptyMap();
+
+        // 조건을 수동으로 조합
+        BooleanBuilder builder = new BooleanBuilder();
+        for (ContentId contentId : contentIds) {
+            builder.or(
+                    review.content.contentId.id.eq(contentId.getId())
+                            .and(review.content.contentId.type.eq(contentId.getType()))
+            );
+        }
+
+        List<Tuple> results = jpaQueryFactory
+                .select(
+                        review.content.contentId.id,
+                        review.content.contentId.type,
+                        review.score.avg()
+                )
+                .from(review)
+                .where(builder)
+                .groupBy(review.content.contentId.id, review.content.contentId.type)
+                .fetch();
+
+        // Map<ContentId, BigDecimal> 으로 변환
+        return results.stream()
+                .collect(Collectors.toMap(
+                        tuple -> new ContentId(tuple.get(review.content.contentId.id), tuple.get(review.content.contentId.type)),
+                        tuple -> tuple.get(review.score.avg())
+                ));
+    }
+
 
 }
