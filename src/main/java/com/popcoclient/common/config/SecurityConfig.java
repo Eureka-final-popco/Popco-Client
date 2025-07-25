@@ -29,6 +29,16 @@ public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
+    private static final String[] whiteList = {
+            "/users/signup",
+            "/auth/refresh",
+            "/auth/login",
+            "/auth/kakao/**",
+            "/reviews/contents/**",
+            "/swagger-ui/**",
+            "/v3/api-docs/**"
+    };
+
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
         return httpSecurity
@@ -42,7 +52,7 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests(authorize -> authorize
                         // 해당 API에 대해서는 모든 요청을 허가
-                        .requestMatchers("/users/register", "/users/login", "/auth/refresh", "/auth/kakao/**", "/reviews/contents/**").permitAll()
+                        .requestMatchers(whiteList).permitAll()
                         // 사용자 삭제는 관리자 권한만 가능
 //                        .requestMatchers(HttpMethod.DELETE, "/user").hasRole("ADMIN")
 //                        .requestMatchers("/members/role").hasRole("USER")
@@ -68,7 +78,7 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
-        configuration.setAllowedOrigins(Arrays.asList("http://localhost:5173", "https://kauth.kakao.com/oauth/token"));
+        configuration.setAllowedOrigins(Arrays.asList("http://localhost:5173", "https://kauth.kakao.com/oauth/token", "http://www.popco.site"));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Cache-Control", "Content-Type"));
         configuration.setAllowCredentials(true);
