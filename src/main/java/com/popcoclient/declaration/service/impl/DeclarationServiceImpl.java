@@ -6,6 +6,7 @@ import com.popcoclient.declaration.entity.Declaration;
 import com.popcoclient.declaration.entity.enums.DeclarationType;
 import com.popcoclient.declaration.repository.DeclarationRepository;
 import com.popcoclient.declaration.service.DeclarationService;
+import com.popcoclient.exception.business.DeclarationAlreadyExistsException;
 import com.popcoclient.exception.business.UserNotFoundException;
 import com.popcoclient.exception.business.review.ReviewNotFoundException;
 import com.popcoclient.review.entity.Review;
@@ -43,6 +44,12 @@ public class DeclarationServiceImpl implements DeclarationService {
 
         Review review = reviewRepository.findById(reviewerId)
                 .orElseThrow(() -> new ReviewNotFoundException("리뷰를 찾을 수 없습니다. reviewId: " + reviewerId));
+
+        boolean existsDeclaration = declarationRepository.existsByReviewAndUser(review, user);
+
+        if (existsDeclaration) {
+            throw new DeclarationAlreadyExistsException("이미 해당 리뷰를 신고하였습니다.");
+        }
 
         updateReviewStatusByDeclaration(review);
     }

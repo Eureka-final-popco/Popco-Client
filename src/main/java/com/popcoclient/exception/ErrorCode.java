@@ -41,6 +41,10 @@ public enum ErrorCode {
   EMPTY_TOKEN(HttpStatus.UNAUTHORIZED, "EMPTY_TOKEN", "JWT 토큰이 비어 있거나 잘못되었습니다."),
   REFRESH_TOKEN_NOT_FOUND(HttpStatus.UNAUTHORIZED, "REFRESH_TOKEN_NOT_FOUND","리프레시 토큰이 쿠키에 존재하지 않습니다."),
 
+  // Declaration
+  DECLARATION_ALREADY_EXISTS(HttpStatus.UNAUTHORIZED, "DECLARATION_ALREADY_EXISTS","이미 해당 리뷰를 신고하였습니다."),
+
+
   // Persona
   QUESTION_NOT_FOUND(HttpStatus.NOT_FOUND, "QUESTION_NOT_FOUND", "해당 순서의 질문을 찾을 수 없습니다.");
 
