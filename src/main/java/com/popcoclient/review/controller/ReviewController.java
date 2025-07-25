@@ -7,13 +7,17 @@ import com.popcoclient.review.dto.request.ReviewUpdateRequestDto;
 import com.popcoclient.review.dto.response.ReviewCreateResponseDto;
 import com.popcoclient.review.dto.response.ReviewLikeResponseDto;
 import com.popcoclient.review.dto.response.ReviewPageResponseDto;
+import com.popcoclient.review.dto.response.TrendingReviewResponseDto;
 import com.popcoclient.review.service.ReviewService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/reviews")
@@ -78,6 +82,15 @@ public class ReviewController {
         } else {
             return ResponseEntity.ok(ApiResponse.success("liked review delete ", response));
         }
+    }
+
+    @Operation(summary = "최근 뜨고 있는 리뷰 목록 조회", description = "최근 일주일간 좋아요를 많이 받은 리뷰 목록을 조회합니다.")
+    @GetMapping("/weekly-trend")
+    public ResponseEntity<ApiResponse<List<TrendingReviewResponseDto>>> getTrendingReviews(
+            @RequestParam(defaultValue = "20") int limit
+    ) {
+        List<TrendingReviewResponseDto> trendingReviews = reviewService.getTrendingReviews(limit);
+        return ResponseEntity.ok(ApiResponse.success("인기 리뷰 목록 조회", trendingReviews));
     }
 
 }

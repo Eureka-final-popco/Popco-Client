@@ -9,14 +9,14 @@ import com.popcoclient.exception.business.review.NotMyReviewException;
 import com.popcoclient.exception.business.review.ReviewNotFoundException;
 import com.popcoclient.review.dto.request.ReviewCreateRequestDto;
 import com.popcoclient.review.dto.request.ReviewUpdateRequestDto;
-import com.popcoclient.review.dto.response.ReviewCreateResponseDto;
+import com.popcoclient.review.dto.response.*;
 import com.popcoclient.content.entity.Content;
-import com.popcoclient.review.dto.response.ReviewLikeResponseDto;
-import com.popcoclient.review.dto.response.ReviewResponseDto;
-import com.popcoclient.review.dto.response.ReviewPageResponseDto;
 import com.popcoclient.review.entity.Review;
 import com.popcoclient.review.entity.ReviewReaction;
+import com.popcoclient.review.entity.TrendingReview;
+import com.popcoclient.review.entity.enums.ReviewStatus;
 import com.popcoclient.review.repository.ReviewReactionRepository;
+import com.popcoclient.review.repository.TrendingReviewRepository;
 import com.popcoclient.review.service.ReviewService;
 import com.popcoclient.user.entity.User;
 import com.popcoclient.user.repository.UserDetailRepository;
@@ -25,13 +25,16 @@ import com.popcoclient.review.repository.ReviewRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -39,9 +42,12 @@ import java.util.Optional;
 public class ReviewServiceImpl implements ReviewService {
     private final ReviewRepository reviewRepository;
     private final ReviewReactionRepository reviewReactionRepository;
+    private final TrendingReviewRepository trendingReviewRepository;
     private final UserDetailRepository userDetailRepository;
     private final UserRepository userRepository;
     private final ContentRepository contentRepository;
+
+    private static final int DISPLAY_LIMIT = 20; // 화면에 표시할 리뷰 개수
 
     @Override
     public ReviewCreateResponseDto insertReview(ReviewCreateRequestDto request, Long contentId, Long userId, String type) {
@@ -145,4 +151,17 @@ public class ReviewServiceImpl implements ReviewService {
         }
 
     }
+
+    @Override
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
+    public List<TrendingReviewResponseDto> getTrendingReviews(int limit) {
+        List<TrendingReview> trendingReviews = trendingReviewRepository.findTopNByOrderByRankingAsc(
+                Math.min(limit, DISPLAY_LIMIT)
+        );
+
+        return trendingReviews.stream()
+                .map(TrendingReviewResponseDto::from)
+                .collect(Collectors.toList());
+    }
+
 }
