@@ -1,6 +1,7 @@
 package com.popcoclient.content.entity;
 
 import com.popcoclient.content.entity.key.ContentId;
+import com.popcoclient.review.dto.request.ReviewUpdateRequestDto;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.BatchSize;
@@ -59,4 +60,9 @@ public class Content {
 
     @OneToMany(mappedBy = "content", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<WatchProvider> watchProviders = new ArrayList<>();
+
+    public void updateOf(BigDecimal ratingAverage, Integer ratingCount) {
+        this.ratingAverage = ratingAverage;
+        this.ratingCount = ratingCount;
+    }
 }
