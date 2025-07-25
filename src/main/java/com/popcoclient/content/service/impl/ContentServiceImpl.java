@@ -25,9 +25,10 @@ public class ContentServiceImpl implements ContentService {
 
     public List<DailyPopularContentResponseDto> getDailyPopularContent(String type) {
         LocalDate yesterday = LocalDate.now().minusDays(1);
+        String batchType = type == null ? null : type.trim().toUpperCase();
 
         List<DailyPopularContent> popularContentList =
-                dailyPopularContentRepository.findByBatchContentTypeAndRankedDate(type, yesterday);
+                dailyPopularContentRepository.findByBatchContentTypeAndRankedDate(batchType, yesterday);
 
         if (popularContentList.isEmpty()) {
             return Collections.emptyList();
