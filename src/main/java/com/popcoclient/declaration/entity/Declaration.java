@@ -1,5 +1,6 @@
 package com.popcoclient.declaration.entity;
 
+import com.popcoclient.declaration.dto.request.DeclarationCreateRequestDto;
 import com.popcoclient.declaration.entity.enums.DeclarationType;
 import com.popcoclient.review.entity.Review;
 import com.popcoclient.user.entity.User;
@@ -45,4 +46,13 @@ public class Declaration {
 
     @LastModifiedDate
     private LocalDateTime updatedAt;
+
+    public static Declaration of(User user, Review review, DeclarationCreateRequestDto dto) {
+        return Declaration.builder()
+                .review(review)
+                .user(user)
+                .declarationType(DeclarationType.valueOf(dto.getDeclarationType()))
+                .content(dto.getContent())
+                .build();
+    }
 }

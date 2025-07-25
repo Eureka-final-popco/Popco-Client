@@ -59,7 +59,8 @@ public class SecurityConfig {
 //                        .requestMatchers(HttpMethod.DELETE, "/user").hasRole("ADMIN")
 //                        .requestMatchers("/members/role").hasRole("USER")
                         // 이 밖에 모든 요청에 대해서 인증을 필요로 한다는 설정
-                        .anyRequest().authenticated())
+                        .anyRequest().permitAll())
+//                        .anyRequest().authenticated())
                 // JWT 인증을 위하여 직접 구현한 필터를 UsernamePasswordAuthenticationFilter 전에 실행
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();
