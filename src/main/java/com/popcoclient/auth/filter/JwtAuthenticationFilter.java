@@ -36,7 +36,7 @@ public class JwtAuthenticationFilter extends GenericFilterBean {
 
         if ((request.getMethod().equals("GET") &&
                 (requestURI.startsWith("/reviews/contents") ||
-                        requestURI.startsWith("/contents/popular")))
+                        requestURI.startsWith("/contents")))
                 || requestURI.startsWith("/auth/login")
                 || requestURI.startsWith("/auth/refresh")
                 || requestURI.startsWith("/auth/kakao")
