@@ -11,4 +11,6 @@ import java.util.Set;
 
 @Repository
 public interface GenreRepository extends JpaRepository<Genre, Integer> {
+
+    List<Genre> findByIdIn(Set<Integer> ids);
 }

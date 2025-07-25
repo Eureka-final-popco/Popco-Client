@@ -1,5 +1,7 @@
 package com.popcoclient.content.controller;
 
+import com.popcoclient.common.response.ApiResponse;
+import com.popcoclient.content.dto.response.ContentDetailDto;
 import com.popcoclient.content.dto.response.DailyPopularContentResponseDto;
 import com.popcoclient.content.service.ContentService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -25,5 +27,12 @@ public class ContentController {
     public ResponseEntity<List<DailyPopularContentResponseDto>> getContent(@PathVariable String type) {
         List<DailyPopularContentResponseDto> response = contentService.getDailyPopularContent(type);
         return ResponseEntity.ok(response);
+    }
+
+    @Operation(summary = "콘텐츠 상세 조회", description = "콘텐츠 상세 정보를 조회할 수 있다.")
+    @GetMapping("/id/{id}/type/{type}")
+    public ResponseEntity<ApiResponse<ContentDetailDto>> getContent(@PathVariable Long id, @PathVariable String type) {
+        ContentDetailDto response = contentService.getContentDetail(id, type);
+        return ResponseEntity.ok(ApiResponse.success("콘텐츠 상세 조회에 성공했습니다.", response));
     }
 }
