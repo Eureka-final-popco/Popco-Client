@@ -1,6 +1,5 @@
 package com.popcoclient.auth.dto.response;
 
-import com.popcoclient.auth.jwt.JwtToken;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -11,14 +10,15 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Getter
 public class LoginResponseDto {
-    private UserResponseDto userResponseDto;
+    private LoginUserResponseDto loginUserResponseDto;
     private JwtResponseDto jwtResponseDto;
     private boolean isProfileComplete;
 
+
     public static LoginResponseDto of(
-            UserResponseDto userResponse, JwtResponseDto jwtResponse, boolean isProfileComplete) {
+            LoginUserResponseDto loginUserResponseDto, JwtResponseDto jwtResponse, boolean isProfileComplete) {
         return LoginResponseDto.builder()
-                .userResponseDto(userResponse)
+                .loginUserResponseDto(loginUserResponseDto)
                 .jwtResponseDto(jwtResponse)
                 .isProfileComplete(isProfileComplete)
                 .build();

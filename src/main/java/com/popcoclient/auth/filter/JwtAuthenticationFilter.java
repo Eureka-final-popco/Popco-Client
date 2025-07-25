@@ -30,41 +30,76 @@ public class JwtAuthenticationFilter extends GenericFilterBean {
     public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain chain)
             throws IOException, ServletException {
 
+        HttpServletRequest request = (HttpServletRequest) servletRequest;
         HttpServletResponse response = (HttpServletResponse) servletResponse;
+        String requestURI = ((HttpServletRequest) servletRequest).getRequestURI();
+
+        if (requestURI.startsWith("/auth/login") ||
+                requestURI.startsWith("/auth/refresh") ||
+                requestURI.startsWith("/auth/kakao") ||
+                requestURI.startsWith("/users/signup") ||
+                requestURI.startsWith("/swagger-ui") ||
+                requestURI.startsWith("/v3/api-docs")
+        ) {
+            chain.doFilter(servletRequest, servletResponse);
+            return;
+        }
 
         try {
-            // 1. Request Header에서 JWT 토큰 추출
-            String token = resolveToken((HttpServletRequest) servletRequest);
-            // 2. validateToken으로 토큰 유효성 검사
-            if (token != null){
-                if (jwtTokenProvider.validateToken(token) && !blackListRepository.existsById(token)){
-                    Authentication authentication = jwtTokenProvider.getAuthentication(token);
+            String accessToken = resolveAccessToken(request);
+            String refreshToken = resolveRefreshToken(request);
+
+            // access token 유효하면 인증 처리
+            if (accessToken != null && jwtTokenProvider.validateToken(accessToken, "ACCESS")) {
+                if (!blackListRepository.existsById(accessToken)) {
+                    Authentication authentication = jwtTokenProvider.getAuthentication(accessToken);
                     SecurityContextHolder.getContext().setAuthentication(authentication);
+                    chain.doFilter(request, response);
+                    return;
                 } else {
+                    // 블랙리스트 처리
                     response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                    response.setContentType("application/json");
+                    response.getWriter().write("{\"code\":\"BLACKLISTED_TOKEN\"}");
                     return;
                 }
             }
+
+            // access가 유효하지 않다면 refresh를 검사해보자 (여기서 validateToken이 예외 던지면 catch로 감)
+            if (refreshToken != null && jwtTokenProvider.validateToken(refreshToken, "REFRESH")) {
+                // refresh 유효하니 access 재발급 필요
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.setContentType("application/json");
+                response.getWriter().write("{\"code\":\"ACCESS_TOKEN_EXPIRED\"}");
+                return;
+            }
+
+            // 둘 다 null이면 그냥 로그인 안 된 요청
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.setContentType("application/json");
+            response.getWriter().write("{\"code\":\"UNAUTHORIZED\"}");
+            return;
+
         } catch (TokenExpiredException e) {
             logger.error(e.getMessage(), e);
             response.setStatus(e.getErrorCode().getStatus().value());
             response.setContentType("application/json");
             response.getWriter().write(
-                    String.format("{\"code\":\"%s\"}",
-                            e.getErrorCode().getCode()));
-            return;
+                    String.format("{\"code\":\"%s\"}", e.getErrorCode().getCode()));
         }
-
-        chain.doFilter(servletRequest, servletResponse);
     }
 
     // Request Header에서 토큰 정보 추출
-    private String resolveToken(HttpServletRequest request) {
+    private String resolveAccessToken(HttpServletRequest request) {
         String bearerToken = request.getHeader("Authorization");
-        if (StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer")) {
+        if (StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer ")) {
             return bearerToken.substring(7);
         }
         return null;
+    }
+
+    private String resolveRefreshToken(HttpServletRequest request) {
+        return request.getHeader("X-Refresh-Token");  // 커스텀 헤더에서 그대로 추출
     }
 
 }

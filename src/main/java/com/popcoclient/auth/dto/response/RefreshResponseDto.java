@@ -13,13 +13,11 @@ import lombok.NoArgsConstructor;
 public class RefreshResponseDto {
     private String grantType;
     private String accessToken;
-    private String refreshToken;
 
     public static RefreshResponseDto from(JwtToken jwtToken) {
         return RefreshResponseDto.builder()
                 .grantType(jwtToken.getGrantType())
                 .accessToken(jwtToken.getAccessToken())
-                .refreshToken(jwtToken.getRefreshToken())
                 .build();
     }
 }

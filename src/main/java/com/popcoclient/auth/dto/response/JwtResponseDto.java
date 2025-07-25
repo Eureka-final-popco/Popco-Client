@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import net.minidev.json.annotate.JsonIgnore;
 
 @Builder
 @AllArgsConstructor
@@ -13,13 +14,11 @@ import lombok.NoArgsConstructor;
 public class JwtResponseDto {
     private String grantType;
     private String accessToken;
-    private String refreshToken;
 
     public static JwtResponseDto from(JwtToken jwtToken) {
         return JwtResponseDto.builder()
                 .grantType(jwtToken.getGrantType())
                 .accessToken(jwtToken.getAccessToken())
-                .refreshToken(jwtToken.getRefreshToken())
                 .build();
     }
 }

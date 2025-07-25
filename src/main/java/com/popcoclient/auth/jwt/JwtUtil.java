@@ -11,6 +11,8 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -28,13 +30,13 @@ public class JwtUtil {
     private final BlackListRepository blackListRepository;
 
     @Value("${jwt.access-token.expire-time}")
-    private long ACCESS_TOKEN_EXPIRE_TIME;
+    private int ACCESS_TOKEN_EXPIRE_TIME;
 
-    @Value("${jwt.refresh-token.expire-time}")
-    private long REFRESH_TOKEN_EXPIRE_TIME;
+//    @Value("${jwt.refresh-token.expire-time}") 테스트를 위한 하드코딩
+    private int REFRESH_TOKEN_EXPIRE_TIME = 604800;
 
     @Value("${jwt.threshold-time}")
-    private long THRESHOLD_TIME;
+    private int THRESHOLD_TIME;
 
     public JwtUtil(@Value("${jwt.secret}") String secretKey,
                    TokenRepository tokenRepository, JwtProvider jwtProvider, BlackListRepository blackListRepository) {
@@ -49,6 +51,7 @@ public class JwtUtil {
     public JwtToken generateToken(Long userId) {
         Optional<Token> existingRefreshToken = tokenRepository.findById(userId);
         long now = (new Date()).getTime();
+        Cookie refreshTokenCookie;
 
         String refreshToken;
         String role = "ROLE_USER";
@@ -153,4 +156,15 @@ public class JwtUtil {
                 .compact();
     }
 
+    public Cookie setRefreshTokenCookie(String refreshToken) {
+        Cookie refreshTokenCookie = new Cookie("refreshToken", refreshToken);
+
+        refreshTokenCookie.setHttpOnly(true);          // JavaScript 접근 불가
+        refreshTokenCookie.setSecure(false);            // HTTPS 환경에서만 전송 (운영환경에서 true 권장)
+        refreshTokenCookie.setPath("/");                // 쿠키를 보낼 경로 설정 (전체 경로 "/" 권장)
+        refreshTokenCookie.setMaxAge(REFRESH_TOKEN_EXPIRE_TIME);   // 쿠키 만료시간 설정 (초 단위)
+        refreshTokenCookie.setAttribute("SameSite", "Lax");
+
+        return refreshTokenCookie;
+    }
 }
