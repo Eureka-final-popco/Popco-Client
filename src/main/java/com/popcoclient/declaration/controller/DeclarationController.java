@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/declaration")
+@RequestMapping("/declarations")
 @RequiredArgsConstructor
 public class DeclarationController {
     private final DeclarationService declarationService;
@@ -25,7 +25,7 @@ public class DeclarationController {
         return ResponseEntity.ok(ApiResponse.success("Get DeclarationType Success",declarationTypes));
     }
 
-    @PostMapping("/{reviewId}")
+    @PostMapping("/reviews/{reviewId}")
     public ResponseEntity<ApiResponse<Void>> createDeclaration(@PathVariable Long reviewId,
                                                                @Valid @RequestBody DeclarationCreateRequestDto dto) {
         Long userId = jwtProvider.getUserIdFromAuthentication();
