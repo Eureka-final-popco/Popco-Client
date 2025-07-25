@@ -1,10 +1,9 @@
 package com.popcoclient.content.service.impl;
 
-import com.popcoclient.content.dto.response.DailyPopularContentResponseDto;
-import com.popcoclient.content.entity.Content;
-import com.popcoclient.content.entity.DailyPopularContent;
-import com.popcoclient.content.entity.Genre;
+import com.popcoclient.content.dto.response.*;
+import com.popcoclient.content.entity.*;
 import com.popcoclient.content.entity.key.ContentId;
+import com.popcoclient.content.repository.ContentRepository;
 import com.popcoclient.content.repository.DailyPopularContentRepository;
 import com.popcoclient.content.repository.GenreRepository;
 import com.popcoclient.content.service.ContentService;
@@ -22,6 +21,7 @@ public class ContentServiceImpl implements ContentService {
     private final DailyPopularContentRepository dailyPopularContentRepository;
     private final GenreRepository genreRepository;
     private final ReviewRepository reviewRepository;
+    private final ContentRepository contentRepository;
 
     public List<DailyPopularContentResponseDto> getDailyPopularContent(String type) {
         LocalDate yesterday = LocalDate.now().minusDays(1);
@@ -71,4 +71,42 @@ public class ContentServiceImpl implements ContentService {
 
         return DailyPopularContentResponseDto.of(pc, genres, reviewAvg);
     }
+
+    @Override
+    public ContentDetailDto getContentDetail(Long id, String type) {
+        ContentId contentId = new ContentId(id, type);
+
+        // 기본 정보와 장르 ID 조회
+        Content content = contentRepository.findByIdWithGenres(contentId)
+                .orElseThrow(() -> new RuntimeException("Content not found"));
+
+        // 장르 정보 조회
+        List<Genre> genres = genreRepository.findByIdIn(content.getGenreIds());
+
+        // 출연진 정보 조회
+        contentRepository.findByIdWithCasts(contentId);
+
+        // 제작진 정보 조회
+        contentRepository.findByIdWithCrews(contentId);
+
+        // 비디오 정보 조회
+        contentRepository.findByIdWithVideos(contentId);
+
+        // 시청 제공자 정보 조회
+        contentRepository.findByIdWithWatchProviders(contentId);
+
+        return ContentDetailDto.of(content, genres);
+    }
+
+
+
+
+
+
+
+
+
+
+
+
 }
