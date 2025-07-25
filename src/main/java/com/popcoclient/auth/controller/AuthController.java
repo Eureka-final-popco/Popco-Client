@@ -7,6 +7,7 @@ import com.popcoclient.auth.dto.response.RefreshResponseDto;
 import com.popcoclient.auth.service.AuthService;
 import com.popcoclient.common.response.ApiResponse;
 import com.popcoclient.auth.dto.request.LoginRequestDto;
+import com.popcoclient.exception.business.auth.RefreshTokenNotFoundException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -32,15 +33,31 @@ public class AuthController {
         return ResponseEntity.ok().body(loginResponseDto);
     }
 
+//    @Operation(summary = "토큰 갱신", description = "헤더에 X-Refresh-Token로 Refresh Token 값을 넣어 사용하여 새로운 Access Token을 발급받습니다.")
+//    @SecurityRequirement(name = "bearerAuth")
+//    @PostMapping("/refresh")
+//    public ResponseEntity<ApiResponse<RefreshResponseDto>> refreshToken(
+//            @RequestHeader("X-Refresh-Token") String refreshTokenHeader, HttpServletResponse response) {
+//        ApiResponse<RefreshResponseDto> refreshToken = authService.refreshToken(refreshTokenHeader, response);
+//
+//        return ResponseEntity.ok(refreshToken);
+//    }
+
     @Operation(summary = "토큰 갱신", description = "헤더에 X-Refresh-Token로 Refresh Token 값을 넣어 사용하여 새로운 Access Token을 발급받습니다.")
     @SecurityRequirement(name = "bearerAuth")
     @PostMapping("/refresh")
     public ResponseEntity<ApiResponse<RefreshResponseDto>> refreshToken(
-            @RequestHeader("X-Refresh-Token") String refreshTokenHeader, HttpServletResponse response) {
-        ApiResponse<RefreshResponseDto> refreshToken = authService.refreshToken(refreshTokenHeader, response);
+            @CookieValue(value = "refreshToken", required = false) String refreshTokenCookie,
+            HttpServletResponse response) {
 
+        if (refreshTokenCookie == null) {
+            throw new RefreshTokenNotFoundException("Refresh token not found in cookies.");
+        }
+
+        ApiResponse<RefreshResponseDto> refreshToken = authService.refreshToken(refreshTokenCookie, response);
         return ResponseEntity.ok(refreshToken);
     }
+
 
     @Operation(summary = "로그아웃", description = "현재 사용자의 Access Token을 무효화하여 로그아웃 처리합니다.")
     @PostMapping("/logout")
