@@ -31,6 +31,7 @@ public class SecurityConfig {
 
     private static final String[] whiteList = {
             "/users/signup",
+            "/users/email",
             "/auth/refresh",
             "/auth/login",
             "/auth/kakao/**",
