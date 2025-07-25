@@ -1,5 +1,7 @@
 package com.popcoclient.content.dto.response;
 
+import com.popcoclient.content.entity.Content;
+import com.popcoclient.content.entity.Genre;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -29,4 +31,24 @@ public class ContentDetailDto {
     private List<CrewDto> crews;
     private List<VideoDto> videos;
     private List<WatchProviderDto> watchProviders;
+
+    public static ContentDetailDto of(Content content, List<Genre> genres) {
+        return ContentDetailDto.builder()
+                .id(content.getContentId().getId())
+                .type(content.getContentId().getType())
+                .title(content.getTitle())
+                .overview(content.getOverview())
+                .ratingAverage(content.getRatingAverage())
+                .releaseDate(content.getReleaseDate())
+                .ratingCount(content.getRatingCount())
+                .backdropPath(content.getBackdropPath())
+                .posterPath(content.getPosterPath())
+                .runtime(content.getRuntime())
+                .genres(GenreDto.from(genres))
+                .casts(CastMemberDto.from(content.getCasts()))
+                .crews(CrewDto.from(content.getCrews()))
+                .videos(VideoDto.from(content.getVideos()))
+                .watchProviders(WatchProviderDto.from(content.getWatchProviders()))
+                .build();
+    }
 }

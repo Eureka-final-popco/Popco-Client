@@ -95,83 +95,18 @@ public class ContentServiceImpl implements ContentService {
         // 시청 제공자 정보 조회
         contentRepository.findByIdWithWatchProviders(contentId);
 
-        return convertToDto(content, genres);
+        return ContentDetailDto.of(content, genres);
     }
 
-    private ContentDetailDto convertToDto(Content content, List<Genre> genres) {
-        return ContentDetailDto.builder()
-                .id(content.getContentId().getId())
-                .type(content.getContentId().getType())
-                .title(content.getTitle())
-                .overview(content.getOverview())
-                .ratingAverage(content.getRatingAverage())
-                .releaseDate(content.getReleaseDate())
-                .ratingCount(content.getRatingCount())
-                .backdropPath(content.getBackdropPath())
-                .posterPath(content.getPosterPath())
-                .runtime(content.getRuntime())
-                .genres(convertGenresToDto(genres))
-                .casts(convertCastsToDto(content.getCasts()))
-                .crews(convertCrewsToDto(content.getCrews()))
-                .videos(convertVideosToDto(content.getVideos()))
-                .watchProviders(convertWatchProvidersToDto(content.getWatchProviders()))
-                .build();
-    }
 
-    private List<GenreDto> convertGenresToDto(List<Genre> genres) {
-        return genres.stream()
-                .map(genre -> GenreDto.builder()
-                        .id(genre.getId())
-                        .name(genre.getName())
-                        .build())
-                .collect(Collectors.toList());
-    }
 
-    private List<CastMemberDto> convertCastsToDto(List<CastMember> casts) {
-        return casts.stream()
-                .map(cast -> CastMemberDto.builder()
-                        .actorId(cast.getActor().getId())
-                        .actorName(cast.getActor().getName())
-                        .profilePath(cast.getActor().getProfilePath())
-                        .characterName(cast.getCharacterName())
-                        .castOrder(cast.getCastOrder())
-                        .build())
-                .sorted((a, b) -> Integer.compare(a.getCastOrder(), b.getCastOrder()))
-                .collect(Collectors.toList());
-    }
 
-    private List<CrewDto> convertCrewsToDto(List<Crew> crews) {
-        return crews.stream()
-                .map(crew -> CrewDto.builder()
-                        .crewMemberId(crew.getCrewMember().getId())
-                        .name(crew.getCrewMember().getName())
-                        .profilePath(crew.getCrewMember().getProfilePath())
-                        .job(crew.getJob())
-                        .knownForDepartment(crew.getCrewMember().getKnownForDepartment())
-                        .build())
-                .collect(Collectors.toList());
-    }
 
-    private List<VideoDto> convertVideosToDto(List<ContentVideo> videos) {
-        return videos.stream()
-                .map(video -> VideoDto.builder()
-                        .id(video.getId())
-                        .name(video.getName())
-                        .key(video.getKey())
-                        .type(video.getType())
-                        .official(video.getOfficial())
-                        .build())
-                .collect(Collectors.toList());
-    }
 
-    private List<WatchProviderDto> convertWatchProvidersToDto(List<WatchProvider> watchProviders) {
-        return watchProviders.stream()
-                .map(wp -> WatchProviderDto.builder()
-                        .providerId(wp.getProvider().getId())
-                        .name(wp.getProvider().getName())
-                        .link(wp.getProvider().getLink())
-                        .logoPath(wp.getProvider().getLogoPath())
-                        .build())
-                .collect(Collectors.toList());
-    }
+
+
+
+
+
+
 }
