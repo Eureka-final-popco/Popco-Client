@@ -63,6 +63,15 @@ public class Review {
         this.status = request.getStatus();
     }
 
+    public void updateReport(Integer report) {
+        this.report = report;
+    }
+
+    public void updateStatusAndReport(ReviewStatus status, Integer report) {
+        this.status = status;
+        this.report = report;
+    }
+
     public static Review of(ReviewCreateRequestDto request, User user, Content content) {
         return Review.builder()
                 .user(user)

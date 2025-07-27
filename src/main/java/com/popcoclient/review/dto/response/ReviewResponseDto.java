@@ -19,10 +19,11 @@ public class ReviewResponseDto {
     private String reviewerName;
     private String reviewerProfile;
     private LocalDateTime reviewDate;
-    private ReviewStatus reviewStatus;
+    private ReviewStatus status;
     private BigDecimal score;
     private String text;
     private Integer likeCount;
     private Boolean isLiked;
     private Boolean isAuthor;
+    private Boolean isDeclaration;
 }

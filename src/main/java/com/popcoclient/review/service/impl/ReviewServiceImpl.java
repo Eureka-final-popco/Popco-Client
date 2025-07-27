@@ -30,6 +30,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -50,6 +51,7 @@ public class ReviewServiceImpl implements ReviewService {
     private static final int DISPLAY_LIMIT = 20; // 화면에 표시할 리뷰 개수
 
     @Override
+    @Transactional
     public ReviewCreateResponseDto insertReview(ReviewCreateRequestDto request, Long contentId, Long userId, String type) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("사용자를 찾을 수 없습니다. userId: " + userId));
@@ -64,6 +66,8 @@ public class ReviewServiceImpl implements ReviewService {
 
         Review review = Review.of(request, user, content);
         reviewRepository.save(review);
+
+        updateContentStats(content);
 
         return ReviewCreateResponseDto.builder()
                 .reviewId(review.getReviewId())
@@ -97,6 +101,7 @@ public class ReviewServiceImpl implements ReviewService {
 
 
     @Override
+    @Transactional
     public void updateReview(Long reviewId, ReviewUpdateRequestDto request, Long userId) {
         Review review = reviewRepository.findById(reviewId)
                 .orElseThrow(() -> new ReviewNotFoundException("리뷰를 찾을 수 없습니다. reviewId: " + reviewId));
@@ -110,10 +115,13 @@ public class ReviewServiceImpl implements ReviewService {
 
         review.updateFrom(request);
         reviewRepository.save(review);
+
+        updateContentStats(review.getContent());
     }
 
 
     @Override
+    @Transactional
     public void deleteReview(Long reviewId, Long userId) {
         Review review = reviewRepository.findById(reviewId)
                 .orElseThrow(() -> new ReviewNotFoundException("리뷰를 찾을 수 없습니다. reviewId: " + reviewId));
@@ -126,6 +134,7 @@ public class ReviewServiceImpl implements ReviewService {
         }
 
         reviewRepository.delete(review);
+        updateContentStats(review.getContent());
     }
 
     @Override
@@ -162,6 +171,14 @@ public class ReviewServiceImpl implements ReviewService {
         return trendingReviews.stream()
                 .map(TrendingReviewResponseDto::from)
                 .collect(Collectors.toList());
+    }
+
+    private void updateContentStats(Content content) {
+        Integer reviewCount = reviewRepository.countByContent(content);
+        Double avgScore = reviewRepository.avgStar(content);
+
+        content.updateOf(BigDecimal.valueOf(avgScore), reviewCount);
+        contentRepository.save(content);
     }
 
 }

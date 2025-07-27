@@ -2,6 +2,7 @@ package com.popcoclient.review.repository.custom;
 
 import com.popcoclient.content.entity.Content;
 import com.popcoclient.content.entity.key.ContentId;
+import com.popcoclient.review.entity.QReview;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.Tuple;
 import com.querydsl.core.types.OrderSpecifier;
@@ -18,7 +19,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.support.PageableExecutionUtils;
 import org.springframework.stereotype.Repository;
 
-import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -29,6 +29,7 @@ import static com.popcoclient.review.entity.QReview.review;
 import static com.popcoclient.review.entity.QReviewReaction.reviewReaction;
 import static com.popcoclient.user.entity.QUser.user;
 import static com.popcoclient.user.entity.QUserDetail.userDetail;
+import static com.popcoclient.declaration.entity.QDeclaration.declaration;
 
 @Repository
 @RequiredArgsConstructor
@@ -43,7 +44,7 @@ public class ReviewRepositoryImpl implements ReviewRepositoryCustom {
         return review.user.userId.eq(userId);
     }
 
-    // 로그인한 사용자면 좋아요여부 판단, 비로그인은 False 반환
+    // 로그인한 사용자면 좋아요 여부 판단, 비로그인은 False 반환
     private BooleanExpression reviewLikeUserIdExist(Long userId) {
         if(userId == null)
             return Expressions.FALSE;
@@ -52,6 +53,18 @@ public class ReviewRepositoryImpl implements ReviewRepositoryCustom {
                 .from(reviewReaction)
                 .where(reviewReaction.user.userId.eq(userId)
                         .and(reviewReaction.review.reviewId.eq(review.reviewId)))
+                .exists();
+    }
+
+    // 로그인한 사용자면 리뷰 신고 여부 판단, 비로그인 False 반환
+    private BooleanExpression reviewDeclarationUserIdExist(Long userId, QReview review) {
+        if(userId == null)
+            return Expressions.FALSE;
+        return JPAExpressions
+                .selectOne()
+                .from(declaration)
+                .where(declaration.user.userId.eq(userId)
+                        .and(declaration.review.reviewId.eq(review.reviewId)))
                 .exists();
     }
 
@@ -78,7 +91,8 @@ public class ReviewRepositoryImpl implements ReviewRepositoryCustom {
                         review.text,
                         review.likeCount,
                         reviewLikeUserIdExist(userId),
-                        reviewUserIdExist(userId)
+                        reviewUserIdExist(userId),
+                        reviewDeclarationUserIdExist(userId, review)
                 ))
                 .from(review)
                 .join(review.user, user)
