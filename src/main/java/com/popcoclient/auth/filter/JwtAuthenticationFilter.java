@@ -33,21 +33,23 @@ public class JwtAuthenticationFilter extends GenericFilterBean {
         HttpServletRequest request = (HttpServletRequest) servletRequest;
         HttpServletResponse response = (HttpServletResponse) servletResponse;
 
-//        if ((request.getMethod().equals("GET") &&
-//                (
-//                        requestURI.startsWith("/reviews/contents") ||
-//                        requestURI.startsWith("/contents/popular")))
-//                || requestURI.startsWith("/auth/login")
-//                || requestURI.startsWith("/users/register")
-//                || requestURI.startsWith("/auth/refresh")
-//                || requestURI.startsWith("/auth/kakao"))
-//                || requestURI.startsWith("/users/email")
-//                || requestURI.startsWith("/swagger-ui")
-//                || requestURI.startsWith("/v3/api-docs")
-//        {
-//            chain.doFilter(servletRequest, servletResponse);
-//            return;
-//        }
+        String requestURI = ((HttpServletRequest) servletRequest).getRequestURI();
+
+//         if ((request.getMethod().equals("GET") &&
+//                 (requestURI.startsWith("/reviews/contents")
+//                         || requestURI.startsWith("/contents") || requestURI.startsWith("/reviews/weekly-trend")))
+//                 || requestURI.startsWith("/auth/login")
+//                 || requestURI.startsWith("/auth/refresh")
+//                 || requestURI.startsWith("/auth/kakao")
+//                 || requestURI.startsWith("/users/signup")
+//                 || requestURI.startsWith("/users/email")
+//                 || requestURI.startsWith("/swagger-ui")
+//                 || requestURI.startsWith("/v3/api-docs")
+//         )
+//         {
+//             chain.doFilter(servletRequest, servletResponse);
+//             return;
+//         }
         try {
             String accessToken = resolveAccessToken(request);
             String refreshToken = resolveRefreshToken(request);

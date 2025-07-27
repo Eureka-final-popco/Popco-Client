@@ -20,6 +20,7 @@ public class TrendingReviewResponseDto {
     private String reviewText;
     private BigDecimal score;
     private ReviewStatus status;
+    private Integer likeCount;
 
     // 사용자 정보
     private Long userId;
@@ -44,6 +45,7 @@ public class TrendingReviewResponseDto {
                 .reviewText(review.getText())
                 .score(review.getScore())
                 .status(review.getStatus())
+                .likeCount(review.getLikeCount())
 
                 // 사용자 정보
                 .userId(user.getUserId())
