@@ -41,11 +41,13 @@ public class JwtAuthenticationFilter extends GenericFilterBean {
 //                || requestURI.startsWith("/users/register")
 //                || requestURI.startsWith("/auth/refresh")
 //                || requestURI.startsWith("/auth/kakao"))
+//                || requestURI.startsWith("/users/email")
+//                || requestURI.startsWith("/swagger-ui")
+//                || requestURI.startsWith("/v3/api-docs")
 //        {
 //            chain.doFilter(servletRequest, servletResponse);
 //            return;
 //        }
-
         try {
             String accessToken = resolveAccessToken(request);
             String refreshToken = resolveRefreshToken(request);
