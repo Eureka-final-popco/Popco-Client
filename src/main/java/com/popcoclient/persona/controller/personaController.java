@@ -1,10 +1,13 @@
 package com.popcoclient.persona.controller;
 
 import com.popcoclient.common.response.ApiResponse;
+import com.popcoclient.persona.dto.response.MyPersonaResponseDto;
+import com.popcoclient.persona.dto.response.PersonaAnalysisResponseDto;
 import com.popcoclient.persona.dto.response.PersonaListResponseDto;
 import com.popcoclient.persona.dto.response.PersonaQuestionResponseDto;
 import com.popcoclient.persona.service.PersonaService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -15,13 +18,26 @@ import org.springframework.web.bind.annotation.RestController;
 
 @Tag(name = "페르소나", description = "페르소나 관련 API")
 @RestController
-@RequestMapping("personas")
+@RequestMapping("/personas")
 @RequiredArgsConstructor
 public class personaController {
     private final PersonaService personaService;
 
-    @Operation(summary = "페르소나 목록 조회", description = "시스템에 등록된 모든 페르소나의 목록을 조회합니다.")
+    @Operation(summary = "나의 페르소나 조회", description = "페르소나 페이지의 Section 1 + 2 에 사용될 데이터")
+    @SecurityRequirement(name = "bearerAuth")
     @GetMapping
+    public ResponseEntity<ApiResponse<MyPersonaResponseDto>> getPersonas() {
+        return null;
+    }
+
+    @Operation(summary = "페르소나 통계 조회", description = "페르소나 페이지의 Section 3 + 4 에 사용될 데이터")
+    @SecurityRequirement(name = "bearerAuth")
+    public ResponseEntity<ApiResponse<PersonaAnalysisResponseDto>> getPersonaAnalysis() {
+        return null;
+    }
+
+    @Operation(summary = "페르소나 목록 조회", description = "시스템에 등록된 모든 페르소나의 목록을 조회합니다.")
+    @GetMapping("/list")
     public ResponseEntity<ApiResponse<PersonaListResponseDto>> getPersonaList() {
         PersonaListResponseDto response = personaService.getPersonaList();
         return ResponseEntity.ok(ApiResponse.success("get persona list success", response));
