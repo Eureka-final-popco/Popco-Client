@@ -48,7 +48,7 @@ public class UserController {
     @SecurityRequirement(name = "bearerAuth")
     @GetMapping("/details")
     public ResponseEntity<ApiResponse<UserDetailResponseDto>> getUserDetail() {
-        Long userId = jwtProvider.getUserIdFromAuthentication();
+        Long userId = jwtProvider.getRequiredUserId();
         UserDetailResponseDto response = userDetailService.getUserDetail(userId);
         return ResponseEntity.ok(ApiResponse.success("Get UserDetail Success",response));
     }
@@ -57,7 +57,7 @@ public class UserController {
     @SecurityRequirement(name = "bearerAuth")
     @PostMapping("/details")
     public ResponseEntity<ApiResponse<Void>> createUserDetail(@Valid @RequestBody UserDetailCreateRequestDto request) {
-        Long userId = jwtProvider.getUserIdFromAuthentication();
+        Long userId = jwtProvider.getRequiredUserId();
         userDetailService.createUserDetail(request, userId);
         return ResponseEntity.ok(ApiResponse.success("Create UserDetail Success", null));
     }
@@ -66,7 +66,7 @@ public class UserController {
     @SecurityRequirement(name = "bearerAuth")
     @PutMapping("/details")
     public ResponseEntity<ApiResponse<Void>> updateUserDetail(@Valid @RequestBody UserDetailUpdateRequestDto request) {
-        Long userId = jwtProvider.getUserIdFromAuthentication();
+        Long userId = jwtProvider.getRequiredUserId();
         userDetailService.updateUserDetail(request, userId);
         return ResponseEntity.ok(ApiResponse.success("Update UserDetail Success", null));
     }

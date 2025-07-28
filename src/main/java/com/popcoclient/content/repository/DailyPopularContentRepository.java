@@ -16,4 +16,9 @@ public interface DailyPopularContentRepository extends JpaRepository<DailyPopula
     @EntityGraph(attributePaths = {"content"})
     List<DailyPopularContent> findByBatchContentTypeAndRankedDate(String batchType, LocalDate rankedDate);
 
+    @Query("SELECT d FROM DailyPopularContent d " +
+            "WHERE d.batchContentType = :batchType AND d.rankedDate = :rankedDate AND d.ranking = 1")
+    DailyPopularContent findFirstRanked(@Param("batchType") String batchType,
+                                           @Param("rankedDate") LocalDate rankedDate);
+
 }
