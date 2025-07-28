@@ -17,7 +17,7 @@ import java.util.Optional;
 @Repository
 public interface CollectionContentRepository extends JpaRepository<CollectionContent, Long> {
 
-    List<CollectionContent> findByCollection(Collection collection);
+    List<CollectionContent> findAllByCollection(Collection collection);
 
     Page<CollectionContent> findByCollection(Collection collection, Pageable pageable);
 
