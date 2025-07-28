@@ -4,6 +4,7 @@ import com.popcoclient.auth.filter.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
@@ -54,6 +55,16 @@ public class SecurityConfig {
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests(authorize -> authorize
+                        .requestMatchers(HttpMethod.GET, "/collections/my").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/collections/*").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/collections/user/*").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/collections/search").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/collections").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/collections/popular").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/collections/*/contents").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/collections/*/contents/all").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/collections/*/contents/count").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/collections/*/contents/check/*").permitAll()
                         // 해당 API에 대해서는 모든 요청을 허가
                         .requestMatchers(whiteList).permitAll()
                         // 사용자 삭제는 관리자 권한만 가능
