@@ -3,10 +3,12 @@ package com.popcoclient.content.controller;
 import com.popcoclient.auth.jwt.JwtProvider;
 import com.popcoclient.common.response.ApiResponse;
 import com.popcoclient.content.dto.response.ContentDetailDto;
+import com.popcoclient.content.dto.response.ContentListResponseDto_40;
 import com.popcoclient.content.dto.response.ContentRecommendResponseDto;
 import com.popcoclient.content.dto.response.DailyPopularContentResponseDto;
 import com.popcoclient.content.service.ContentService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -46,5 +48,13 @@ public class ContentController {
 
         List<ContentRecommendResponseDto> response = contentService.getContentRecommendList(userId, type);
         return ResponseEntity.ok(ApiResponse.success("1등 관련 콘텐츠 조회에 성공했습니다.", response));
+    }
+
+    @Operation(summary = "선호도 진단 시 포스터 조회", description = "선호도 진단에 쓰이는 40개의 포스터를 조회하는 api")
+    @SecurityRequirement(name = "bearerAuth")
+    @GetMapping("/preferences")
+    public ResponseEntity<ApiResponse<ContentListResponseDto_40>> getContentPreferenceTest() {
+        Long userId = jwtProvider.getRequiredUserId();
+        return ResponseEntity.ok(ApiResponse.success(contentService.getContentPreferenceList(userId)));
     }
 }

@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -39,4 +40,6 @@ public interface ContentRepository extends JpaRepository<Content, ContentId> {
             "LEFT JOIN FETCH wp.provider " +
             "WHERE c.contentId = :contentId")
     Optional<Content> findByIdWithWatchProviders(@Param("contentId") ContentId contentId);
+
+    List<Content> findAllByTitleIn(List<String> titles);
 }
