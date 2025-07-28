@@ -30,14 +30,16 @@ public class ContentServiceImpl implements ContentService {
     private final ContentRecommendationRepository contentRecommendationRepository;
 
     public List<DailyPopularContentResponseDto> getDailyPopularContentList(String type) {
-        LocalDate yesterday = LocalDate.now().minusDays(1);
+        LocalDate today = LocalDate.now();
         String batchType = type == null ? null : type.trim().toUpperCase();
 
         List<DailyPopularContent> popularContentList =
-                dailyPopularContentRepository.findByBatchContentTypeAndRankedDate(batchType, yesterday);
+                dailyPopularContentRepository.findByBatchContentTypeAndRankedDate(batchType, today);
 
-        if (popularContentList.isEmpty()) {
-            return Collections.emptyList();
+        if(popularContentList.isEmpty()) {
+            LocalDate yesterday = today.minusDays(1);
+            popularContentList =
+                    dailyPopularContentRepository.findByBatchContentTypeAndRankedDate(batchType, yesterday);
         }
 
         // 모든 장르 ID를 미리 조회해서 매핑 생성
@@ -106,11 +108,16 @@ public class ContentServiceImpl implements ContentService {
 
     @Override
     public List<ContentRecommendResponseDto> getContentRecommendList(Long userId, String type) {
-        LocalDate yesterday = LocalDate.now().minusDays(1);
+        LocalDate today = LocalDate.now();
         String batchType = type == null ? null : type.trim().toUpperCase();
 
         DailyPopularContent popularContent =
-                dailyPopularContentRepository.findFirstRanked(batchType, yesterday);
+                dailyPopularContentRepository.findFirstRanked(batchType, today);
+
+        if(popularContent == null) {
+            LocalDate yesterday = today.minusDays(1);
+            popularContent = dailyPopularContentRepository.findFirstRanked(batchType, yesterday);
+        }
 
         if (userId == null) {
             return contentRecommendationRepository.findWithoutUserReactions(popularContent.getContent());
