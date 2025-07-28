@@ -2,6 +2,7 @@ package com.popcoclient.review.controller;
 
 import com.popcoclient.auth.jwt.JwtProvider;
 import com.popcoclient.common.response.ApiResponse;
+import com.popcoclient.exception.business.auth.UnauthorizedUserException;
 import com.popcoclient.review.dto.request.ReviewCreateRequestDto;
 import com.popcoclient.review.dto.request.ReviewUpdateRequestDto;
 import com.popcoclient.review.dto.response.ReviewCreateResponseDto;
@@ -34,7 +35,6 @@ public class ReviewController {
             @RequestParam(name = "pageSize", defaultValue = "10") Integer pageSize,
             @RequestParam(name = "sort", defaultValue = "recent") String sort,
             @PathVariable("contentId") Long contentId, @PathVariable("type") String type) {
-
         Long userId = jwtProvider.getUserIdFromAuthentication();
 
         ReviewPageResponseDto response = reviewService.getReviewPage(pageNumber, pageSize, sort, userId, contentId, type);
@@ -46,7 +46,7 @@ public class ReviewController {
     @PostMapping("/contents/{contentId}/types/{type}")
     public ResponseEntity<ApiResponse<ReviewCreateResponseDto>> createReview(
             @RequestBody ReviewCreateRequestDto request, @PathVariable("contentId") Long contentId, @PathVariable("type") String type) {
-        Long userId = jwtProvider.getUserIdFromAuthentication();
+        Long userId = jwtProvider.getRequiredUserId();
 
         ReviewCreateResponseDto response = reviewService.insertReview(request, contentId, userId, type);
         return ResponseEntity.ok(ApiResponse.success("create review success", response));
@@ -57,7 +57,7 @@ public class ReviewController {
     @PutMapping("/{reviewId}")
     public ResponseEntity<ApiResponse<Void>> updateReview(
             @RequestBody ReviewUpdateRequestDto request, @PathVariable("reviewId") Long reviewId){
-        Long userId = jwtProvider.getUserIdFromAuthentication();
+        Long userId = jwtProvider.getRequiredUserId();
         reviewService.updateReview(reviewId, request, userId);
         return ResponseEntity.ok(ApiResponse.success("update review success", null));
     }
@@ -66,7 +66,7 @@ public class ReviewController {
     @SecurityRequirement(name = "bearerAuth")
     @DeleteMapping("/{reviewId}")
     public ResponseEntity<ApiResponse<Void>> deleteReview(@PathVariable("reviewId") Long reviewId) {
-        Long userId = jwtProvider.getUserIdFromAuthentication();
+        Long userId = jwtProvider.getRequiredUserId();
         reviewService.deleteReview(reviewId, userId);
         return ResponseEntity.ok(ApiResponse.success("delete review success", null));
     }
@@ -75,7 +75,7 @@ public class ReviewController {
     @SecurityRequirement(name = "bearerAuth")
     @PostMapping("/{reviewId}/reaction")
     public ResponseEntity<ApiResponse<ReviewLikeResponseDto>> reactionReview(@PathVariable("reviewId") Long reviewId) {
-        Long userId = jwtProvider.getUserIdFromAuthentication();
+        Long userId = jwtProvider.getRequiredUserId();
         ReviewLikeResponseDto response = reviewService.reactionReview(reviewId, userId);
 
         if (response.getIsLiked()) {

@@ -35,7 +35,7 @@ public class DeclarationController {
     @PostMapping("/reviews/{reviewId}")
     public ResponseEntity<ApiResponse<Void>> createDeclaration(@PathVariable Long reviewId,
                                                                @Valid @RequestBody DeclarationCreateRequestDto dto) {
-        Long userId = jwtProvider.getUserIdFromAuthentication();
+        Long userId = jwtProvider.getRequiredUserId();
         declarationService.createReviewDeclaration(dto, userId, reviewId);
         return ResponseEntity.ok(ApiResponse.success("Create Declaration Success", null));
     }

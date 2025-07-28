@@ -3,11 +3,15 @@ package com.popcoclient.content.service.impl;
 import com.popcoclient.content.dto.response.*;
 import com.popcoclient.content.entity.*;
 import com.popcoclient.content.entity.key.ContentId;
+import com.popcoclient.content.repository.ContentRecommendationRepository;
 import com.popcoclient.content.repository.ContentRepository;
 import com.popcoclient.content.repository.DailyPopularContentRepository;
 import com.popcoclient.content.repository.GenreRepository;
 import com.popcoclient.content.service.ContentService;
+import com.popcoclient.exception.business.UserNotFoundException;
 import com.popcoclient.review.repository.ReviewRepository;
+import com.popcoclient.user.entity.User;
+import com.popcoclient.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -22,8 +26,10 @@ public class ContentServiceImpl implements ContentService {
     private final GenreRepository genreRepository;
     private final ReviewRepository reviewRepository;
     private final ContentRepository contentRepository;
+    private final UserRepository userRepository;
+    private final ContentRecommendationRepository contentRecommendationRepository;
 
-    public List<DailyPopularContentResponseDto> getDailyPopularContent(String type) {
+    public List<DailyPopularContentResponseDto> getDailyPopularContentList(String type) {
         LocalDate yesterday = LocalDate.now().minusDays(1);
         String batchType = type == null ? null : type.trim().toUpperCase();
 
@@ -67,7 +73,7 @@ public class ContentServiceImpl implements ContentService {
                 .collect(Collectors.joining(","));
 
         // 리뷰 평점 평균 가져오기
-        Double reviewAvg = reviewAvgMap.getOrDefault(contentId, null);
+        Double reviewAvg = reviewAvgMap.get(contentId);
 
         return DailyPopularContentResponseDto.of(pc, genres, reviewAvg);
     }
@@ -98,15 +104,19 @@ public class ContentServiceImpl implements ContentService {
         return ContentDetailDto.of(content, genres);
     }
 
+    @Override
+    public List<ContentRecommendResponseDto> getContentRecommendList(Long userId, String type) {
+        LocalDate yesterday = LocalDate.now().minusDays(1);
+        String batchType = type == null ? null : type.trim().toUpperCase();
 
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("사용자를 찾을 수 없습니다. userId: " + userId));
 
+        DailyPopularContent popularContent =
+                dailyPopularContentRepository.findFirstRanked(batchType, yesterday);
 
-
-
-
-
-
-
+        return contentRecommendationRepository.findWithUserReactions(popularContent.getContent(), user.getUserId());
+    }
 
 
 }

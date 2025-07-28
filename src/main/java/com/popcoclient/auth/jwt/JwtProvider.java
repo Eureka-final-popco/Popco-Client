@@ -59,10 +59,39 @@ public class JwtProvider {
         String principal = authentication.getName();
 
         if ("anonymousUser".equals(principal)) {
-            return null; // 비회원일 경우 null 리턴
+            return null;
         }
 
         return Long.parseLong(principal); // 회원일 경우
+    }
+
+    // 로그인 안 하면 null을 반환하는 버전
+    public Long getNullableUserId() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return null;
+        }
+
+        String principal = authentication.getName();
+        if ("anonymousUser".equals(principal)) {
+            return null;
+        }
+
+        try {
+            return Long.parseLong(principal);
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+
+    // 로그인 필수일 때 사용하는 버전
+    public Long getRequiredUserId() {
+        Long userId = getNullableUserId();
+        if (userId == null) {
+            throw new UnauthorizedUserException("로그인이 필요합니다.");
+        }
+        return userId;
     }
 
     public boolean validateToken(String token, String tokenType) {

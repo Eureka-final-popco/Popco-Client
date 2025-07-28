@@ -51,7 +51,6 @@ public class JwtUtil {
     public JwtToken generateToken(Long userId) {
         Optional<Token> existingRefreshToken = tokenRepository.findById(userId);
         long now = (new Date()).getTime();
-        Cookie refreshTokenCookie;
 
         String refreshToken;
         String role = "ROLE_USER";
