@@ -9,6 +9,7 @@ import com.popcoclient.collection.service.CollectionService;
 import com.popcoclient.common.response.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@Tag(name = "컬렉션", description = "컬렉션과 관련된 api")
 @RestController
 @RequestMapping("/collections")
 @RequiredArgsConstructor
