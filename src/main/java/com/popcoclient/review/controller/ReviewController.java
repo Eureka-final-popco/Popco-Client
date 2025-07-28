@@ -35,8 +35,7 @@ public class ReviewController {
             @RequestParam(name = "pageSize", defaultValue = "10") Integer pageSize,
             @RequestParam(name = "sort", defaultValue = "recent") String sort,
             @PathVariable("contentId") Long contentId, @PathVariable("type") String type) {
-        Long userId = jwtProvider.getUserIdFromAuthentication();
-
+        Long userId = jwtProvider.getNullableUserId();
         ReviewPageResponseDto response = reviewService.getReviewPage(pageNumber, pageSize, sort, userId, contentId, type);
         return ResponseEntity.ok(ApiResponse.success("get review page success", response));
     }
@@ -47,7 +46,6 @@ public class ReviewController {
     public ResponseEntity<ApiResponse<ReviewCreateResponseDto>> createReview(
             @RequestBody ReviewCreateRequestDto request, @PathVariable("contentId") Long contentId, @PathVariable("type") String type) {
         Long userId = jwtProvider.getRequiredUserId();
-
         ReviewCreateResponseDto response = reviewService.insertReview(request, contentId, userId, type);
         return ResponseEntity.ok(ApiResponse.success("create review success", response));
     }
