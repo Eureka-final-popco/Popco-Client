@@ -109,11 +109,15 @@ public class ContentServiceImpl implements ContentService {
         LocalDate yesterday = LocalDate.now().minusDays(1);
         String batchType = type == null ? null : type.trim().toUpperCase();
 
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException("사용자를 찾을 수 없습니다. userId: " + userId));
-
         DailyPopularContent popularContent =
                 dailyPopularContentRepository.findFirstRanked(batchType, yesterday);
+
+        if (userId == null) {
+            return contentRecommendationRepository.findWithoutUserReactions(popularContent.getContent());
+        }
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("사용자를 찾을 수 없습니다. userId: " + userId));
 
         return contentRecommendationRepository.findWithUserReactions(popularContent.getContent(), user.getUserId());
     }

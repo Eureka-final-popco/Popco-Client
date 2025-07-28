@@ -14,7 +14,19 @@ import java.util.List;
 @Repository
 public interface ContentRecommendationRepository extends JpaRepository<ContentRecommendation, ContentRecommendationId> {
 
-    List<ContentRecommendation> findBySourceContent(Content sourceContent);
+    @Query(
+            "select new com.popcoclient.content.dto.response.ContentRecommendResponseDto(" +
+                    "cr.recommendedContent.contentId.id, " +
+                    "cr.recommendedContent.contentId.type, " +
+                    "cr.recommendedContent.title, " +
+                    "cr.ranking, " +
+                    "cr.recommendedContent.posterPath, " +
+                    "null" +
+                    ") " +
+                    "from ContentRecommendation cr " +
+                    "where cr.sourceContent = :sourceContent"
+    )
+    List<ContentRecommendResponseDto> findWithoutUserReactions(@Param("sourceContent") Content sourceContent);
 
     @Query(
             "select new com.popcoclient.content.dto.response.ContentRecommendResponseDto(" +
@@ -29,7 +41,6 @@ public interface ContentRecommendationRepository extends JpaRepository<ContentRe
                     "left join ContentReaction r " +
                     "on r.content = cr.recommendedContent " +
                     "and r.user.userId = :userId " +
-//                    "and r.reaction <> 'dislike' " + // 싫어요를 포함해서 보여줄 것인지 ?
                     "where cr.sourceContent = :sourceContent"
     )
     List<ContentRecommendResponseDto> findWithUserReactions(
