@@ -77,8 +77,22 @@ public class AuthServiceImpl implements AuthService {
         KakaoToken token = kakaoUtil.requestToken(accessCode);
         KakaoProfile kakaoProfile = kakaoUtil.requestProfile(token);
 
-        String email = kakaoProfile.getKakao_account().getEmail();
-        String nickname = kakaoProfile.getKakao_account().getProfile().getNickname();
+        if (kakaoProfile == null || kakaoProfile.getKakao_account() == null) {
+            throw new IllegalStateException("카카오 계정 정보가 없습니다.");
+        }
+
+        KakaoProfile.KakaoAccount account = kakaoProfile.getKakao_account();
+
+        // 이메일은 반드시 있어야 하므로 검사
+        String email = account.getEmail();
+        if (email == null || email.isBlank()) {
+            throw new IllegalStateException("이메일 정보가 없습니다.");
+        }
+
+        // 프로필은 선택 사항 → 없을 경우 기본값 "user" 사용
+        String nickname = Optional.ofNullable(account.getProfile())
+                .map(KakaoProfile.KakaoAccount.Profile::getNickname)
+                .orElse("user");
 
         Optional<User> userOpt = userRepository.findByEmail(email);
 
@@ -99,7 +113,7 @@ public class AuthServiceImpl implements AuthService {
     }
 
     private LoginResponseDto buildLoginResponse(User user, JwtToken token) {
-                Optional<UserDetail> userDetailOpt = userDetailRepository.findById(user.getUserId());
+        Optional<UserDetail> userDetailOpt = userDetailRepository.findById(user.getUserId());
         LoginUserResponseDto userResponseDto = null;
         boolean isProfileComplete = false;
 
