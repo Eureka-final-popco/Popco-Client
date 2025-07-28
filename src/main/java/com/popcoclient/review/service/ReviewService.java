@@ -2,10 +2,7 @@ package com.popcoclient.review.service;
 
 import com.popcoclient.review.dto.request.ReviewCreateRequestDto;
 import com.popcoclient.review.dto.request.ReviewUpdateRequestDto;
-import com.popcoclient.review.dto.response.ReviewCreateResponseDto;
-import com.popcoclient.review.dto.response.ReviewLikeResponseDto;
-import com.popcoclient.review.dto.response.ReviewPageResponseDto;
-import com.popcoclient.review.dto.response.TrendingReviewResponseDto;
+import com.popcoclient.review.dto.response.*;
 
 import java.util.List;
 
@@ -19,4 +16,6 @@ public interface ReviewService {
     ReviewLikeResponseDto reactionReview(Long reviewId, Long userId);
 
     List<TrendingReviewResponseDto> getTrendingReviews(int limit);
+
+    ReviewSummaryResponseDto getContentReviewSummary(Long contentId, String type);
 }

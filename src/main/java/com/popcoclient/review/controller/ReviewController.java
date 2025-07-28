@@ -5,10 +5,7 @@ import com.popcoclient.common.response.ApiResponse;
 import com.popcoclient.exception.business.auth.UnauthorizedUserException;
 import com.popcoclient.review.dto.request.ReviewCreateRequestDto;
 import com.popcoclient.review.dto.request.ReviewUpdateRequestDto;
-import com.popcoclient.review.dto.response.ReviewCreateResponseDto;
-import com.popcoclient.review.dto.response.ReviewLikeResponseDto;
-import com.popcoclient.review.dto.response.ReviewPageResponseDto;
-import com.popcoclient.review.dto.response.TrendingReviewResponseDto;
+import com.popcoclient.review.dto.response.*;
 import com.popcoclient.review.service.ReviewService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -90,6 +87,15 @@ public class ReviewController {
     ) {
         List<TrendingReviewResponseDto> trendingReviews = reviewService.getTrendingReviews(limit);
         return ResponseEntity.ok(ApiResponse.success("인기 리뷰 목록 조회", trendingReviews));
+    }
+
+    @Operation(summary = "콘텐츠 리뷰 요약 조회", description = "리뷰가 5개 이상 쌓이면 리뷰 요약본을 제공합니다.")
+    @GetMapping("/summary/contents/{contentId}/types/{type}")
+    public ResponseEntity<ApiResponse<ReviewSummaryResponseDto>> getContentReviewSummary(
+            @PathVariable("contentId") Long contentId, @PathVariable("type") String type
+    ) {
+        ReviewSummaryResponseDto reviewSummary = reviewService.getContentReviewSummary(contentId, type);
+        return ResponseEntity.ok(ApiResponse.success("콘텐츠 리뷰 요약 조회", reviewSummary));
     }
 
 }
