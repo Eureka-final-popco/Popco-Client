@@ -6,6 +6,7 @@ import com.popcoclient.collection.dto.response.CollectionContentResponseDto;
 import com.popcoclient.collection.service.CollectionContentService;
 import com.popcoclient.common.response.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +28,7 @@ public class CollectionContentController {
 
     // 컬렉션에 컨텐츠 추가
     @Operation(summary = "컬렉션에 컨텐츠 추가", description = "")
+    @SecurityRequirement(name = "bearerAuth")
     @PostMapping
     public ResponseEntity<ApiResponse<CollectionContentResponseDto>> addContentToCollection(@PathVariable Long collectionId, @Valid @RequestBody CollectionContentRequestDto request) {
         Long userId = jwtProvider.getUserIdFromAuthentication();
@@ -52,6 +54,7 @@ public class CollectionContentController {
 
     // 컬렉션에서 컨텐츠 제거
     @Operation(summary = "컬렉션에서 컨텐츠 제거", description = "")
+    @SecurityRequirement(name = "bearerAuth")
     @DeleteMapping("/{contentId}")
     public ResponseEntity<ApiResponse<Void>> removeContentFromCollection(@PathVariable Long collectionId, @PathVariable Long contentId, @RequestParam String contentType) {
         Long userId = jwtProvider.getUserIdFromAuthentication();

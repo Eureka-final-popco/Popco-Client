@@ -8,6 +8,7 @@ import com.popcoclient.collection.dto.response.CollectionResponseDto;
 import com.popcoclient.collection.service.CollectionService;
 import com.popcoclient.common.response.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -25,6 +26,7 @@ public class CollectionController {
 
     // 컬렉션 생성
     @Operation(summary = "컬렉션 생성", description = "새로운 컬렉션을 생성합니다")
+    @SecurityRequirement(name = "bearerAuth")
     @PostMapping
     public ResponseEntity<ApiResponse<CollectionResponseDto>> createCollection(@Valid @RequestBody CollectionRequestDto request) {
         Long userId = jwtProvider.getUserIdFromAuthentication();
@@ -53,6 +55,7 @@ public class CollectionController {
 
     // 내 컬렉션 목록 조회
     @Operation(summary = "내 컬렉션 목록 조회", description = "현재 로그인한 사용자의 컬렉션 목록을 조회합니다")
+    @SecurityRequirement(name = "bearerAuth")
     @GetMapping("/my")
     public ResponseEntity<ApiResponse<CollectionListResponseDto>> getMyCollections(
             @RequestParam(defaultValue = "0") Integer pageNumber,
@@ -65,10 +68,7 @@ public class CollectionController {
     // 컬렉션 검색
     @Operation(summary = "컬렉션 검색", description = "키워드로 컬렉션을 검색합니다")
     @GetMapping("/search")
-    public ResponseEntity<ApiResponse<CollectionListResponseDto>> searchCollections(
-            @RequestParam String keyword,
-            @RequestParam(defaultValue = "0") Integer pageNumber,
-            @RequestParam(defaultValue = "20") Integer pageSize) {
+    public ResponseEntity<ApiResponse<CollectionListResponseDto>> searchCollections(@RequestParam String keyword, @RequestParam(defaultValue = "0") Integer pageNumber, @RequestParam(defaultValue = "20") Integer pageSize) {
         CollectionListResponseDto response = collectionService.searchCollections(keyword, pageNumber, pageSize);
         return ResponseEntity.ok(ApiResponse.success("컬렉션 검색 성공", response));
     }
@@ -93,6 +93,7 @@ public class CollectionController {
 
     // 컬렉션 수정
     @Operation(summary = "컬렉션 수정", description = "컬렉션의 제목과 설명을 수정합니다")
+    @SecurityRequirement(name = "bearerAuth")
     @PatchMapping("/{collectionId}")
     public ResponseEntity<ApiResponse<CollectionResponseDto>> updateCollection(
             @PathVariable Long collectionId,
@@ -104,6 +105,7 @@ public class CollectionController {
 
     // 컬렉션 삭제
     @Operation(summary = "컬렉션 삭제", description = "컬렉션을 삭제합니다")
+    @SecurityRequirement(name = "bearerAuth")
     @DeleteMapping("/{collectionId}")
     public ResponseEntity<ApiResponse<Void>> deleteCollection(@PathVariable Long collectionId) {
         Long userId = jwtProvider.getUserIdFromAuthentication();
