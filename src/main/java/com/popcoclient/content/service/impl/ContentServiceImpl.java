@@ -9,7 +9,11 @@ import com.popcoclient.content.repository.GenreRepository;
 import com.popcoclient.content.service.ContentService;
 import com.popcoclient.review.repository.ReviewRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDate;
 import java.util.*;
@@ -22,6 +26,11 @@ public class ContentServiceImpl implements ContentService {
     private final GenreRepository genreRepository;
     private final ReviewRepository reviewRepository;
     private final ContentRepository contentRepository;
+
+    @Override
+    public Page<Content> getAllContents(Pageable pageable) {
+        return contentRepository.findAll(pageable);
+    }
 
     public List<DailyPopularContentResponseDto> getDailyPopularContent(String type) {
         LocalDate yesterday = LocalDate.now().minusDays(1);
