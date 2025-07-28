@@ -4,6 +4,7 @@ import com.popcoclient.content.entity.key.ContentId;
 import com.popcoclient.content.repository.ContentRepository;
 import com.popcoclient.exception.business.ContentNotFoundException;
 import com.popcoclient.exception.business.UserNotFoundException;
+import com.popcoclient.exception.business.auth.UnauthorizedUserException;
 import com.popcoclient.exception.business.review.AlreadyReviewedException;
 import com.popcoclient.exception.business.review.NotMyReviewException;
 import com.popcoclient.exception.business.review.ReviewNotFoundException;
@@ -53,6 +54,11 @@ public class ReviewServiceImpl implements ReviewService {
     @Override
     @Transactional
     public ReviewCreateResponseDto insertReview(ReviewCreateRequestDto request, Long contentId, Long userId, String type) {
+
+        if (userId == null) {
+            throw new UnauthorizedUserException("로그인이 필요한 기능입니다.");
+        }
+
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("사용자를 찾을 수 없습니다. userId: " + userId));
 
@@ -103,6 +109,11 @@ public class ReviewServiceImpl implements ReviewService {
     @Override
     @Transactional
     public void updateReview(Long reviewId, ReviewUpdateRequestDto request, Long userId) {
+
+        if (userId == null) {
+            throw new UnauthorizedUserException("로그인이 필요한 기능입니다.");
+        }
+
         Review review = reviewRepository.findById(reviewId)
                 .orElseThrow(() -> new ReviewNotFoundException("리뷰를 찾을 수 없습니다. reviewId: " + reviewId));
 
@@ -123,6 +134,11 @@ public class ReviewServiceImpl implements ReviewService {
     @Override
     @Transactional
     public void deleteReview(Long reviewId, Long userId) {
+
+        if (userId == null) {
+            throw new UnauthorizedUserException("로그인이 필요한 기능입니다.");
+        }
+
         Review review = reviewRepository.findById(reviewId)
                 .orElseThrow(() -> new ReviewNotFoundException("리뷰를 찾을 수 없습니다. reviewId: " + reviewId));
 

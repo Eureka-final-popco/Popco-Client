@@ -1,9 +1,10 @@
 package com.popcoclient.content.controller;
 
+import com.popcoclient.auth.jwt.JwtProvider;
 import com.popcoclient.common.response.ApiResponse;
 import com.popcoclient.content.dto.response.ContentDetailDto;
-import com.popcoclient.content.dto.response.ContentDto;
 import com.popcoclient.content.dto.response.ContentPageDto;
+import com.popcoclient.content.dto.response.ContentRecommendResponseDto;
 import com.popcoclient.content.dto.response.DailyPopularContentResponseDto;
 import com.popcoclient.content.entity.Content;
 import com.popcoclient.content.service.ContentService;
@@ -25,6 +26,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ContentController {
     private final ContentService contentService;
+    private final JwtProvider jwtProvider;
 
     @Operation(summary = "전체 콘텐츠 조회")
     @GetMapping
@@ -56,8 +58,8 @@ public class ContentController {
 
     @Operation(summary = "콘텐츠 일간랭킹", description = "ALL,MOVIE,TV 타입을 통해 사이트의 일간 랭킹을 확인할 수 있다.")
     @GetMapping("/popular/types/{type}")
-    public ResponseEntity<List<DailyPopularContentResponseDto>> getContent(@PathVariable String type) {
-        List<DailyPopularContentResponseDto> response = contentService.getDailyPopularContent(type);
+    public ResponseEntity<List<DailyPopularContentResponseDto>> getPopularContent(@PathVariable String type) {
+        List<DailyPopularContentResponseDto> response = contentService.getDailyPopularContentList(type);
         return ResponseEntity.ok(response);
     }
 
@@ -66,5 +68,14 @@ public class ContentController {
     public ResponseEntity<ApiResponse<ContentDetailDto>> getContent(@PathVariable Long id, @PathVariable String type) {
         ContentDetailDto response = contentService.getContentDetail(id, type);
         return ResponseEntity.ok(ApiResponse.success("콘텐츠 상세 조회에 성공했습니다.", response));
+    }
+
+    @Operation(summary = "1등과 관련된 콘텐츠", description = "ALL,MOVIE,TV 타입을 통해 1등과 관련된 콘텐츠를 확인할 수 있다..")
+    @GetMapping("/popular/types/{type}/recommend")
+    public ResponseEntity<ApiResponse<List<ContentRecommendResponseDto>>> getPopularRecommendContent(@PathVariable String type) {
+        Long userId = jwtProvider.getNullableUserId();
+
+        List<ContentRecommendResponseDto> response = contentService.getContentRecommendList(userId, type);
+        return ResponseEntity.ok(ApiResponse.success("1등 관련 콘텐츠 조회에 성공했습니다.", response));
     }
 }
