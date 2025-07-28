@@ -26,6 +26,11 @@ public enum ErrorCode {
   // Content
   CONTENT_NOT_FOUND(HttpStatus.NOT_FOUND, "CONTENT_NOT_FOUND", "콘텐츠를 찾을 수 없습니다."),
 
+  // Collection
+  COLLECTION_NOT_FOUND(HttpStatus.NOT_FOUND, "COLLECTION_NOT_FOUND", "컬렉션을 찾을 수 없습니다."),
+  COLLECTION_ALREADY_EXISTS(HttpStatus.CONFLICT, "COLLECTION_ALREADY_EXISTS", "컬렉션이 이미 존재합니다."),
+  CONTENT_ALREADY_EXISTS_IN_COLLECTION(HttpStatus.CONFLICT, "CONTENT_ALREADY_EXISTS_IN_COLLECTION", "이미 컬렉션에 추가된 컨텐츠입니다."),
+
   // Auth
   UNAUTHORIZED_USER(HttpStatus.UNAUTHORIZED, "UNAUTHORIZED_USER", "인증되지 않은 사용자입니다."),
   INVALID_REFRESH_TOKEN(HttpStatus.UNAUTHORIZED, "INVALID_REFRESH_TOKEN", "유효하지 않은 리프레시 토큰입니다."),

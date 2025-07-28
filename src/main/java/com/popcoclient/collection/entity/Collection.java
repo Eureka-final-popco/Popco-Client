@@ -36,6 +36,9 @@ public class Collection {
     @Column(name = "save_count", nullable = false)
     private Integer saveCount;
 
+    @Column(name = "content_count", nullable = false)
+    private Integer contentCount;
+
     @CreatedDate
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
