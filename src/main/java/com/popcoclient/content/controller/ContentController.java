@@ -28,7 +28,7 @@ public class ContentController {
     private final ContentService contentService;
     private final JwtProvider jwtProvider;
 
-    @Operation(summary = "전체 콘텐츠 조회")
+    @Operation(summary = "전체 콘텐츠 조회", description = "최근 발매된 작품부터 기본 40개씩 조회할 수 있다.")
     @GetMapping
     public ResponseEntity<ApiResponse<ContentPageDto>> getAllContents(
             @RequestParam(name = "pageNumber", defaultValue = "0") Integer pageNumber,
