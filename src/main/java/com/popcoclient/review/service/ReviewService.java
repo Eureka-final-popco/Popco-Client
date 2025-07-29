@@ -18,4 +18,8 @@ public interface ReviewService {
     List<TrendingReviewResponseDto> getTrendingReviews(int limit);
 
     ReviewSummaryResponseDto getContentReviewSummary(Long contentId, String type);
+
+    List<MyReviewResponseDto> getMyReviews(Long userId);
+
+    ScoreDistributionResponseDto getScoreDistribution(Long userId);
 }

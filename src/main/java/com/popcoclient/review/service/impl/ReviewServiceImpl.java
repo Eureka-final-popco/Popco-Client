@@ -35,9 +35,7 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -218,6 +216,47 @@ public class ReviewServiceImpl implements ReviewService {
         contentRepository.save(content);
     }
 
+    @Override
+    public List<MyReviewResponseDto> getMyReviews(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
 
+        List<Review> reviews = reviewRepository.findByUserOrderByCreatedAtDesc(user);
 
+        return reviews.stream()
+                .map(MyReviewResponseDto::of)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public ScoreDistributionResponseDto getScoreDistribution(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+
+        Double avg = reviewRepository.findAverageScoreByUser(user);
+        Long total = reviewRepository.countByUser(user);
+
+        List<Object[]> raw = reviewRepository.findScoreCountByUser(user);
+
+        Map<BigDecimal, Long> dist = new LinkedHashMap<>();
+        for (int i = 1; i <= 10; i++) {
+            BigDecimal score = BigDecimal.valueOf(i).divide(BigDecimal.valueOf(2));
+            dist.put(score, 0L);
+        }
+
+        raw.forEach(row -> {
+            BigDecimal rawScore = (BigDecimal) row[0];
+            BigDecimal scoreKey = rawScore.stripTrailingZeros();
+            Long cnt        = (Long)      row[1];
+            dist.put(scoreKey, cnt);
+        });
+
+        BigDecimal mostFreq = raw.stream()
+                .map(r -> Map.entry((BigDecimal) r[0], (Long) r[1]))
+                .max(Map.Entry.comparingByValue())
+                .map(Map.Entry::getKey)
+                .orElse(null);
+
+        return new ScoreDistributionResponseDto(avg, total, mostFreq, dist);
+    }
 }
