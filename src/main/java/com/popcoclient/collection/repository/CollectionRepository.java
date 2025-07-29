@@ -35,7 +35,7 @@ public interface CollectionRepository extends JpaRepository<Collection, Long> {
 
     // 모든 컬렉션 조회시 User 정보도 함께 가져오기
     @EntityGraph(attributePaths = {"user", "user.userDetail"})
-    Page<Collection> findAll(Pageable pageable);
+    Page<Collection> findAllByOrderByCreatedAtDesc(Pageable pageable);
 
     // 특정 컨텐츠를 포함한 컬렉션 조회 - 인기순 (마크 수(saveCount) 기준)
     @Query("SELECT DISTINCT c FROM Collection c " +

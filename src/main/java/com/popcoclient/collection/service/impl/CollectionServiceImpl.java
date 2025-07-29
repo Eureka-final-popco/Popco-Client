@@ -130,7 +130,7 @@ public class CollectionServiceImpl implements CollectionService {
     @Override
     public List<CollectionResponseDto> getCollections(Integer pageNumber, Integer pageSize) {
         Pageable pageable = PageRequest.of(pageNumber, pageSize);
-        Page<Collection> collections = collectionRepository.findAll(pageable);
+        Page<Collection> collections = collectionRepository.findAllByOrderByCreatedAtDesc(pageable);
 
         return mapCollectionsWithPostersList(collections.getContent());
     }
@@ -138,7 +138,7 @@ public class CollectionServiceImpl implements CollectionService {
     @Override
     public List<CollectionResponseDto> getCollections(Long userId, Integer pageNumber, Integer pageSize) {
         Pageable pageable = PageRequest.of(pageNumber, pageSize);
-        Page<Collection> collections = collectionRepository.findAll(pageable);
+        Page<Collection> collections = collectionRepository.findAllByOrderByCreatedAtDesc(pageable);
 
         return mapCollectionsWithPostersAndMarksList(collections.getContent(), userId);
     }
