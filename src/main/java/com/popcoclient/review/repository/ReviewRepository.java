@@ -13,6 +13,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 @Repository
 public interface ReviewRepository extends JpaRepository<Review, Long>, ReviewRepositoryCustom {
     Boolean existsReviewByContentAndUser(Content content, User user);
@@ -26,4 +28,21 @@ public interface ReviewRepository extends JpaRepository<Review, Long>, ReviewRep
     void decrementReviewLikeCount(@Param("reviewId") Long reviewId);
 
     Integer countByContent(Content content);
+
+    @Query("select r from Review r " +
+            " join fetch r.content c " +
+            " where r.user = :user " +
+            " order by r.createdAt desc")
+    List<Review> findByUserOrderByCreatedAtDesc(@Param("user") User user);
+
+    @Query("select avg(r.score) from Review r where r.user = :user")
+    Double findAverageScoreByUser(@Param("user") User user);
+
+    @Query("select count(r) from Review r where r.user = :user")
+    Long countByUser(@Param("user") User user);
+
+    @Query("select r.score, count(r) from Review r " +
+            " where r.user = :user " +
+            " group by r.score")
+    List<Object[]> findScoreCountByUser(@Param("user") User user);
 }
