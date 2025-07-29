@@ -2,11 +2,7 @@ package com.popcoclient.content.controller;
 
 import com.popcoclient.auth.jwt.JwtProvider;
 import com.popcoclient.common.response.ApiResponse;
-import com.popcoclient.content.dto.response.ContentDetailDto;
-import com.popcoclient.content.dto.response.ContentListResponseDto_40;
-import com.popcoclient.content.dto.response.ContentPageDto;
-import com.popcoclient.content.dto.response.ContentRecommendResponseDto;
-import com.popcoclient.content.dto.response.DailyPopularContentResponseDto;
+import com.popcoclient.content.dto.response.*;
 import com.popcoclient.content.entity.Content;
 import com.popcoclient.content.service.ContentService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -87,5 +83,14 @@ public class ContentController {
     public ResponseEntity<ApiResponse<ContentListResponseDto_40>> getContentPreferenceTest() {
         Long userId = jwtProvider.getRequiredUserId();
         return ResponseEntity.ok(ApiResponse.success(contentService.getContentPreferenceList(userId)));
+    }
+
+    @Operation(summary = "마이페이지 내가 좋아요한 컨텐츠 목록", description = "내가 좋아요 누른 컨텐츠 목록 조회")
+    @SecurityRequirement(name = "bearerAuth")
+    @GetMapping("/liked")
+    public ResponseEntity<ApiResponse<List<LikedContentResponseDto>>> getLikedContents() {
+        Long userId = jwtProvider.getRequiredUserId();
+        List<LikedContentResponseDto> likedContents = contentService.getLikedContents(userId);
+        return ResponseEntity.ok(ApiResponse.success("내가 좋아요 누른 컨텐츠 목록 조회 성공", likedContents));
     }
 }
