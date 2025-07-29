@@ -2,12 +2,10 @@ package com.popcoclient.review.controller;
 
 import com.popcoclient.auth.jwt.JwtProvider;
 import com.popcoclient.common.response.ApiResponse;
+import com.popcoclient.exception.business.auth.UnauthorizedUserException;
 import com.popcoclient.review.dto.request.ReviewCreateRequestDto;
 import com.popcoclient.review.dto.request.ReviewUpdateRequestDto;
-import com.popcoclient.review.dto.response.ReviewCreateResponseDto;
-import com.popcoclient.review.dto.response.ReviewLikeResponseDto;
-import com.popcoclient.review.dto.response.ReviewPageResponseDto;
-import com.popcoclient.review.dto.response.TrendingReviewResponseDto;
+import com.popcoclient.review.dto.response.*;
 import com.popcoclient.review.service.ReviewService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -34,9 +32,7 @@ public class ReviewController {
             @RequestParam(name = "pageSize", defaultValue = "10") Integer pageSize,
             @RequestParam(name = "sort", defaultValue = "recent") String sort,
             @PathVariable("contentId") Long contentId, @PathVariable("type") String type) {
-
-        Long userId = jwtProvider.getUserIdFromAuthentication();
-
+        Long userId = jwtProvider.getNullableUserId();
         ReviewPageResponseDto response = reviewService.getReviewPage(pageNumber, pageSize, sort, userId, contentId, type);
         return ResponseEntity.ok(ApiResponse.success("get review page success", response));
     }
@@ -46,8 +42,7 @@ public class ReviewController {
     @PostMapping("/contents/{contentId}/types/{type}")
     public ResponseEntity<ApiResponse<ReviewCreateResponseDto>> createReview(
             @RequestBody ReviewCreateRequestDto request, @PathVariable("contentId") Long contentId, @PathVariable("type") String type) {
-        Long userId = jwtProvider.getUserIdFromAuthentication();
-
+        Long userId = jwtProvider.getRequiredUserId();
         ReviewCreateResponseDto response = reviewService.insertReview(request, contentId, userId, type);
         return ResponseEntity.ok(ApiResponse.success("create review success", response));
     }
@@ -57,7 +52,7 @@ public class ReviewController {
     @PutMapping("/{reviewId}")
     public ResponseEntity<ApiResponse<Void>> updateReview(
             @RequestBody ReviewUpdateRequestDto request, @PathVariable("reviewId") Long reviewId){
-        Long userId = jwtProvider.getUserIdFromAuthentication();
+        Long userId = jwtProvider.getRequiredUserId();
         reviewService.updateReview(reviewId, request, userId);
         return ResponseEntity.ok(ApiResponse.success("update review success", null));
     }
@@ -66,7 +61,7 @@ public class ReviewController {
     @SecurityRequirement(name = "bearerAuth")
     @DeleteMapping("/{reviewId}")
     public ResponseEntity<ApiResponse<Void>> deleteReview(@PathVariable("reviewId") Long reviewId) {
-        Long userId = jwtProvider.getUserIdFromAuthentication();
+        Long userId = jwtProvider.getRequiredUserId();
         reviewService.deleteReview(reviewId, userId);
         return ResponseEntity.ok(ApiResponse.success("delete review success", null));
     }
@@ -75,7 +70,7 @@ public class ReviewController {
     @SecurityRequirement(name = "bearerAuth")
     @PostMapping("/{reviewId}/reaction")
     public ResponseEntity<ApiResponse<ReviewLikeResponseDto>> reactionReview(@PathVariable("reviewId") Long reviewId) {
-        Long userId = jwtProvider.getUserIdFromAuthentication();
+        Long userId = jwtProvider.getRequiredUserId();
         ReviewLikeResponseDto response = reviewService.reactionReview(reviewId, userId);
 
         if (response.getIsLiked()) {
@@ -92,6 +87,15 @@ public class ReviewController {
     ) {
         List<TrendingReviewResponseDto> trendingReviews = reviewService.getTrendingReviews(limit);
         return ResponseEntity.ok(ApiResponse.success("인기 리뷰 목록 조회", trendingReviews));
+    }
+
+    @Operation(summary = "콘텐츠 리뷰 요약 조회", description = "리뷰가 5개 이상 쌓이면 리뷰 요약본을 제공합니다.")
+    @GetMapping("/summary/contents/{contentId}/types/{type}")
+    public ResponseEntity<ApiResponse<ReviewSummaryResponseDto>> getContentReviewSummary(
+            @PathVariable("contentId") Long contentId, @PathVariable("type") String type
+    ) {
+        ReviewSummaryResponseDto reviewSummary = reviewService.getContentReviewSummary(contentId, type);
+        return ResponseEntity.ok(ApiResponse.success("콘텐츠 리뷰 요약 조회", reviewSummary));
     }
 
 }

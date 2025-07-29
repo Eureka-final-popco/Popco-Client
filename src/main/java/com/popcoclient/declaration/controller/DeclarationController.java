@@ -7,6 +7,7 @@ import com.popcoclient.declaration.dto.response.DeclarationTypeResponseDto;
 import com.popcoclient.declaration.service.DeclarationService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -32,10 +33,11 @@ public class DeclarationController {
     }
 
     @Operation(summary = "리뷰 신고 생성", description = "특정 리뷰에 대해 신고를 생성합니다.")
+    @SecurityRequirement(name = "bearerAuth")
     @PostMapping("/reviews/{reviewId}")
     public ResponseEntity<ApiResponse<Void>> createDeclaration(@PathVariable Long reviewId,
                                                                @Valid @RequestBody DeclarationCreateRequestDto dto) {
-        Long userId = jwtProvider.getUserIdFromAuthentication();
+        Long userId = jwtProvider.getRequiredUserId();
         declarationService.createReviewDeclaration(dto, userId, reviewId);
         return ResponseEntity.ok(ApiResponse.success("Create Declaration Success", null));
     }

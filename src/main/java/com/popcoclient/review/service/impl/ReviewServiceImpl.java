@@ -4,6 +4,7 @@ import com.popcoclient.content.entity.key.ContentId;
 import com.popcoclient.content.repository.ContentRepository;
 import com.popcoclient.exception.business.ContentNotFoundException;
 import com.popcoclient.exception.business.UserNotFoundException;
+import com.popcoclient.exception.business.auth.UnauthorizedUserException;
 import com.popcoclient.exception.business.review.AlreadyReviewedException;
 import com.popcoclient.exception.business.review.NotMyReviewException;
 import com.popcoclient.exception.business.review.ReviewNotFoundException;
@@ -13,9 +14,11 @@ import com.popcoclient.review.dto.response.*;
 import com.popcoclient.content.entity.Content;
 import com.popcoclient.review.entity.Review;
 import com.popcoclient.review.entity.ReviewReaction;
+import com.popcoclient.review.entity.ReviewSummary;
 import com.popcoclient.review.entity.TrendingReview;
 import com.popcoclient.review.entity.enums.ReviewStatus;
 import com.popcoclient.review.repository.ReviewReactionRepository;
+import com.popcoclient.review.repository.ReviewSummaryRepository;
 import com.popcoclient.review.repository.TrendingReviewRepository;
 import com.popcoclient.review.service.ReviewService;
 import com.popcoclient.user.entity.User;
@@ -44,7 +47,7 @@ public class ReviewServiceImpl implements ReviewService {
     private final ReviewRepository reviewRepository;
     private final ReviewReactionRepository reviewReactionRepository;
     private final TrendingReviewRepository trendingReviewRepository;
-    private final UserDetailRepository userDetailRepository;
+    private final ReviewSummaryRepository reviewSummaryRepository;
     private final UserRepository userRepository;
     private final ContentRepository contentRepository;
 
@@ -53,11 +56,16 @@ public class ReviewServiceImpl implements ReviewService {
     @Override
     @Transactional
     public ReviewCreateResponseDto insertReview(ReviewCreateRequestDto request, Long contentId, Long userId, String type) {
+
+        if (userId == null) {
+            throw new UnauthorizedUserException("로그인이 필요한 기능입니다.");
+        }
+
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("사용자를 찾을 수 없습니다. userId: " + userId));
 
-        ContentId contentIds = new ContentId(contentId, type);
-        Content content = contentRepository.findById(contentIds)
+        ContentId id = new ContentId(contentId, type);
+        Content content = contentRepository.findById(id)
                 .orElseThrow(() -> new ContentNotFoundException("콘텐츠를 찾을 수 없습니다. contentId: " + contentId + "content Type : " + type));
 
         if(reviewRepository.existsReviewByContentAndUser(content, user)){
@@ -81,9 +89,9 @@ public class ReviewServiceImpl implements ReviewService {
         // login status check
         Boolean loginStatus;
         Page<ReviewResponseDto> reviewPage;
-        ContentId contentComplex = new ContentId(contentId, type);
+        ContentId id = new ContentId(contentId, type);
 
-        Content content = contentRepository.findById(contentComplex)
+        Content content = contentRepository.findById(id)
                 .orElseThrow(() -> new ContentNotFoundException("콘텐츠를 찾을 수 없습니다. contentId: " + contentId + "content Type : " + type));
 
         if(userId != null){
@@ -103,6 +111,11 @@ public class ReviewServiceImpl implements ReviewService {
     @Override
     @Transactional
     public void updateReview(Long reviewId, ReviewUpdateRequestDto request, Long userId) {
+
+        if (userId == null) {
+            throw new UnauthorizedUserException("로그인이 필요한 기능입니다.");
+        }
+
         Review review = reviewRepository.findById(reviewId)
                 .orElseThrow(() -> new ReviewNotFoundException("리뷰를 찾을 수 없습니다. reviewId: " + reviewId));
 
@@ -123,6 +136,11 @@ public class ReviewServiceImpl implements ReviewService {
     @Override
     @Transactional
     public void deleteReview(Long reviewId, Long userId) {
+
+        if (userId == null) {
+            throw new UnauthorizedUserException("로그인이 필요한 기능입니다.");
+        }
+
         Review review = reviewRepository.findById(reviewId)
                 .orElseThrow(() -> new ReviewNotFoundException("리뷰를 찾을 수 없습니다. reviewId: " + reviewId));
 
@@ -173,6 +191,25 @@ public class ReviewServiceImpl implements ReviewService {
                 .collect(Collectors.toList());
     }
 
+    @Override
+    public ReviewSummaryResponseDto getContentReviewSummary(Long contentId, String type) {
+        ContentId id = new ContentId(contentId, type);
+
+        Content content = contentRepository.findById(id)
+                .orElseThrow(() -> new ContentNotFoundException("콘텐츠를 찾을 수 없습니다. contentId: " + contentId + "content Type : " + type));
+
+        Optional<ReviewSummary> optReviewSummary = reviewSummaryRepository.findByContent(content);
+        String summary = "아직 충분한 리뷰가 모이지 않았어요. 더 많은 이용자들의 후기가 쌓이면, 추천 리뷰를 보여드릴게요!";
+
+        if (optReviewSummary.isEmpty()) {
+            return ReviewSummaryResponseDto.of(summary, null, false);
+        }
+
+        ReviewSummary reviewSummary = optReviewSummary.get();
+
+        return ReviewSummaryResponseDto.of(reviewSummary.getSummaryText(), reviewSummary.getEvaluationType(), true);
+    }
+
     private void updateContentStats(Content content) {
         Integer reviewCount = reviewRepository.countByContent(content);
         Double avgScore = reviewRepository.avgStar(content);
@@ -180,5 +217,7 @@ public class ReviewServiceImpl implements ReviewService {
         content.updateOf(BigDecimal.valueOf(avgScore), reviewCount);
         contentRepository.save(content);
     }
+
+
 
 }
