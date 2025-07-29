@@ -129,22 +129,22 @@ public class CollectionController {
     }
 
     // 인기 컬렉션 목록 조회
-    @Operation(summary = "인기 컬렉션 목록 조회", description = "저장 수가 많은 상위 10개 컬렉션을 조회합니다")
-    @GetMapping("/popular")
-    public ResponseEntity<ApiResponse<List<CollectionResponseDto>>> getPopularCollections() {
-        Long userId = null;
-        try {
-            userId = jwtProvider.getUserIdFromAuthentication();
-        } catch (Exception e) {
-            // 로그인하지 않은 사용자도 조회 가능
-        }
-
-        List<CollectionResponseDto> response = userId != null ?
-                collectionService.getPopularCollections(userId) :
-                collectionService.getPopularCollections();
-
-        return ResponseEntity.ok(ApiResponse.success("인기 컬렉션 목록 조회 성공", response));
-    }
+//    @Operation(summary = "인기 컬렉션 목록 조회", description = "저장 수가 많은 상위 10개 컬렉션을 조회합니다")
+//    @GetMapping("/popular")
+//    public ResponseEntity<ApiResponse<List<CollectionResponseDto>>> getPopularCollections() {
+//        Long userId = null;
+//        try {
+//            userId = jwtProvider.getUserIdFromAuthentication();
+//        } catch (Exception e) {
+//            // 로그인하지 않은 사용자도 조회 가능
+//        }
+//
+//        List<CollectionResponseDto> response = userId != null ?
+//                collectionService.getPopularCollections(userId) :
+//                collectionService.getPopularCollections();
+//
+//        return ResponseEntity.ok(ApiResponse.success("인기 컬렉션 목록 조회 성공", response));
+//    }
 
     // 컬렉션 수정
     @Operation(summary = "컬렉션 수정", description = "컬렉션의 제목과 설명을 수정합니다")
