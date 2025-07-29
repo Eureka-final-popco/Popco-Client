@@ -1,7 +1,9 @@
 package com.popcoclient.collection.controller;
 
 import com.popcoclient.auth.jwt.JwtProvider;
+import com.popcoclient.collection.dto.request.CollectionContentBatchRequestDto;
 import com.popcoclient.collection.dto.request.CollectionContentRequestDto;
+import com.popcoclient.collection.dto.response.CollectionContentBatchResponseDto;
 import com.popcoclient.collection.dto.response.CollectionContentResponseDto;
 import com.popcoclient.collection.service.CollectionContentService;
 import com.popcoclient.common.response.ApiResponse;
@@ -33,6 +35,18 @@ public class CollectionContentController {
         Long userId = jwtProvider.getUserIdFromAuthentication();
         CollectionContentResponseDto response = collectionContentService.addContentToCollection(userId, collectionId, request);
         return ResponseEntity.ok(ApiResponse.success("컬렉션에 컨텐츠 추가 성공", response));
+    }
+
+    // 컬렉션에 여러 컨텐츠 한번에 추가
+    @Operation(summary = "컬렉션에 여러 컨텐츠 추가", description = "한 번에 여러 개의 컨텐츠를 컬렉션에 추가합니다")
+    @SecurityRequirement(name = "bearerAuth")
+    @PostMapping("/batch")
+    public ResponseEntity<ApiResponse<CollectionContentBatchResponseDto>> addMultipleContentsToCollection(
+            @PathVariable Long collectionId,
+            @Valid @RequestBody CollectionContentBatchRequestDto request) {
+        Long userId = jwtProvider.getUserIdFromAuthentication();
+        CollectionContentBatchResponseDto response = collectionContentService.addMultipleContentsToCollection(userId, collectionId, request);
+        return ResponseEntity.ok(ApiResponse.success("컬렉션에 여러 컨텐츠 추가 완료", response));
     }
 
     // 컬렉션의 컨텐츠 목록 조회 (페이징)

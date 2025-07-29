@@ -1,6 +1,5 @@
 package com.popcoclient.collection.dto.response;
 
-import com.popcoclient.collection.dto.ContentPosterDto;
 import com.popcoclient.collection.entity.Collection;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
