@@ -15,7 +15,9 @@ import com.popcoclient.review.repository.ReviewRepository;
 import com.popcoclient.user.entity.User;
 import com.popcoclient.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
+import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDate;
 import java.util.*;
@@ -31,15 +33,23 @@ public class ContentServiceImpl implements ContentService {
     private final UserRepository userRepository;
     private final ContentRecommendationRepository contentRecommendationRepository;
 
+    @Override
+    public Page<Content> getAllContents(Pageable pageable) {
+        return contentRepository.findAll(pageable);
+    }
+
+    @Override
     public List<DailyPopularContentResponseDto> getDailyPopularContentList(String type) {
-        LocalDate yesterday = LocalDate.now().minusDays(1);
+        LocalDate today = LocalDate.now();
         String batchType = type == null ? null : type.trim().toUpperCase();
 
         List<DailyPopularContent> popularContentList =
-                dailyPopularContentRepository.findByBatchContentTypeAndRankedDate(batchType, yesterday);
+                dailyPopularContentRepository.findByBatchContentTypeAndRankedDate(batchType, today);
 
-        if (popularContentList.isEmpty()) {
-            return Collections.emptyList();
+        if(popularContentList.isEmpty()) {
+            LocalDate yesterday = today.minusDays(1);
+            popularContentList =
+                    dailyPopularContentRepository.findByBatchContentTypeAndRankedDate(batchType, yesterday);
         }
 
         // 모든 장르 ID를 미리 조회해서 매핑 생성
@@ -108,11 +118,16 @@ public class ContentServiceImpl implements ContentService {
 
     @Override
     public List<ContentRecommendResponseDto> getContentRecommendList(Long userId, String type) {
-        LocalDate yesterday = LocalDate.now().minusDays(1);
+        LocalDate today = LocalDate.now();
         String batchType = type == null ? null : type.trim().toUpperCase();
 
         DailyPopularContent popularContent =
-                dailyPopularContentRepository.findFirstRanked(batchType, yesterday);
+                dailyPopularContentRepository.findFirstRanked(batchType, today);
+
+        if(popularContent == null) {
+            LocalDate yesterday = today.minusDays(1);
+            popularContent = dailyPopularContentRepository.findFirstRanked(batchType, yesterday);
+        }
 
         if (userId == null) {
             return contentRecommendationRepository.findWithoutUserReactions(popularContent.getContent());
