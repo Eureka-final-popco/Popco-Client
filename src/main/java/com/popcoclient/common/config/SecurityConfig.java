@@ -37,11 +37,25 @@ public class SecurityConfig {
             "/auth/login",
             "/auth/kakao/**",
             "/reviews/contents/**",
-            "reviews/weekly-trend",
+            "/reviews/weekly-trend",
             "/contents/**",
             "/swagger-ui/**",
-            "/v3/api-docs/**"
+            "/v3/api-docs/**",
+
+            "/collections/*",
+            "/collections/user/*",
+            "/collections/search",
+            "/collections",
+            "/collections/popular",
+            "/collections/popular/weekly",
+            "/collections/content/*",
+
+            "/collections/*/contents",
+            "/collections/*/contents/all",
+            "/collections/*/contents/count",
+            "/collections/*/contents/check/*"
     };
+
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
@@ -55,16 +69,6 @@ public class SecurityConfig {
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers(HttpMethod.GET, "/collections/my").authenticated()
-                        .requestMatchers(HttpMethod.GET, "/collections/*").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/collections/user/*").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/collections/search").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/collections").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/collections/popular").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/collections/*/contents").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/collections/*/contents/all").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/collections/*/contents/count").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/collections/*/contents/check/*").permitAll()
                         // 해당 API에 대해서는 모든 요청을 허가
                         .requestMatchers(whiteList).permitAll()
                         // 사용자 삭제는 관리자 권한만 가능

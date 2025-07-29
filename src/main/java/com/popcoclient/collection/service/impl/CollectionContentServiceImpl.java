@@ -36,6 +36,7 @@ public class CollectionContentServiceImpl implements CollectionContentService {
     private final UserRepository userRepository;
 
     @Override
+    @Transactional
     public CollectionContentResponseDto addContentToCollection(Long userId, Long collectionId, CollectionContentRequestDto request) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("사용자를 찾을 수 없습니다. id : " + userId));
@@ -56,9 +57,11 @@ public class CollectionContentServiceImpl implements CollectionContentService {
                 .content(content)
                 .build();
 
+        // 컬렉션의 컨텐츠 수 증가
         collection.setContentCount(collection.getContentCount() + 1);
-        collectionContentRepository.save(collectionContent);
+        collectionRepository.save(collection);
 
+        // CollectionContent 저장
         CollectionContent savedContent = collectionContentRepository.save(collectionContent);
         return CollectionContentResponseDto.from(savedContent);
     }
@@ -95,8 +98,11 @@ public class CollectionContentServiceImpl implements CollectionContentService {
         Content content = contentRepository.findById(contentIdObj)
                 .orElseThrow(() -> new ContentNotFoundException("컨텐츠를 찾을 수 없습니다. id : " + contentId + " contnetType : " + contentType));
 
-        collection.setContentCount(collection.getContentCount() - 1);
-        collectionRepository.save(collection);
+        // 컬렉션의 컨텐츠 수 감소
+        if (collection.getContentCount() > 0) {
+            collection.setContentCount(collection.getContentCount() - 1);
+            collectionRepository.save(collection);
+        }
 
         collectionContentRepository.deleteByCollectionAndContent(collection, content);
     }
