@@ -1,6 +1,6 @@
 package com.popcoclient.collection.service.impl;
 
-import com.popcoclient.collection.dto.ContentPosterDto;
+import com.popcoclient.collection.dto.response.ContentPosterDto;
 import com.popcoclient.collection.dto.response.CollectionListResponseDto;
 import com.popcoclient.collection.dto.response.CollectionResponseDto;
 import com.popcoclient.collection.entity.Collection;
