@@ -25,7 +25,7 @@ public class personaController {
     private final PersonaService personaService;
     private final JwtProvider jwtProvider;
 
-    @Operation(summary = "나의 페르소나 조회", description = "페르소나 페이지의 Section 1 + 2 에 사용될 데이터, 개발중")
+    @Operation(summary = "나의 페르소나 조회", description = "페르소나 페이지의 Section 1 + 2 에 사용될 데이터, 나의 메인&서브&최종 페르소나를 조회합니다.")
     @SecurityRequirement(name = "bearerAuth")
     @GetMapping
     public ResponseEntity<ApiResponse<MyPersonaResponseDto>> getPersonas() {
