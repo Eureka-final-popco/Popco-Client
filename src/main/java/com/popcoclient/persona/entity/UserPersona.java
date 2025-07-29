@@ -1,5 +1,6 @@
 package com.popcoclient.persona.entity;
 
+import com.popcoclient.persona.entity.key.UserPersonaId;
 import com.popcoclient.user.entity.User;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -16,17 +17,8 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 @Builder
 public class UserPersona {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long userPersonaId;
+    @EmbeddedId
+    private UserPersonaId userPersonaId;
 
     private BigDecimal score;
-
-    @ManyToOne
-    @JoinColumn(name = "user_id")
-    private User user;
-
-    @ManyToOne
-    @JoinColumn(name = "persona_id")
-    private Persona persona;
 }

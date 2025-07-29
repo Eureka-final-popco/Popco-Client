@@ -13,7 +13,8 @@ public class PersonaAnalysisResponseDto {
     private Double myRatingPercent;
     private Double personaRatingPercent;
     private List<Integer> eventPercent; // [내 참여 횟수, 페르소나 평균 참여 횟수]
-    private List<Integer> reviewPercent; // [내가 남긴 리뷰 수, 페르소나 평균 리뷰 수]
+    private Integer eventCount; // 지금까지 개최된 이벤트 수 -> MAX 값
+    private List<Integer> reviewPercent; // [1달간 내가 남긴 리뷰 수, 1달간 페르소나 평균 리뷰 수] -> 시청 기록
     private List<Integer> myLikePercent; // [나의 좋아요 수 %, 싫어요 수 %]
     // 장르 선호도 오각형 그래프 보류
 }

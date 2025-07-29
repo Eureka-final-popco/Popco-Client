@@ -1,5 +1,6 @@
 package com.popcoclient.persona.controller;
 
+import com.popcoclient.auth.jwt.JwtProvider;
 import com.popcoclient.common.response.ApiResponse;
 import com.popcoclient.persona.dto.response.MyPersonaResponseDto;
 import com.popcoclient.persona.dto.response.PersonaAnalysisResponseDto;
@@ -22,16 +23,19 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class personaController {
     private final PersonaService personaService;
+    private final JwtProvider jwtProvider;
 
-    @Operation(summary = "나의 페르소나 조회", description = "페르소나 페이지의 Section 1 + 2 에 사용될 데이터")
+    @Operation(summary = "나의 페르소나 조회", description = "페르소나 페이지의 Section 1 + 2 에 사용될 데이터, 개발중")
     @SecurityRequirement(name = "bearerAuth")
     @GetMapping
     public ResponseEntity<ApiResponse<MyPersonaResponseDto>> getPersonas() {
-        return null;
+        Long userId = jwtProvider.getUserIdFromAuthentication();
+        return ResponseEntity.ok(ApiResponse.success(personaService.getPersona(userId)));
     }
 
-    @Operation(summary = "페르소나 통계 조회", description = "페르소나 페이지의 Section 3 + 4 에 사용될 데이터")
+    @Operation(summary = "페르소나 통계 조회", description = "페르소나 페이지의 Section 3 + 4 에 사용될 데이터, 개발중")
     @SecurityRequirement(name = "bearerAuth")
+    @GetMapping("/analysis")
     public ResponseEntity<ApiResponse<PersonaAnalysisResponseDto>> getPersonaAnalysis() {
         return null;
     }
