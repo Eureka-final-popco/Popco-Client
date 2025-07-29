@@ -2,11 +2,9 @@ package com.popcoclient.content.service.impl;
 
 import com.popcoclient.content.dto.response.*;
 import com.popcoclient.content.entity.*;
+import com.popcoclient.content.entity.enums.ReactionType;
 import com.popcoclient.content.entity.key.ContentId;
-import com.popcoclient.content.repository.ContentRecommendationRepository;
-import com.popcoclient.content.repository.ContentRepository;
-import com.popcoclient.content.repository.DailyPopularContentRepository;
-import com.popcoclient.content.repository.GenreRepository;
+import com.popcoclient.content.repository.*;
 import com.popcoclient.content.service.ContentService;
 import com.popcoclient.exception.BusinessException;
 import com.popcoclient.exception.ErrorCode;
@@ -16,6 +14,7 @@ import com.popcoclient.user.entity.User;
 import com.popcoclient.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.data.domain.Pageable;
 
@@ -30,6 +29,7 @@ public class ContentServiceImpl implements ContentService {
     private final GenreRepository genreRepository;
     private final ReviewRepository reviewRepository;
     private final ContentRepository contentRepository;
+    private final ContentReactionRepository contentReactionRepository;
     private final UserRepository userRepository;
     private final ContentRecommendationRepository contentRecommendationRepository;
 
@@ -161,5 +161,17 @@ public class ContentServiceImpl implements ContentService {
         return ContentListResponseDto_40.builder()
                 .contents(contentDtoList)
                 .build();
+    }
+
+    @Override
+    public List<LikedContentResponseDto> getLikedContents(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+
+        List<ContentReaction> reactions = contentReactionRepository.findByUserAndReactionWithContent(user, ReactionType.LIKE);
+
+        return reactions.stream()
+                .map(LikedContentResponseDto::from)
+                .collect(Collectors.toList());
     }
 }
