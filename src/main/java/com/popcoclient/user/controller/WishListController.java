@@ -6,6 +6,7 @@ import com.popcoclient.user.dto.response.WishListResponseDto;
 import com.popcoclient.user.entity.WishList;
 import com.popcoclient.user.service.WishListService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -23,6 +24,7 @@ public class WishListController {
 
     @Operation(summary = "위시리스트에 콘텐츠 추가", description = "지정된 사용자의 위시리스트에 콘텐츠를 추가합니다.")
     @PostMapping("/users/{userId}")
+    @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<ApiResponse<WishListResponseDto>> createWishList(
             @PathVariable Long userId,
             @RequestBody WishListRequestDto request) {
@@ -44,6 +46,7 @@ public class WishListController {
 
     @Operation(summary = "위시리스트에서 콘텐츠 삭제", description = "지정된 사용자의 위시리스트에서 특정 콘텐츠를 삭제합니다.")
     @DeleteMapping("/users/{userId}")
+    @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<ApiResponse<Void>> deleteWishList(
             @PathVariable Long userId,
             @RequestBody WishListRequestDto request) {
