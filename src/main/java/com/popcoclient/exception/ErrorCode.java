@@ -49,14 +49,17 @@ public enum ErrorCode {
   // Declaration
   DECLARATION_ALREADY_EXISTS(HttpStatus.UNAUTHORIZED, "DECLARATION_ALREADY_EXISTS","이미 해당 리뷰를 신고하였습니다."),
 
-
   // Persona
-  QUESTION_NOT_FOUND(HttpStatus.NOT_FOUND, "QUESTION_NOT_FOUND", "해당 순서의 질문을 찾을 수 없습니다.");
+  QUESTION_NOT_FOUND(HttpStatus.NOT_FOUND, "QUESTION_NOT_FOUND", "해당 순서의 질문을 찾을 수 없습니다."),
+
+  // WishList
+  WISHLIST_ALREADY_EXISTS(HttpStatus.CONFLICT, "WISHLIST_ALREADY_EXISTS", "이미 위시리스트에 추가된 콘텐츠입니다."),
+  WISHLIST_NOT_FOUND(HttpStatus.NOT_FOUND, "WISHLIST_NOT_FOUND", "위시리스트 항목을 찾을 수 없습니다.");
+
 
   private final HttpStatus status;
   private final String code;
   private final String message;
-
 
   ErrorCode(HttpStatus status, String code, String message) {
     this.status = status;
