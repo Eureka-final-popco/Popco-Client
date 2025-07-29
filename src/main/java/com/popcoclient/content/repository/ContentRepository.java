@@ -2,6 +2,8 @@ package com.popcoclient.content.repository;
 
 import com.popcoclient.content.entity.Content;
 import com.popcoclient.content.entity.key.ContentId;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -11,6 +13,8 @@ import java.util.Optional;
 
 @Repository
 public interface ContentRepository extends JpaRepository<Content, ContentId> {
+
+    Page<Content> findAll(Pageable pageable);
 
     @Query("SELECT DISTINCT c FROM Content c " +
             "LEFT JOIN FETCH c.genreIds " +

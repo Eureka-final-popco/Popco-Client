@@ -13,7 +13,9 @@ import com.popcoclient.review.repository.ReviewRepository;
 import com.popcoclient.user.entity.User;
 import com.popcoclient.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
+import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDate;
 import java.util.*;
@@ -29,6 +31,12 @@ public class ContentServiceImpl implements ContentService {
     private final UserRepository userRepository;
     private final ContentRecommendationRepository contentRecommendationRepository;
 
+    @Override
+    public Page<Content> getAllContents(Pageable pageable) {
+        return contentRepository.findAll(pageable);
+    }
+
+    @Override
     public List<DailyPopularContentResponseDto> getDailyPopularContentList(String type) {
         LocalDate today = LocalDate.now();
         String batchType = type == null ? null : type.trim().toUpperCase();

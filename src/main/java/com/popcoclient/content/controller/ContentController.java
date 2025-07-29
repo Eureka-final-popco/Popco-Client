@@ -3,17 +3,20 @@ package com.popcoclient.content.controller;
 import com.popcoclient.auth.jwt.JwtProvider;
 import com.popcoclient.common.response.ApiResponse;
 import com.popcoclient.content.dto.response.ContentDetailDto;
+import com.popcoclient.content.dto.response.ContentPageDto;
 import com.popcoclient.content.dto.response.ContentRecommendResponseDto;
 import com.popcoclient.content.dto.response.DailyPopularContentResponseDto;
+import com.popcoclient.content.entity.Content;
 import com.popcoclient.content.service.ContentService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -24,6 +27,34 @@ import java.util.List;
 public class ContentController {
     private final ContentService contentService;
     private final JwtProvider jwtProvider;
+
+    @Operation(summary = "전체 콘텐츠 조회", description = "최근 발매된 작품부터 기본 40개씩 조회할 수 있다.")
+    @GetMapping
+    public ResponseEntity<ApiResponse<ContentPageDto>> getAllContents(
+            @RequestParam(name = "pageNumber", defaultValue = "0") Integer pageNumber,
+            @RequestParam(name = "pageSize", defaultValue = "40") Integer pageSize,
+            @RequestParam(name = "sort", defaultValue = "recent") String sort) {
+        Sort sortOrder;
+        if ("recent".equalsIgnoreCase(sort)) {
+            sortOrder = Sort.by("releaseDate").descending();
+        } else {
+            String[] sortParams = sort.split(",");
+            if (sortParams.length == 2) {
+                String field = sortParams[0];
+                Sort.Direction direction = Sort.Direction.fromString(sortParams[1]);
+                sortOrder = Sort.by(direction, field);
+            } else {
+                sortOrder = Sort.by(sort);
+            }
+        }
+
+        Pageable pageable = PageRequest.of(pageNumber, pageSize, sortOrder);
+
+        Page<Content> contentsPage = contentService.getAllContents(pageable);
+
+        ContentPageDto responseDto = new ContentPageDto(contentsPage);
+        return ResponseEntity.ok(ApiResponse.success("전체 콘텐츠 조회 성공", responseDto));
+    }
 
     @Operation(summary = "콘텐츠 일간랭킹", description = "ALL,MOVIE,TV 타입을 통해 사이트의 일간 랭킹을 확인할 수 있다.")
     @GetMapping("/popular/types/{type}")
