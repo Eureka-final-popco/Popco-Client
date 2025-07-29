@@ -35,6 +35,7 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.YearMonth;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -217,11 +218,16 @@ public class ReviewServiceImpl implements ReviewService {
     }
 
     @Override
-    public List<MyReviewResponseDto> getMyReviews(Long userId) {
+    public List<MyReviewResponseDto> getMyReviewsByMonth(Long userId, String month) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
 
-        List<Review> reviews = reviewRepository.findByUserOrderByCreatedAtDesc(user);
+        YearMonth ym = YearMonth.parse(month);
+        LocalDateTime start = ym.atDay(1).atStartOfDay();
+        LocalDateTime end   = ym.plusMonths(1).atDay(1).atStartOfDay();
+
+        List<Review> reviews = reviewRepository
+                .findByUserAndCreatedAtBetweenOrderByCreatedAtDesc(user, start, end);
 
         return reviews.stream()
                 .map(MyReviewResponseDto::of)
