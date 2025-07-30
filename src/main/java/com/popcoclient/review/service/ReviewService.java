@@ -19,7 +19,7 @@ public interface ReviewService {
 
     ReviewSummaryResponseDto getContentReviewSummary(Long contentId, String type);
 
-    List<MyReviewResponseDto> getMyReviews(Long userId);
+    List<MyReviewResponseDto> getMyReviewsByMonth(Long userId, String month);
 
     ScoreDistributionResponseDto getScoreDistribution(Long userId);
 }

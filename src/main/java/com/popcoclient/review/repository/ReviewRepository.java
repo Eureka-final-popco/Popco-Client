@@ -30,11 +30,19 @@ public interface ReviewRepository extends JpaRepository<Review, Long>, ReviewRep
 
     Integer countByContent(Content content);
 
-    @Query("select r from Review r " +
-            " join fetch r.content c " +
-            " where r.user = :user " +
-            " order by r.createdAt desc")
-    List<Review> findByUserOrderByCreatedAtDesc(@Param("user") User user);
+    @Query("""
+       select r
+         from Review r
+    join fetch r.content c
+        where r.user      = :user
+          and r.createdAt >= :start
+          and r.createdAt <  :end
+     order by r.createdAt desc
+    """)
+    List<Review> findByUserAndCreatedAtBetweenOrderByCreatedAtDesc(
+            @Param("user")  User user,
+            @Param("start") LocalDateTime start,
+            @Param("end")   LocalDateTime end);
 
     @Query("select avg(r.score) from Review r where r.user = :user")
     Double findAverageScoreByUser(@Param("user") User user);

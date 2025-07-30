@@ -98,12 +98,12 @@ public class ReviewController {
         return ResponseEntity.ok(ApiResponse.success("콘텐츠 리뷰 요약 조회", reviewSummary));
     }
 
-    @Operation(summary = "나의 리뷰 목록 조회", description = "나의 리뷰 목록을 조회합니다. 마이페이지에 달력이랑 나의 리뷰에 사용 가능")
+    @Operation(summary = "나의 리뷰 목록 월별 조회", description = "나의 리뷰 목록을 조회합니다. 마이페이지에 달력이랑 나의 리뷰에 사용 가능. (month 값 예시 : 2025-07")
     @SecurityRequirement(name = "bearerAuth")
-    @GetMapping("/my")
-    public ResponseEntity<ApiResponse<List<MyReviewResponseDto>>> getMyReviews() {
+    @GetMapping("/my/monthly")
+    public ResponseEntity<ApiResponse<List<MyReviewResponseDto>>> getMyReviewsByMonth(@RequestParam String month) {
         Long userId = jwtProvider.getRequiredUserId();
-        return ResponseEntity.ok(ApiResponse.success(reviewService.getMyReviews(userId)));
+        return ResponseEntity.ok(ApiResponse.success(reviewService.getMyReviewsByMonth(userId, month)));
     }
 
     @Operation(summary = "나의 리뷰 별점 분포", description = "나의 리뷰 별점 분포를 조회합니다.")
