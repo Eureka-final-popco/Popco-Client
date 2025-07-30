@@ -6,6 +6,7 @@ import com.popcoclient.user.dto.request.PasswordChangeRequest;
 import com.popcoclient.user.dto.request.UserDetailCreateRequestDto;
 import com.popcoclient.user.dto.request.UserDetailUpdateRequestDto;
 import com.popcoclient.user.dto.request.UserSignupRequestDto;
+import com.popcoclient.user.dto.response.UserCreateResponseDto;
 import com.popcoclient.user.dto.response.UserDetailResponseDto;
 import com.popcoclient.user.dto.response.UserResponseDto;
 import com.popcoclient.user.service.UserDetailService;
@@ -56,10 +57,10 @@ public class UserController {
     @Operation(summary = "userId로 사용자 상세 입력", description = "userId로 사용자 상세 입력")
     @SecurityRequirement(name = "bearerAuth")
     @PostMapping("/details")
-    public ResponseEntity<ApiResponse<Void>> createUserDetail(@Valid @RequestBody UserDetailCreateRequestDto request) {
+    public ResponseEntity<ApiResponse<UserCreateResponseDto>> createUserDetail(@Valid @RequestBody UserDetailCreateRequestDto request) {
         Long userId = jwtProvider.getRequiredUserId();
-        userDetailService.createUserDetail(request, userId);
-        return ResponseEntity.ok(ApiResponse.success("Create UserDetail Success", null));
+        UserCreateResponseDto response = userDetailService.createUserDetail(request, userId);
+        return ResponseEntity.ok(ApiResponse.success("Create UserDetail Success", response));
     }
 
     @Operation(summary = "userId로 사용자 상세 수정", description = "userId로 사용자 상세 수정")

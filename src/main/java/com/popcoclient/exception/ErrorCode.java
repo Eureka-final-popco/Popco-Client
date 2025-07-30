@@ -16,6 +16,7 @@ public enum ErrorCode {
   
   // User
   EMAIL_ALREADY_EXISTS(HttpStatus.CONFLICT, "EMAIL_ALREADY_EXISTS", "이미 존재하는 이메일입니다."),
+  USER_DETAIL_ALREADY_EXISTS(HttpStatus.CONFLICT, "USER_DETAIL_ALREADY_EXISTS", "이미 작성된 유저정보가 있습니다."),
 
   // Review
   REVIEW_NOT_FOUND(HttpStatus.NOT_FOUND, "REVIEW_NOT_FOUND", "리뷰를 찾을 수 없습니다."),
