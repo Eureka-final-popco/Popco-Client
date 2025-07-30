@@ -11,13 +11,11 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Getter
 public class LoginUserResponseDto {
-    private Long userId;
     private String nickname;
     private String profileImgUrl;
 
     public static LoginUserResponseDto from(UserDetail userDetail) {
         return LoginUserResponseDto.builder()
-                .userId(userDetail.getUserId())
                 .nickname(userDetail.getNickname())
                 .profileImgUrl(userDetail.getProfilePath())
                 .build();

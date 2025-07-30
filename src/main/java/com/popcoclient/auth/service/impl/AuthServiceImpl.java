@@ -56,7 +56,7 @@ public class AuthServiceImpl implements AuthService {
 
         response.addCookie(cookie);
 
-        return ApiResponse.success("LOGIN", RefreshResponseDto.from(token));
+        return ApiResponse.success("REFRESH TOKEN", RefreshResponseDto.from(token));
     }
 
     @Override
@@ -122,7 +122,7 @@ public class AuthServiceImpl implements AuthService {
             isProfileComplete = true;
         }
 
-        return LoginResponseDto.of(userResponseDto, JwtResponseDto.from(token), isProfileComplete);
+        return LoginResponseDto.of(user.getUserId(), userResponseDto, JwtResponseDto.from(token), isProfileComplete);
     }
 
 }
