@@ -161,7 +161,7 @@ public class JwtUtil {
         refreshTokenCookie.setHttpOnly(true);
         refreshTokenCookie.setPath("/");
         refreshTokenCookie.setMaxAge(REFRESH_TOKEN_EXPIRE_TIME);
-        refreshTokenCookie.setAttribute("SameSite", "None"); // CORS 대응을 위해 반드시 None
+        refreshTokenCookie.setAttribute("SameSite", "Lax"); // CORS 대응을 위해 반드시 None
         refreshTokenCookie.setSecure(true);
 
         return refreshTokenCookie;
