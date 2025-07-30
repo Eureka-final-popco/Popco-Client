@@ -162,7 +162,7 @@ public class JwtUtil {
         refreshTokenCookie.setPath("/");
         refreshTokenCookie.setMaxAge(REFRESH_TOKEN_EXPIRE_TIME);
         refreshTokenCookie.setAttribute("SameSite", "Lax");
-        refreshTokenCookie.setSecure(false);
+        refreshTokenCookie.setSecure(true);
 
         return refreshTokenCookie;
     }
