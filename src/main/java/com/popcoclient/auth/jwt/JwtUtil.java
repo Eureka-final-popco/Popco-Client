@@ -162,7 +162,7 @@ public class JwtUtil {
         refreshTokenCookie.setPath("/");
         refreshTokenCookie.setMaxAge(REFRESH_TOKEN_EXPIRE_TIME);
         refreshTokenCookie.setAttribute("SameSite", "Lax"); // CORS 대응을 위해 반드시 None
-        refreshTokenCookie.setSecure(true);
+        refreshTokenCookie.setSecure(false);
 
         return refreshTokenCookie;
     }
