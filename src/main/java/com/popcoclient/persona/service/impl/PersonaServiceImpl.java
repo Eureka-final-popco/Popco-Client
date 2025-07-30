@@ -1,21 +1,32 @@
 package com.popcoclient.persona.service.impl;
 
-import com.popcoclient.content.entity.Genre;
+import com.popcoclient.content.entity.enums.ReactionType;
+import com.popcoclient.content.repository.ContentReactionRepository;
+import com.popcoclient.event.repository.QuizRepository;
+import com.popcoclient.event.repository.UserQuizAttemptRepository;
 import com.popcoclient.exception.business.QuestionNotFoundException;
 import com.popcoclient.persona.dto.response.*;
 import com.popcoclient.persona.entity.Option;
 import com.popcoclient.persona.entity.Persona;
 import com.popcoclient.persona.entity.PersonaQuestion;
 import com.popcoclient.persona.entity.UserPersona;
-import com.popcoclient.persona.repository.*;
+import com.popcoclient.persona.repository.PersonaGenreRepository;
+import com.popcoclient.persona.repository.PersonaQuestionRepository;
+import com.popcoclient.persona.repository.PersonaRepository;
+import com.popcoclient.persona.repository.UserPersonaRepository;
 import com.popcoclient.persona.service.PersonaService;
+import com.popcoclient.review.repository.ReviewRepository;
+import com.popcoclient.user.entity.UserDetail;
+import com.popcoclient.user.repository.UserDetailRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.YearMonth;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -23,9 +34,13 @@ import java.util.stream.Collectors;
 public class PersonaServiceImpl implements PersonaService {
     private final PersonaRepository personaRepository;
     private final PersonaQuestionRepository personaQuestionRepository;
-    private final PersonaDetailRepository personaDetailRepository;
     private final UserPersonaRepository userPersonaRepository;
     private final PersonaGenreRepository personaGenreRepository;
+    private final UserDetailRepository userDetailRepository;
+    private final ContentReactionRepository contentReactionRepository;
+    private final ReviewRepository reviewRepository;
+    private final UserQuizAttemptRepository userQuizAttemptRepository;
+    private final QuizRepository quizRepository;
 
     @Override
     public PersonaListResponseDto getPersonaList() {
@@ -104,5 +119,68 @@ public class PersonaServiceImpl implements PersonaService {
         }
     }
 
+    @Transactional(readOnly = true)
+    @Override
+    public PersonaAnalysisResponseDto getPersonaAnalysis(Long userId) {
+        List<UserPersona> allUsersMainPersonaList = userPersonaRepository.findAllUsersMainPersonas();
+        Map<Long, Long>  userPerMap = new HashMap<>();
+        for (UserPersona userPersona : allUsersMainPersonaList) {
+            userPerMap.put(userPersona.getUserPersonaId().getUserId(), userPersona.getUserPersonaId().getPersonaId());
+        }
+        Long myPerId = userPerMap.get(userId);
+        List<Long> samePersonaUserList = new ArrayList<>();
+        userPerMap.forEach((uId, pId) -> {
+            if (pId.equals(myPerId)) {
+                samePersonaUserList.add(uId);
+            }
+        });
+
+        List<UserDetail> userDetailsList = userDetailRepository.findAllByUserIdIn(samePersonaUserList);
+        List<Integer> genderDistribution = UtilServiceImpl.calculateGenderPercent(userDetailsList); // genderPercent
+        List<Integer> ageDistribution = UtilServiceImpl.calculateBirthPercent(userDetailsList); // agePercent
+        List<Double> ratingDistribution = getRatingDistribution(userId, samePersonaUserList); // ratingPercent
+        List<Integer> eventDistribution = getEventDistribution(userId, samePersonaUserList); // eventPercent
+        Long eventCount = quizRepository.count(); // eventCount;
+        List<Integer> reviewDistribution = getReviewsDistribution(userId, samePersonaUserList); // reviewPercent
+        List<Integer> myReactionDistribution = getReactionsDistribution(userId); // myLikePercent
+
+        return PersonaAnalysisResponseDto.of(genderDistribution, ageDistribution, ratingDistribution, eventDistribution, eventCount, reviewDistribution, myReactionDistribution);
+    }
+
+    public List<Double> getRatingDistribution(Long userId, List<Long> samePersonaUserList) {
+        List<Double> ratingDistribution = new ArrayList<>();
+        Double myRatingAvg = reviewRepository.findAvgScoreByUserId(userId);
+        Double perRatingAvg = reviewRepository.findAvgScoreForUsersInList(samePersonaUserList);
+
+        ratingDistribution.add(Math.round(myRatingAvg * 100.0) / 100.0);
+        ratingDistribution.add(Math.round(perRatingAvg * 100.0) / 100.0);
+
+        return ratingDistribution;
+    }
+
+    public List<Integer> getEventDistribution(Long userId, List<Long> samePersonaUsersList) {
+        Integer myParticipate = userQuizAttemptRepository.countByUser_UserId(userId);
+        Integer perTotalParticipate = userQuizAttemptRepository.countByUser_UserIdIn(samePersonaUsersList);
+
+        return UtilServiceImpl.calcPerAvg(myParticipate, perTotalParticipate, samePersonaUsersList.size());
+    }
+
+    public List<Integer> getReviewsDistribution(Long userId, List<Long> samePersonaUsersList) {
+        YearMonth currentYearMonth = YearMonth.now();
+        LocalDateTime startOfMonth = currentYearMonth.atDay(1).atStartOfDay();
+        LocalDateTime endOfMonth = currentYearMonth.atEndOfMonth().atTime(LocalTime.MAX);
+
+        Integer myReviews = reviewRepository.countByUser_UserIdAndCreatedAtBetween(userId, startOfMonth, endOfMonth);
+        Integer personaTotalReviews = reviewRepository.countByUser_UserIdInAndCreatedAtBetween(samePersonaUsersList, startOfMonth, endOfMonth);
+
+        return UtilServiceImpl.calcPerAvg(myReviews, personaTotalReviews, samePersonaUsersList.size());
+    }
+
+    public List<Integer> getReactionsDistribution(Long userId) {
+        Integer myLikes = contentReactionRepository.countByUser_UserIdAndReaction(userId, ReactionType.LIKE);
+        Integer myDisLikes = contentReactionRepository.countByUser_UserIdAndReaction(userId, ReactionType.DISLIKE);
+
+        return UtilServiceImpl.calculateIntegerPercentages(myLikes, myDisLikes);
+    }
 
 }

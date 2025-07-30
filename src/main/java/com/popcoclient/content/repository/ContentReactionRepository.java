@@ -24,4 +24,5 @@ public interface ContentReactionRepository extends JpaRepository<ContentReaction
             "ORDER BY cr.createdAt DESC")
     List<ContentReaction> findByUserAndReactionWithContent(@Param("user") User user, @Param("reaction") ReactionType reaction);
 
+    Integer countByUser_UserIdAndReaction(Long userId, ReactionType reactionType);
 }
