@@ -49,6 +49,9 @@ public class Quiz {
     @Column(name = "round_count")
     private Integer roundCount;
 
+    @Column(name="quiz_reward")
+    private String quizReward;
+
     @OneToMany(mappedBy = "quiz", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<QuizQuestion> questions = new ArrayList<>();
