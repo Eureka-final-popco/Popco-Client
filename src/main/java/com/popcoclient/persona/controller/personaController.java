@@ -33,11 +33,12 @@ public class personaController {
         return ResponseEntity.ok(ApiResponse.success(personaService.getPersona(userId)));
     }
 
-    @Operation(summary = "페르소나 통계 조회", description = "페르소나 페이지의 Section 3 + 4 에 사용될 데이터, 개발중")
+    @Operation(summary = "페르소나 통계 조회", description = "페르소나 페이지의 Section 3 + 4 에 사용될 데이터, List[남, 여], 연령대[10,20,~~,60], 나의 평균 별점, 페르소나 평균 별점, List[내 이벤트 참여 수, 페스소나 평균 이벤트 참여 수], 지금까지 개최된 이벤트 수, List[1달간 내가 남긴 리뷰 수, 1달간 페평 남긴 리뷰 수], List[나의 좋아요 수 %, 싫어요 수 %]")
     @SecurityRequirement(name = "bearerAuth")
     @GetMapping("/analysis")
     public ResponseEntity<ApiResponse<PersonaAnalysisResponseDto>> getPersonaAnalysis() {
-        return null;
+        Long userId = jwtProvider.getUserIdFromAuthentication();
+        return ResponseEntity.ok(ApiResponse.success(personaService.getPersonaAnalysis(userId)));
     }
 
     @Operation(summary = "페르소나 목록 조회", description = "시스템에 등록된 모든 페르소나의 목록을 조회합니다.")
