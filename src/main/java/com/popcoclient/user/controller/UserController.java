@@ -16,6 +16,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -65,8 +66,8 @@ public class UserController {
 
     @Operation(summary = "userId로 사용자 상세 수정", description = "userId로 사용자 상세 수정")
     @SecurityRequirement(name = "bearerAuth")
-    @PutMapping("/details")
-    public ResponseEntity<ApiResponse<Void>> updateUserDetail(@Valid @RequestBody UserDetailUpdateRequestDto request) {
+    @PutMapping(value = "/details", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<ApiResponse<Void>> updateUserDetail(@ModelAttribute UserDetailUpdateRequestDto request) {
         Long userId = jwtProvider.getRequiredUserId();
         userDetailService.updateUserDetail(request, userId);
         return ResponseEntity.ok(ApiResponse.success("Update UserDetail Success", null));

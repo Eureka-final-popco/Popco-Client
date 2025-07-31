@@ -58,8 +58,9 @@ public class UserDetailServiceImpl implements UserDetailService {
 
         s3Service.deleteFile(userDetail.getProfilePath());
 
-        String uploadFile = s3Service.uploadFile(request.getProfileImageUrl());
-        userDetail.updateOf(request.getNickname(), uploadFile);
+        String imageUuid = s3Service.uploadFile(request.getProfileImageUrl());
+        String profilePath = "/profile/" + imageUuid;
+        userDetail.updateOf(request.getNickname(), profilePath);
         userDetailRepository.save(userDetail);
     }
 }
