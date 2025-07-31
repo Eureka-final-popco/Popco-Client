@@ -21,7 +21,7 @@ public interface ContentReactionRepository extends JpaRepository<ContentReaction
             "JOIN FETCH cr.content c " +
             "WHERE cr.user = :user " +
             "AND cr.reaction = :reaction " +
-            "ORDER BY cr.createdAt DESC")
+            "ORDER BY cr.updatedAt DESC")
     List<ContentReaction> findByUserAndReactionWithContent(@Param("user") User user, @Param("reaction") ReactionType reaction);
 
 }

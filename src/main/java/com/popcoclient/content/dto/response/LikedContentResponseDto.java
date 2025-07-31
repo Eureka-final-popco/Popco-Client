@@ -28,7 +28,7 @@ public class LikedContentResponseDto {
     private String backdropPath;
     private String posterPath;
     private Integer runtime;
-    private Set<Integer> genreIds;
+//    private Set<Integer> genreIds;
     private LocalDateTime likedAt;
 
     public static LikedContentResponseDto from(ContentReaction reaction) {
@@ -44,7 +44,7 @@ public class LikedContentResponseDto {
                 .backdropPath(content.getBackdropPath())
                 .posterPath(content.getPosterPath())
                 .runtime(content.getRuntime())
-                .genreIds(content.getGenreIds())
+//                .genreIds(content.getGenreIds())
                 .likedAt(reaction.getCreatedAt())
                 .build();
     }
