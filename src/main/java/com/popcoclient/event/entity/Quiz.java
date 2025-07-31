@@ -43,6 +43,9 @@ public class Quiz {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
+    @Column(name = "quiz_poster_path")
+    private String quizPosterPath;
+
     @Column(name = "banner_path")
     private String bannerPath;
 
