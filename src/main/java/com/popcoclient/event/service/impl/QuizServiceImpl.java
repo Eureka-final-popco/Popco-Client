@@ -1,6 +1,7 @@
 package com.popcoclient.event.service.impl;
 
 import com.popcoclient.event.dto.response.QuizAlarmResponseDto;
+import com.popcoclient.event.dto.response.QuizDetailDto;
 import com.popcoclient.event.dto.response.QuizResponseDto;
 import com.popcoclient.event.entity.Quiz;
 import com.popcoclient.event.repository.QuizRepository;
@@ -21,33 +22,39 @@ public class QuizServiceImpl implements QuizService {
 
     @Override
     public QuizAlarmResponseDto getQuizAlarm(Long userId) {
-        if(userId == null) {
-            throw new RuntimeException("퀴즈 알람은 로그인 사용자에게만 적용됩니다.");
-        }
         LocalDateTime now = LocalDateTime.now();
         LocalDate today = now.toLocalDate();
 
-        // 오늘 날짜의 퀴즈 중 하나만 조회 (시작 시간이 미래인 것만)
         Optional<Quiz> optionalQuiz = quizRepository.findFirstByStartAtBetween(
                 today.atStartOfDay(),
                 today.plusDays(1).atStartOfDay()
         );
 
         if (optionalQuiz.isEmpty()) {
-            return QuizAlarmResponseDto.from(null,false);
+            return null;
         }
 
-        Quiz quiz = optionalQuiz.get();
-        LocalDateTime quizStart = quiz.getStartAt();
-
-        long minutesUntilStart = Duration.between(now, quizStart).toMinutes();
-        boolean showPopup = minutesUntilStart <= 10 && minutesUntilStart > 0;
-
-        return QuizAlarmResponseDto.from(quiz,showPopup);
+        return QuizAlarmResponseDto.from(optionalQuiz.get(),now);
     }
 
     @Override
     public QuizResponseDto getQuiz() {
-        return null;
+        LocalDateTime now = LocalDateTime.now();
+        LocalDate today = now.toLocalDate();
+
+        Optional<Quiz> optionalQuiz = quizRepository.findFirstByStartAtBetween(
+                today.atStartOfDay(),
+                today.plusDays(1).atStartOfDay()
+        );
+
+        if (optionalQuiz.isEmpty()) {
+            return QuizResponseDto.from(null,false);
+        }
+
+        Quiz quiz = optionalQuiz.get();
+        QuizDetailDto detailDto = QuizDetailDto.from(quiz,now);
+
+        return QuizResponseDto.from(detailDto, true);
     }
+
 }

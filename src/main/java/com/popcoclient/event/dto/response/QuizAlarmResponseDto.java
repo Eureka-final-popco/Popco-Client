@@ -6,20 +6,24 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
+
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
 public class QuizAlarmResponseDto {
-    private Long QuizId;
-    private String QuizName;
-    private boolean showAlert;
+    private Long quizId;
+    private String quizName;
+    private LocalDateTime quizStartTime;
+    private LocalDateTime serverTime;
 
-    public static QuizAlarmResponseDto from(Quiz quiz, boolean showAlert) {
+    public static QuizAlarmResponseDto from(Quiz quiz, LocalDateTime serverTime) {
         return QuizAlarmResponseDto.builder()
-                .QuizId(quiz.getQuizId())
-                .QuizName(quiz.getName())
-                .showAlert(showAlert)
+                .quizId(quiz.getQuizId())
+                .quizName(quiz.getName())
+                .quizStartTime(quiz.getStartAt())
+                .serverTime(serverTime)
                 .build();
     }
 }

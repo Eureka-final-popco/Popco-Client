@@ -14,6 +14,7 @@ import com.popcoclient.user.repository.UserRepository;
 import com.popcoclient.user.service.UserDetailService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Optional;
 
@@ -56,10 +57,24 @@ public class UserDetailServiceImpl implements UserDetailService {
         UserDetail userDetail = userDetailRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("사용자 정보를 찾을 수 없습니다. userId: " + userId));
 
-        s3Service.deleteFile(userDetail.getProfilePath());
+        // 닉네임 업데이트 (null 또는 빈 문자열 아닌 경우에만)
+        if (request.getNickname() != null && !request.getNickname().isBlank()) {
+            userDetail.setNickname(request.getNickname());
+        }
 
-        String uploadFile = s3Service.uploadFile(request.getProfileImageUrl());
-        userDetail.updateOf(request.getNickname(), uploadFile);
+        // 프로필 이미지가 새로 들어온 경우에만 S3 업로드 및 삭제 처리
+        MultipartFile newProfileImage = request.getProfileImageUrl();
+        if (newProfileImage != null && !newProfileImage.isEmpty()) {
+            // 기존 프로필 이미지 삭제
+            s3Service.deleteFile(userDetail.getProfilePath());
+
+            // 새로운 프로필 이미지 업로드 및 경로 설정
+            String imageUuid = s3Service.uploadFile(newProfileImage);
+            String profilePath = "/profile/" + imageUuid;
+            userDetail.setProfilePath(profilePath);
+        }
+
         userDetailRepository.save(userDetail);
     }
+
 }

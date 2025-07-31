@@ -29,7 +29,7 @@ public class personaController {
     @SecurityRequirement(name = "bearerAuth")
     @GetMapping
     public ResponseEntity<ApiResponse<MyPersonaResponseDto>> getPersonas() {
-        Long userId = jwtProvider.getUserIdFromAuthentication();
+        Long userId = jwtProvider.getRequiredUserId();
         return ResponseEntity.ok(ApiResponse.success(personaService.getPersona(userId)));
     }
 
@@ -37,7 +37,7 @@ public class personaController {
     @SecurityRequirement(name = "bearerAuth")
     @GetMapping("/analysis")
     public ResponseEntity<ApiResponse<PersonaAnalysisResponseDto>> getPersonaAnalysis() {
-        Long userId = jwtProvider.getUserIdFromAuthentication();
+        Long userId = jwtProvider.getRequiredUserId();
         return ResponseEntity.ok(ApiResponse.success(personaService.getPersonaAnalysis(userId)));
     }
 

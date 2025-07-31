@@ -10,6 +10,13 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Builder
 public class QuizResponseDto {
-    private Integer isQuizPageAccess;
+    private boolean isQuizPageAccess;
     private QuizDetailDto quizDetail;
+
+    public static QuizResponseDto from(QuizDetailDto quizDetail, boolean isQuizPageAccess) {
+        return QuizResponseDto.builder()
+                .quizDetail(quizDetail)
+                .isQuizPageAccess(isQuizPageAccess)
+                .build();
+    }
 }

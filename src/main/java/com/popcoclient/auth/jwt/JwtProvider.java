@@ -49,22 +49,6 @@ public class JwtProvider {
         return new UsernamePasswordAuthenticationToken(principal, "", authorities);
     }
 
-    public Long getUserIdFromAuthentication() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
-        if (authentication == null || !authentication.isAuthenticated()) {
-            throw new UnauthorizedUserException();
-        }
-
-        String principal = authentication.getName();
-
-        if ("anonymousUser".equals(principal)) {
-            return null;
-        }
-
-        return Long.parseLong(principal); // 회원일 경우
-    }
-
     // 로그인 안 하면 null을 반환하는 버전
     public Long getNullableUserId() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();

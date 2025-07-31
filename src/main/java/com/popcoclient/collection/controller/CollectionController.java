@@ -31,7 +31,7 @@ public class CollectionController {
     @SecurityRequirement(name = "bearerAuth")
     @PostMapping
     public ResponseEntity<ApiResponse<CollectionResponseDto>> createCollection(@Valid @RequestBody CollectionRequestDto request) {
-        Long userId = jwtProvider.getUserIdFromAuthentication();
+        Long userId = jwtProvider.getRequiredUserId();
         CollectionResponseDto response = collectionService.createCollection(userId, request);
         return ResponseEntity.ok(ApiResponse.success("컬렉션 생성 성공", response));
     }
@@ -42,7 +42,7 @@ public class CollectionController {
     public ResponseEntity<ApiResponse<CollectionResponseDto>> getCollection(@PathVariable Long collectionId) {
         Long userId = null;
         try {
-            userId = jwtProvider.getUserIdFromAuthentication();
+            userId = jwtProvider.getNullableUserId();
         } catch (Exception e) {
             // 로그인하지 않은 사용자도 조회 가능
         }
@@ -63,7 +63,7 @@ public class CollectionController {
             @RequestParam(defaultValue = "20") Integer pageSize) {
         Long currentUserId = null;
         try {
-            currentUserId = jwtProvider.getUserIdFromAuthentication();
+            currentUserId = jwtProvider.getNullableUserId();
         } catch (Exception e) {
             // 로그인하지 않은 사용자도 조회 가능
         }
@@ -82,7 +82,7 @@ public class CollectionController {
     public ResponseEntity<ApiResponse<CollectionListResponseDto>> getMyCollections(
             @RequestParam(defaultValue = "0") Integer pageNumber,
             @RequestParam(defaultValue = "20") Integer pageSize) {
-        Long userId = jwtProvider.getUserIdFromAuthentication();
+        Long userId = jwtProvider.getRequiredUserId();
         CollectionListResponseDto response = collectionService.getUserCollections(userId, pageNumber, pageSize);
         return ResponseEntity.ok(ApiResponse.success("내 컬렉션 목록 조회 성공", response));
     }
@@ -96,7 +96,7 @@ public class CollectionController {
             @RequestParam(defaultValue = "20") Integer pageSize) {
         Long userId = null;
         try {
-            userId = jwtProvider.getUserIdFromAuthentication();
+            userId = jwtProvider.getNullableUserId();
         } catch (Exception e) {
             // 로그인하지 않은 사용자도 조회 가능
         }
@@ -116,7 +116,7 @@ public class CollectionController {
             @RequestParam(defaultValue = "20") Integer pageSize) {
         Long userId = null;
         try {
-            userId = jwtProvider.getUserIdFromAuthentication();
+            userId = jwtProvider.getNullableUserId();
         } catch (Exception e) {
             // 로그인하지 않은 사용자도 조회 가능
         }
@@ -153,7 +153,7 @@ public class CollectionController {
     public ResponseEntity<ApiResponse<CollectionResponseDto>> updateCollection(
             @PathVariable Long collectionId,
             @Valid @RequestBody CollectionUpdateRequestDto request) {
-        Long userId = jwtProvider.getUserIdFromAuthentication();
+        Long userId = jwtProvider.getRequiredUserId();
         CollectionResponseDto response = collectionService.updateCollection(userId, collectionId, request);
         return ResponseEntity.ok(ApiResponse.success("컬렉션 수정 성공", response));
     }
@@ -163,7 +163,7 @@ public class CollectionController {
     @SecurityRequirement(name = "bearerAuth")
     @DeleteMapping("/{collectionId}")
     public ResponseEntity<ApiResponse<Void>> deleteCollection(@PathVariable Long collectionId) {
-        Long userId = jwtProvider.getUserIdFromAuthentication();
+        Long userId = jwtProvider.getRequiredUserId();
         collectionService.deleteCollection(userId, collectionId);
         return ResponseEntity.ok(ApiResponse.success("컬렉션 삭제 성공", null));
     }
