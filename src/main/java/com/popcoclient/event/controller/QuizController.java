@@ -30,9 +30,9 @@ public class QuizController {
     @GetMapping("/alarm")
     @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<ApiResponse<QuizAlarmResponseDto>> getQuizAlarm() {
-        Long userId = jwtProvider.getRequiredUserId();
+        jwtProvider.getRequiredUserId();
 
-        QuizAlarmResponseDto response = quizService.getQuizAlarm(userId);
+        QuizAlarmResponseDto response = quizService.getQuizAlarm();
         if (response == null) {
             return ResponseEntity.ok(ApiResponse.success("오늘은 퀴즈가 없습니다.", null));
         }
@@ -47,7 +47,7 @@ public class QuizController {
     @GetMapping
     @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<ApiResponse<QuizResponseDto>> getQuiz() {
-        Long userId = jwtProvider.getRequiredUserId();
+        jwtProvider.getRequiredUserId();
 
         QuizResponseDto response = quizService.getQuiz();
         if (!response.isQuizPageAccess()) {
@@ -55,4 +55,6 @@ public class QuizController {
         }
         return ResponseEntity.ok(ApiResponse.success("퀴즈 조회 성공", response));
     }
+
+
 }

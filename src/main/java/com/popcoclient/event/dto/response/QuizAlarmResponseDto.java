@@ -13,17 +13,15 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @Builder
 public class QuizAlarmResponseDto {
-    private Long quizId;
-    private String quizName;
-    private LocalDateTime quizStartTime;
-    private LocalDateTime serverTime;
+    private QuizAlarmDto quizAlarmDto;
+    private boolean existTodayQuiz;
+    private boolean isAlarm;
 
-    public static QuizAlarmResponseDto from(Quiz quiz, LocalDateTime serverTime) {
+    public static QuizAlarmResponseDto from(QuizAlarmDto quizAlarmDto, boolean existTodayQuiz, boolean isAlarm) {
         return QuizAlarmResponseDto.builder()
-                .quizId(quiz.getQuizId())
-                .quizName(quiz.getName())
-                .quizStartTime(quiz.getStartAt())
-                .serverTime(serverTime)
+                .quizAlarmDto(quizAlarmDto)
+                .existTodayQuiz(existTodayQuiz)
+                .isAlarm(isAlarm)
                 .build();
     }
 }

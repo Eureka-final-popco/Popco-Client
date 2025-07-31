@@ -1,17 +1,27 @@
 package com.popcoclient.event.service.impl;
 
-import com.popcoclient.event.dto.response.QuizAlarmResponseDto;
-import com.popcoclient.event.dto.response.QuizDetailDto;
-import com.popcoclient.event.dto.response.QuizResponseDto;
+import com.popcoclient.event.dto.response.*;
 import com.popcoclient.event.entity.Quiz;
+import com.popcoclient.event.entity.QuizOption;
+import com.popcoclient.event.entity.QuizQuestion;
+import com.popcoclient.event.repository.QuizOptionRepository;
+import com.popcoclient.event.repository.QuizQuestionRepository;
 import com.popcoclient.event.repository.QuizRepository;
 import com.popcoclient.event.service.QuizService;
+import com.popcoclient.exception.business.QuizMismatchForTodayException;
+import com.popcoclient.exception.business.QuizNotFountForTodayException;
+import com.popcoclient.exception.business.UserNotFoundException;
+import com.popcoclient.persona.dto.response.OptionResponseDto;
+import com.popcoclient.user.entity.User;
+import com.popcoclient.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -19,42 +29,88 @@ import java.util.Optional;
 public class QuizServiceImpl implements QuizService {
 
     private final QuizRepository quizRepository;
+    private final UserRepository userRepository;
+    private final QuizQuestionRepository quizQuestionRepository;
+    private final QuizOptionRepository quizOptionRepository;
 
     @Override
-    public QuizAlarmResponseDto getQuizAlarm(Long userId) {
-        LocalDateTime now = LocalDateTime.now();
-        LocalDate today = now.toLocalDate();
-
-        Optional<Quiz> optionalQuiz = quizRepository.findFirstByStartAtBetween(
-                today.atStartOfDay(),
-                today.plusDays(1).atStartOfDay()
-        );
+    public QuizAlarmResponseDto getQuizAlarm() {
+        Optional<Quiz> optionalQuiz = getTodayQuiz();
 
         if (optionalQuiz.isEmpty()) {
-            return null;
+            return QuizAlarmResponseDto.from(null,false,false);
         }
 
-        return QuizAlarmResponseDto.from(optionalQuiz.get(),now);
+        Quiz quiz = optionalQuiz.get();
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime quizStart = quiz.getStartAt();
+
+        QuizAlarmDto quizAlarmDto = QuizAlarmDto.from(quiz,now);
+
+        long minutesUntilStart = Duration.between(now, quizStart).toMinutes();
+        boolean showPopup = minutesUntilStart <= 1 && minutesUntilStart > 0;
+
+        if (showPopup) {
+            return QuizAlarmResponseDto.from(quizAlarmDto,true,true);
+        } else {
+            return QuizAlarmResponseDto.from(quizAlarmDto,true,false);
+        }
     }
 
     @Override
     public QuizResponseDto getQuiz() {
-        LocalDateTime now = LocalDateTime.now();
-        LocalDate today = now.toLocalDate();
-
-        Optional<Quiz> optionalQuiz = quizRepository.findFirstByStartAtBetween(
-                today.atStartOfDay(),
-                today.plusDays(1).atStartOfDay()
-        );
+        Optional<Quiz> optionalQuiz = getTodayQuiz();
 
         if (optionalQuiz.isEmpty()) {
             return QuizResponseDto.from(null,false);
         }
 
         Quiz quiz = optionalQuiz.get();
+        LocalDateTime now = LocalDateTime.now();
         QuizDetailDto detailDto = QuizDetailDto.from(quiz,now);
 
         return QuizResponseDto.from(detailDto, true);
     }
+
+    @Override
+    @Transactional
+    public QuizQuestionResponseDto getQuizQuestion(long userId, long quizId, long questionNum) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("사용자를 찾을 수 없습니다. userId: " + userId));
+
+        Optional<Quiz> optionalQuiz = getTodayQuiz();
+
+        if (optionalQuiz.isEmpty()) {
+            throw new QuizNotFountForTodayException();
+        }
+
+        Quiz quiz = optionalQuiz.get();
+        LocalDateTime now = LocalDateTime.now();
+
+        if (quiz.getQuizId() == quizId) {
+            throw new QuizMismatchForTodayException();
+        }
+
+        if(quiz.getRoundCount() < questionNum) {
+            throw new RuntimeException("해당 질문은 존재하지 않습니다.");
+        }
+
+        boolean lastRound = quiz.getRoundCount() == questionNum;
+
+        QuizQuestion question = quizQuestionRepository.findByQuiz(quiz);
+        List<QuizOptionDto> options =
+                quizOptionRepository.findByQuizIdAndQuestionId(quiz.getQuizId(), question.getQuestionId().getQuestionId());
+
+        return QuizQuestionResponseDto.from(question, options, now, lastRound);
+    }
+
+    private Optional<Quiz> getTodayQuiz() {
+        LocalDate today = LocalDate.now(); // 테스트 용이성 ↑
+        LocalDateTime start = today.atStartOfDay();
+        LocalDateTime end = today.plusDays(1).atStartOfDay();
+
+        return quizRepository.findFirstByStartAtBetween(start, end);
+    }
+
 
 }
