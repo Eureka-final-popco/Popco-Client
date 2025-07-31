@@ -32,7 +32,7 @@ public class CollectionContentController {
     @SecurityRequirement(name = "bearerAuth")
     @PostMapping
     public ResponseEntity<ApiResponse<CollectionContentResponseDto>> addContentToCollection(@PathVariable Long collectionId, @Valid @RequestBody CollectionContentRequestDto request) {
-        Long userId = jwtProvider.getUserIdFromAuthentication();
+        Long userId = jwtProvider.getRequiredUserId();
         CollectionContentResponseDto response = collectionContentService.addContentToCollection(userId, collectionId, request);
         return ResponseEntity.ok(ApiResponse.success("컬렉션에 컨텐츠 추가 성공", response));
     }
@@ -44,7 +44,7 @@ public class CollectionContentController {
     public ResponseEntity<ApiResponse<CollectionContentBatchResponseDto>> addMultipleContentsToCollection(
             @PathVariable Long collectionId,
             @Valid @RequestBody CollectionContentBatchRequestDto request) {
-        Long userId = jwtProvider.getUserIdFromAuthentication();
+        Long userId = jwtProvider.getRequiredUserId();
         CollectionContentBatchResponseDto response = collectionContentService.addMultipleContentsToCollection(userId, collectionId, request);
         return ResponseEntity.ok(ApiResponse.success("컬렉션에 여러 컨텐츠 추가 완료", response));
     }
@@ -70,7 +70,7 @@ public class CollectionContentController {
     @SecurityRequirement(name = "bearerAuth")
     @DeleteMapping("/{contentId}")
     public ResponseEntity<ApiResponse<Void>> removeContentFromCollection(@PathVariable Long collectionId, @PathVariable Long contentId, @RequestParam String contentType) {
-        Long userId = jwtProvider.getUserIdFromAuthentication();
+        Long userId = jwtProvider.getRequiredUserId();
         collectionContentService.removeContentFromCollection(userId, collectionId, contentId, contentType);
         return ResponseEntity.ok(ApiResponse.success("컬렉션에서 컨텐츠 삭제 성공", null));
     }

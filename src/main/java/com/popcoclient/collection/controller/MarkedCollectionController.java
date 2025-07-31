@@ -28,7 +28,7 @@ public class MarkedCollectionController {
     @SecurityRequirement(name = "bearerAuth")
     @PostMapping("/{collectionId}/mark")
     public ResponseEntity<ApiResponse<Boolean>> toggleMarkCollection(@PathVariable Long collectionId) {
-        Long userId = jwtProvider.getUserIdFromAuthentication();
+        Long userId = jwtProvider.getRequiredUserId();
         boolean isMarked = markedCollectionService.toggleMarkCollection(userId, collectionId);
         String message = isMarked ? "컬렉션을 마크했습니다" : "컬렉션 마크를 해제했습니다";
         return ResponseEntity.ok(ApiResponse.success(message, isMarked));
@@ -39,7 +39,7 @@ public class MarkedCollectionController {
     @SecurityRequirement(name = "bearerAuth")
     @PutMapping("/{collectionId}/mark")
     public ResponseEntity<ApiResponse<Void>> markCollection(@PathVariable Long collectionId) {
-        Long userId = jwtProvider.getUserIdFromAuthentication();
+        Long userId = jwtProvider.getRequiredUserId();
         markedCollectionService.markCollection(userId, collectionId);
         return ResponseEntity.ok(ApiResponse.success("컬렉션을 마크했습니다", null));
     }
@@ -49,7 +49,7 @@ public class MarkedCollectionController {
     @SecurityRequirement(name = "bearerAuth")
     @DeleteMapping("/{collectionId}/mark")
     public ResponseEntity<ApiResponse<Void>> unmarkCollection(@PathVariable Long collectionId) {
-        Long userId = jwtProvider.getUserIdFromAuthentication();
+        Long userId = jwtProvider.getRequiredUserId();
         markedCollectionService.unmarkCollection(userId, collectionId);
         return ResponseEntity.ok(ApiResponse.success("컬렉션 마크를 해제했습니다", null));
     }
@@ -59,7 +59,7 @@ public class MarkedCollectionController {
     @SecurityRequirement(name = "bearerAuth")
     @GetMapping("/{collectionId}/mark")
     public ResponseEntity<ApiResponse<Boolean>> isMarkedCollection(@PathVariable Long collectionId) {
-        Long userId = jwtProvider.getUserIdFromAuthentication();
+        Long userId = jwtProvider.getRequiredUserId();
         boolean isMarked = markedCollectionService.isMarkedByUser(userId, collectionId);
         return ResponseEntity.ok(ApiResponse.success("마크 여부 조회 성공", isMarked));
     }
@@ -71,7 +71,7 @@ public class MarkedCollectionController {
     public ResponseEntity<ApiResponse<CollectionListResponseDto>> getMyMarkedCollections(
             @RequestParam(defaultValue = "0") Integer pageNumber,
             @RequestParam(defaultValue = "20") Integer pageSize) {
-        Long userId = jwtProvider.getUserIdFromAuthentication();
+        Long userId = jwtProvider.getRequiredUserId();
         CollectionListResponseDto response = markedCollectionService.getUserMarkedCollections(userId, pageNumber, pageSize);
         return ResponseEntity.ok(ApiResponse.success("마크한 컬렉션 목록 조회 성공", response));
     }
@@ -83,7 +83,7 @@ public class MarkedCollectionController {
             @RequestParam(defaultValue = "10") Integer limit) {
         Long userId = null;
         try {
-            userId = jwtProvider.getUserIdFromAuthentication();
+            userId = jwtProvider.getNullableUserId();
         } catch (Exception e) {
             // 로그인하지 않은 사용자도 조회 가능
         }
@@ -102,7 +102,7 @@ public class MarkedCollectionController {
             @RequestParam(defaultValue = "20") Integer pageSize) {
         Long userId = null;
         try {
-            userId = jwtProvider.getUserIdFromAuthentication();
+            userId = jwtProvider.getNullableUserId();
         } catch (Exception e) {
             // 로그인하지 않은 사용자도 조회 가능
         }
