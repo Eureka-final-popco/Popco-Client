@@ -3,10 +3,7 @@ package com.popcoclient.user.entity;
 import com.popcoclient.user.dto.request.UserDetailCreateRequestDto;
 import com.popcoclient.user.dto.request.UserDetailUpdateRequestDto;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -18,6 +15,7 @@ import java.time.LocalDateTime;
 @Table(name = "user_details")
 @Builder
 @Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @EntityListeners(AuditingEntityListener.class)
@@ -38,11 +36,6 @@ public class UserDetail {
     @MapsId
     @JoinColumn(name = "user_id")
     private User user;
-
-    public void updateOf(String nickname, String profilePath) {
-        this.nickname = nickname;
-        this.profilePath = profilePath;
-    }
 
     public static UserDetail of(UserDetailCreateRequestDto request, User user) {
         return UserDetail.builder()

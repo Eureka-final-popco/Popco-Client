@@ -21,6 +21,10 @@ public class QuizDetailDto {
     private LocalDateTime serverTime;
 
     public static QuizDetailDto from(Quiz quiz, LocalDateTime serverTime) {
+        if (quiz == null) {
+            return null;
+        }
+
         return QuizDetailDto.builder()
                 .quizId(quiz.getQuizId())
                 .quizName(quiz.getName())

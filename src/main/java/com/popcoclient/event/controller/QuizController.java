@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @Tag(name = "퀴즈", description = "퀴즈 관련 API")
 @RestController
-@RequestMapping("/quizs")
+@RequestMapping("/quizzes")
 @RequiredArgsConstructor
 public class QuizController {
     private final QuizService quizService;
