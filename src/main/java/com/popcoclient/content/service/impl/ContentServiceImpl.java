@@ -166,7 +166,7 @@ public class ContentServiceImpl implements ContentService {
     @Override
     public List<LikedContentResponseDto> getLikedContents(Long userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+                .orElseThrow(() -> new UserNotFoundException("사용자를 찾을 수 없습니다. id : " + userId));
 
         List<ContentReaction> reactions = contentReactionRepository.findByUserAndReactionWithContent(user, ReactionType.LIKE);
 
