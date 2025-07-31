@@ -13,6 +13,7 @@ import com.popcoclient.user.repository.UserDetailRepository;
 import com.popcoclient.user.repository.UserRepository;
 import com.popcoclient.user.service.UserDetailService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -20,6 +21,7 @@ import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class UserDetailServiceImpl implements UserDetailService {
 
     private final UserRepository userRepository;
@@ -57,21 +59,28 @@ public class UserDetailServiceImpl implements UserDetailService {
         UserDetail userDetail = userDetailRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("사용자 정보를 찾을 수 없습니다. userId: " + userId));
 
-        // 닉네임 업데이트 (null 또는 빈 문자열 아닌 경우에만)
         if (request.getNickname() != null && !request.getNickname().isBlank()) {
             userDetail.setNickname(request.getNickname());
         }
 
-        // 프로필 이미지가 새로 들어온 경우에만 S3 업로드 및 삭제 처리
         MultipartFile newProfileImage = request.getProfileImageUrl();
         if (newProfileImage != null && !newProfileImage.isEmpty()) {
-            // 기존 프로필 이미지 삭제
-            s3Service.deleteFile(userDetail.getProfilePath());
+            try {
+                // 새로운 프로필 이미지 업로드
+                String imageFileName = s3Service.uploadFile(newProfileImage);
 
-            // 새로운 프로필 이미지 업로드 및 경로 설정
-            String imageUuid = s3Service.uploadFile(newProfileImage);
-            String profilePath = "/profile/" + imageUuid;
-            userDetail.setProfilePath(profilePath);
+                // 기존 프로필 이미지 삭제 (새 이미지 업로드 성공 후에)
+                String currentProfilePath = userDetail.getProfilePath();
+                if (currentProfilePath != null && !currentProfilePath.isEmpty()) {
+                    s3Service.deleteFile(currentProfilePath);
+                }
+
+                userDetail.setProfilePath(imageFileName);
+
+            } catch (Exception e) {
+                log.error("프로필 이미지 업데이트 실패: {}", e.getMessage(), e);
+                throw new RuntimeException("프로필 이미지 업데이트에 실패했습니다.", e);
+            }
         }
 
         userDetailRepository.save(userDetail);
