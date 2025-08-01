@@ -77,7 +77,7 @@ public class MarkedCollectionController {
     }
 
     // 최근 일주일간 인기 컬렉션
-    @Operation(summary = "주간 인기 컬렉션", description = "최근 일주일간 가장 많이 마크된 컬렉션 목록을 조회합니다")
+    @Operation(summary = "주간 인기 컬렉션", description = "최근 일주일간 가장 많이 마크된 컬렉션 목록을 조회합니다. (로그인 비로그인 둘 다 가능하지만 로그인 상태일 때는 토큰 필요)")
     @GetMapping("/popular/weekly")
     public ResponseEntity<ApiResponse<List<CollectionResponseDto>>> getWeeklyPopularCollections(
             @RequestParam(defaultValue = "10") Integer limit) {
@@ -92,7 +92,7 @@ public class MarkedCollectionController {
     }
 
     // 특정 컨텐츠를 포함한 컬렉션 목록
-    @Operation(summary = "컨텐츠를 포함한 컬렉션", description = "특정 컨텐츠가 포함된 컬렉션 목록을 조회합니다. (sortType 은 popular, latest 가 있습니다.)")
+    @Operation(summary = "컨텐츠를 포함한 컬렉션", description = "특정 컨텐츠가 포함된 컬렉션 목록을 조회합니다. (로그인 비로그인 둘 다 가능하지만 로그인 상태일 때는 토큰 필요) (sortType 은 popular, latest 가 있습니다.)")
     @GetMapping("/content/{contentId}")
     public ResponseEntity<ApiResponse<CollectionListResponseDto>> getCollectionsByContent(
             @PathVariable Long contentId,

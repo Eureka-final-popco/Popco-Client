@@ -37,7 +37,7 @@ public class CollectionController {
     }
 
     // 특정 컬렉션 조회
-    @Operation(summary = "특정 컬렉션 조회", description = "컬렉션 ID로 특정 컬렉션을 조회합니다")
+    @Operation(summary = "특정 컬렉션 조회", description = "컬렉션 ID로 특정 컬렉션을 조회합니다. (로그인 비로그인 둘 다 가능하지만 로그인 상태일 때는 토큰 필요)")
     @GetMapping("/{collectionId}")
     public ResponseEntity<ApiResponse<CollectionResponseDto>> getCollection(@PathVariable Long collectionId) {
         Long userId = null;
@@ -55,7 +55,7 @@ public class CollectionController {
     }
 
     // 사용자의 컬렉션 목록 조회
-    @Operation(summary = "사용자의 컬렉션 목록 조회", description = "특정 사용자의 컬렉션 목록을 조회합니다")
+    @Operation(summary = "사용자의 컬렉션 목록 조회", description = "특정 사용자의 컬렉션 목록을 조회합니다. (로그인 비로그인 둘 다 가능하지만 로그인 상태일 때는 토큰 필요)")
     @GetMapping("/user/{userId}")
     public ResponseEntity<ApiResponse<CollectionListResponseDto>> getUserCollections(
             @PathVariable Long userId,
@@ -88,7 +88,7 @@ public class CollectionController {
     }
 
     // 컬렉션 검색
-    @Operation(summary = "컬렉션 검색", description = "키워드로 컬렉션을 검색합니다")
+    @Operation(summary = "컬렉션 검색", description = "키워드로 컬렉션을 검색합니다. (로그인 비로그인 둘 다 가능하지만 로그인 상태일 때는 토큰 필요)")
     @GetMapping("/search")
     public ResponseEntity<ApiResponse<CollectionListResponseDto>> searchCollections(
             @RequestParam String keyword,
@@ -109,7 +109,7 @@ public class CollectionController {
     }
 
     // 전체 컬렉션 목록
-    @Operation(summary = "전체 컬렉션 목록 조회", description = "전체 컬렉션 목록을 페이징하여 조회합니다")
+    @Operation(summary = "전체 컬렉션 목록 조회", description = "전체 컬렉션 목록을 페이징하여 조회합니다. (로그인 비로그인 둘 다 가능하지만 로그인 상태일 때는 토큰 필요)")
     @GetMapping
     public ResponseEntity<ApiResponse<List<CollectionResponseDto>>> getCollections(
             @RequestParam(defaultValue = "0") Integer pageNumber,
