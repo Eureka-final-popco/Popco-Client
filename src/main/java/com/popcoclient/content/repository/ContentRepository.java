@@ -46,6 +46,4 @@ public interface ContentRepository extends JpaRepository<Content, ContentId> {
     Optional<Content> findByIdWithWatchProviders(@Param("contentId") ContentId contentId);
 
     List<Content> findAllByTitleIn(List<String> titles);
-
-    Optional<Content> findByContentId_IdAndContentId_Type(Long id, String type);
 }
