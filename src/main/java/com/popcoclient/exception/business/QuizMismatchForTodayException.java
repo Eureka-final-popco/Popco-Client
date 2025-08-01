@@ -5,10 +5,10 @@ import com.popcoclient.exception.ErrorCode;
 
 public class QuizMismatchForTodayException extends BusinessException {
   public QuizMismatchForTodayException() {
-    super(ErrorCode.QUIZ_NOT_FOUND_FOR_TODAY);
+    super(ErrorCode.QUIZ_ID_MISMATCH_FOR_TODAY);
   }
 
   public QuizMismatchForTodayException(String message) {
-    super(ErrorCode.QUIZ_NOT_FOUND_FOR_TODAY, message);
+    super(ErrorCode.QUIZ_ID_MISMATCH_FOR_TODAY, message);
   }
 }

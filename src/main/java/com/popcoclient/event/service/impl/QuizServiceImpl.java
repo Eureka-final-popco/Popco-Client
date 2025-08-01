@@ -2,16 +2,14 @@ package com.popcoclient.event.service.impl;
 
 import com.popcoclient.event.dto.response.*;
 import com.popcoclient.event.entity.Quiz;
-import com.popcoclient.event.entity.QuizOption;
 import com.popcoclient.event.entity.QuizQuestion;
 import com.popcoclient.event.repository.QuizOptionRepository;
 import com.popcoclient.event.repository.QuizQuestionRepository;
 import com.popcoclient.event.repository.QuizRepository;
 import com.popcoclient.event.service.QuizService;
 import com.popcoclient.exception.business.QuizMismatchForTodayException;
-import com.popcoclient.exception.business.QuizNotFountForTodayException;
+import com.popcoclient.exception.business.QuizNotFoundForTodayException;
 import com.popcoclient.exception.business.UserNotFoundException;
-import com.popcoclient.persona.dto.response.OptionResponseDto;
 import com.popcoclient.user.entity.User;
 import com.popcoclient.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -75,24 +73,24 @@ public class QuizServiceImpl implements QuizService {
     @Override
     @Transactional
     public QuizQuestionResponseDto getQuizQuestion(long userId, long quizId, long questionNum) {
-        User user = userRepository.findById(userId)
+        userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("사용자를 찾을 수 없습니다. userId: " + userId));
 
         Optional<Quiz> optionalQuiz = getTodayQuiz();
 
         if (optionalQuiz.isEmpty()) {
-            throw new QuizNotFountForTodayException();
+            throw new QuizNotFoundForTodayException();
         }
 
         Quiz quiz = optionalQuiz.get();
         LocalDateTime now = LocalDateTime.now();
 
-        if (quiz.getQuizId() == quizId) {
+        if (quiz.getQuizId() != quizId) {
             throw new QuizMismatchForTodayException();
         }
 
         if(quiz.getRoundCount() < questionNum) {
-            throw new RuntimeException("해당 질문은 존재하지 않습니다.");
+            throw new IllegalArgumentException("해당 질문은 존재하지 않습니다.");
         }
 
         boolean lastRound = quiz.getRoundCount() == questionNum;
