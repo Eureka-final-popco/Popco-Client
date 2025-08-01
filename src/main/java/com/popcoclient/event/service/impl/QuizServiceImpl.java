@@ -72,7 +72,7 @@ public class QuizServiceImpl implements QuizService {
 
     @Override
     @Transactional
-    public QuizQuestionResponseDto getQuizQuestion(long userId, long quizId, long questionNum) {
+    public QuizQuestionResponseDto getQuizQuestion(Long userId, Long quizId, Integer questionOrder) {
         userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("사용자를 찾을 수 없습니다. userId: " + userId));
 
@@ -89,13 +89,13 @@ public class QuizServiceImpl implements QuizService {
             throw new QuizMismatchForTodayException();
         }
 
-        if(quiz.getRoundCount() < questionNum) {
+        if(quiz.getRoundCount() < questionOrder) {
             throw new IllegalArgumentException("해당 질문은 존재하지 않습니다.");
         }
 
-        boolean lastRound = quiz.getRoundCount() == questionNum;
+        boolean lastRound = quiz.getRoundCount() == questionOrder;
 
-        QuizQuestion question = quizQuestionRepository.findByQuiz(quiz);
+        QuizQuestion question = quizQuestionRepository.findByQuizAndQuestionOrder(quiz, questionOrder);
         List<QuizOptionDto> options =
                 quizOptionRepository.findByQuizIdAndQuestionId(quiz.getQuizId(), question.getQuestionId().getQuestionId());
 

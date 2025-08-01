@@ -65,7 +65,7 @@ public class QuizController {
     @GetMapping("/{quizId}/question/{questionNum}")
     @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<ApiResponse<QuizQuestionResponseDto>> getQuizQuestion(
-            @PathVariable("quizId") Long quizId, @PathVariable("questionNum") Long questionNum
+            @PathVariable("quizId") Long quizId, @PathVariable("questionNum") Integer questionNum
     ) {
         long userId = jwtProvider.getRequiredUserId();
 

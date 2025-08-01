@@ -11,5 +11,5 @@ public interface QuizService {
     // 이벤트 페이지에 내려줄 정보
     QuizResponseDto getQuiz();
 
-    QuizQuestionResponseDto getQuizQuestion(long userId, long quizId, long questionNum);
+    QuizQuestionResponseDto getQuizQuestion(Long userId, Long quizId, Integer questionOrder);
 }
