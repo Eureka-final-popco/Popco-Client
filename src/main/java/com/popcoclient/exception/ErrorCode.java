@@ -55,7 +55,12 @@ public enum ErrorCode {
 
   // WishList
   WISHLIST_ALREADY_EXISTS(HttpStatus.CONFLICT, "WISHLIST_ALREADY_EXISTS", "이미 위시리스트에 추가된 콘텐츠입니다."),
-  WISHLIST_NOT_FOUND(HttpStatus.NOT_FOUND, "WISHLIST_NOT_FOUND", "위시리스트 항목을 찾을 수 없습니다.");
+  WISHLIST_NOT_FOUND(HttpStatus.NOT_FOUND, "WISHLIST_NOT_FOUND", "위시리스트 항목을 찾을 수 없습니다."),
+
+  // Quiz
+  QUIZ_NOT_FOUND_FOR_TODAY(HttpStatus.NOT_FOUND, "QUIZ_NOT_FOUND_FOR_TODAY", "오늘 진행되는 퀴즈를 찾을 수 없습니다."),
+  QUIZ_ID_MISMATCH_FOR_TODAY(HttpStatus.BAD_REQUEST,"QUIZ_ID_MISMATCH_FOR_TODAY", "퀴즈 아이디와 오늘 퀴즈 아이디가 맞지 않습니다.");
+
 
 
   private final HttpStatus status;

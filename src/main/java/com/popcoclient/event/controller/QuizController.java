@@ -3,6 +3,7 @@ package com.popcoclient.event.controller;
 import com.popcoclient.auth.jwt.JwtProvider;
 import com.popcoclient.common.response.ApiResponse;
 import com.popcoclient.event.dto.response.QuizAlarmResponseDto;
+import com.popcoclient.event.dto.response.QuizQuestionResponseDto;
 import com.popcoclient.event.dto.response.QuizResponseDto;
 import com.popcoclient.event.entity.Quiz;
 import com.popcoclient.event.service.QuizService;
@@ -12,6 +13,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -30,9 +32,9 @@ public class QuizController {
     @GetMapping("/alarm")
     @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<ApiResponse<QuizAlarmResponseDto>> getQuizAlarm() {
-        Long userId = jwtProvider.getRequiredUserId();
+        jwtProvider.getRequiredUserId();
 
-        QuizAlarmResponseDto response = quizService.getQuizAlarm(userId);
+        QuizAlarmResponseDto response = quizService.getQuizAlarm();
         if (response == null) {
             return ResponseEntity.ok(ApiResponse.success("오늘은 퀴즈가 없습니다.", null));
         }
@@ -47,7 +49,7 @@ public class QuizController {
     @GetMapping
     @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<ApiResponse<QuizResponseDto>> getQuiz() {
-        Long userId = jwtProvider.getRequiredUserId();
+        jwtProvider.getRequiredUserId();
 
         QuizResponseDto response = quizService.getQuiz();
         if (!response.isQuizPageAccess()) {
@@ -55,4 +57,21 @@ public class QuizController {
         }
         return ResponseEntity.ok(ApiResponse.success("퀴즈 조회 성공", response));
     }
+
+    @Operation(
+            summary = "퀴즈 질문 조회",
+            description = "오늘의 퀴즈의 질문을 순서대로 조회합니다."
+    )
+    @GetMapping("/{quizId}/question/{questionNum}")
+    @SecurityRequirement(name = "bearerAuth")
+    public ResponseEntity<ApiResponse<QuizQuestionResponseDto>> getQuizQuestion(
+            @PathVariable("quizId") Long quizId, @PathVariable("questionNum") Integer questionNum
+    ) {
+        long userId = jwtProvider.getRequiredUserId();
+
+        QuizQuestionResponseDto response = quizService.getQuizQuestion(userId, quizId, questionNum);
+
+        return ResponseEntity.ok(ApiResponse.success("퀴즈 조회 성공", response));
+    }
+
 }

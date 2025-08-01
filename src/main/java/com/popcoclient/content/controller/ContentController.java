@@ -54,7 +54,7 @@ public class ContentController {
         return ResponseEntity.ok(ApiResponse.success("전체 콘텐츠 조회 성공", responseDto));
     }
 
-    @Operation(summary = "콘텐츠 일간랭킹", description = "ALL,MOVIE,TV 타입을 통해 사이트의 일간 랭킹을 확인할 수 있다.")
+    @Operation(summary = "콘텐츠 주간랭킹", description = "ALL,MOVIE,TV 타입을 통해 사이트의 일간 랭킹을 확인할 수 있다.")
     @GetMapping("/popular/types/{type}")
     public ResponseEntity<ApiResponse<List<DailyPopularContentResponseDto>>> getPopularContent(@PathVariable String type) {
         List<DailyPopularContentResponseDto> response = contentService.getDailyPopularContentList(type);
