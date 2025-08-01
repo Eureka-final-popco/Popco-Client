@@ -53,7 +53,10 @@ public class SecurityConfig {
             "/collections/*/contents",
             "/collections/*/contents/all",
             "/collections/*/contents/count",
-            "/collections/*/contents/check/*"
+            "/collections/*/contents/check/*",
+
+            "/search/**",
+            "/index/**"
     };
 
 
