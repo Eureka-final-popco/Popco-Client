@@ -23,12 +23,19 @@ public class ContentId implements Serializable {
 
     @Override
     public boolean equals(Object o) {
+        if (this == o) return true; // 성능 최적화
         if (!(o instanceof ContentId contentId)) return false;
-        return Objects.equals(id, contentId.id) && Objects.equals(type, contentId.type);
+        return Objects.equals(id, contentId.id)
+                && Objects.equals(normalize(type), normalize(contentId.type));
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, type);
+        return Objects.hash(id, normalize(type));
+    }
+
+    private String normalize(String s) {
+        return s == null ? null : s.toLowerCase();
     }
 }
+
