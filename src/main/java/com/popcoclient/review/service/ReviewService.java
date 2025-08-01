@@ -21,5 +21,7 @@ public interface ReviewService {
 
     List<MyReviewResponseDto> getMyReviewsByMonth(Long userId, String month);
 
+    MyContentReviewResponseDto getMyReviewsByContent(Long userId, Long contentId, String type);
+
     ScoreDistributionResponseDto getScoreDistribution(Long userId);
 }

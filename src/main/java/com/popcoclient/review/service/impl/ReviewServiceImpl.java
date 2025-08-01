@@ -235,6 +235,31 @@ public class ReviewServiceImpl implements ReviewService {
     }
 
     @Override
+    public MyContentReviewResponseDto getMyReviewsByContent(Long userId, Long contentId, String type) {
+        if(userId == null){
+            return MyContentReviewResponseDto.from(null, false, false);
+        }
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+
+        ContentId id = new ContentId(contentId, type);
+
+        Content content = contentRepository.findById(id)
+                .orElseThrow(() -> new ContentNotFoundException("콘텐츠를 찾을 수 없습니다. contentId: " + contentId + "content Type : " + type));
+
+        Optional<Review> optReview = reviewRepository.findByContentAndUser(content, user);
+
+        if (optReview.isEmpty()) {
+            return MyContentReviewResponseDto.from(null, true, false);
+        }
+
+        MyReviewResponseDto myReview = MyReviewResponseDto.of(optReview.get());
+
+        return MyContentReviewResponseDto.from(myReview, true, true);
+    }
+
+    @Override
     public ScoreDistributionResponseDto getScoreDistribution(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));

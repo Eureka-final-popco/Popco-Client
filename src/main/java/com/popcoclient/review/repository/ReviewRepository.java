@@ -15,6 +15,7 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface ReviewRepository extends JpaRepository<Review, Long>, ReviewRepositoryCustom {
@@ -63,4 +64,6 @@ public interface ReviewRepository extends JpaRepository<Review, Long>, ReviewRep
 
     Integer countByUser_UserIdAndCreatedAtBetween(Long userId, LocalDateTime start, LocalDateTime end);
     Integer countByUser_UserIdInAndCreatedAtBetween(List<Long> userIds, LocalDateTime start, LocalDateTime end);
+
+    Optional<Review> findByContentAndUser(Content content, User user);
 }

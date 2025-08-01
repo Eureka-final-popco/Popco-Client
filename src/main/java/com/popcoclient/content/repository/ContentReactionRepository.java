@@ -13,6 +13,7 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @Repository
 public interface ContentReactionRepository extends JpaRepository<ContentReaction, Long> {
@@ -25,4 +26,11 @@ public interface ContentReactionRepository extends JpaRepository<ContentReaction
     List<ContentReaction> findByUserAndReactionWithContent(@Param("user") User user, @Param("reaction") ReactionType reaction);
 
     Integer countByUser_UserIdAndReaction(Long userId, ReactionType reactionType);
+
+    @Query("SELECT cr FROM ContentReaction cr " +
+            "WHERE cr.user.userId = :userId AND cr.content.contentId IN :contentIds")
+    List<ContentReaction> findByUserIdAndContentIds(@Param("userId") Long userId,
+                                                    @Param("contentIds") Set<ContentId> contentIds);
+
+
 }

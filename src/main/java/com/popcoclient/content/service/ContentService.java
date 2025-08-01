@@ -10,7 +10,7 @@ import java.util.List;
 public interface ContentService {
     Page<Content> getAllContents(Pageable pageable);
 
-    List<DailyPopularContentResponseDto> getDailyPopularContentList(String type);
+    List<DailyPopularContentResponseDto> getDailyPopularContentList(Long userId, String type);
 
     ContentDetailDto getContentDetail(Long id, String type);
 
