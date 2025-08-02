@@ -7,7 +7,10 @@ import org.springframework.data.elasticsearch.client.elc.ElasticsearchConfigurat
 import org.springframework.data.elasticsearch.repository.config.EnableElasticsearchRepositories;
 
 @Configuration
-@EnableElasticsearchRepositories(basePackages = "com.popcoclient.content.repository.search")
+@EnableElasticsearchRepositories(basePackages = {
+        "com.popcoclient.content.repository.search",
+        "com.popcoclient.content.repository.filter"
+})
 public class ElasticsearchConfig extends ElasticsearchConfiguration {
 
     @Value("${spring.elasticsearch.uris:http://localhost:9200}")

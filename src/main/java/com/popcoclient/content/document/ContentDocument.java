@@ -38,7 +38,7 @@ public class ContentDocument {
     private LocalDate releaseDate;
 
     @Field(type = FieldType.Keyword)
-    private String posterPath;  // 추가
+    private String posterPath;
 
     @Field(type = FieldType.Nested)
     private List<CastInfo> cast;
