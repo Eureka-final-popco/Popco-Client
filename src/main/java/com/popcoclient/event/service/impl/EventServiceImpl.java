@@ -79,7 +79,7 @@ public class EventServiceImpl {
      return latest;
     }
 
-    public QuizQuestionResponseDto getQuizQuestion(Long quizId, Long questionId){
+    public CurrentQuestionResponseDto getQuizQuestion(Long quizId, Long questionId){
         QuizQuestionId quizQuestionId = QuizQuestionId.of(questionId, quizId);
         QuizQuestion quizQuestion = quizQuestionRepository.findById(quizQuestionId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.QUESTION_NOT_FOUND));
@@ -91,7 +91,7 @@ public class EventServiceImpl {
             optionsList.add(optionsDto);
         }
 
-        return QuizQuestionResponseDto.builder()
+        return CurrentQuestionResponseDto.builder()
                 .quizId(quizId)
                 .questionId(questionId)
                 .content(quizQuestion.getContent())

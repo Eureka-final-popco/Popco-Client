@@ -4,6 +4,7 @@ import com.popcoclient.auth.jwt.JwtProvider;
 import com.popcoclient.common.response.ApiResponse;
 import com.popcoclient.event.dto.request.QuizSubmissionResultDto;
 import com.popcoclient.event.dto.request.SubmitAnswerRequestDto;
+import com.popcoclient.event.dto.response.CurrentQuestionResponseDto;
 import com.popcoclient.event.dto.response.QuizQuestionResponseDto;
 import com.popcoclient.event.dto.response.QuizStatusResponseDto;
 import com.popcoclient.event.dto.response.SurvivorRankingResponse;
@@ -41,7 +42,7 @@ public class QuizAnswerController {
 
     @GetMapping("/{quizId}/questions/{questionId}")
     @Operation(summary = "퀴즈 질문 및 선택지 리스트 조회", description = "이번 이벤트에서 사용될 n 번 질문과 선택지 리스트를 조회합니다.")
-    public ResponseEntity<ApiResponse<QuizQuestionResponseDto>> getQuizQuestion(@PathVariable Long quizId, @PathVariable Long questionId) {
+    public ResponseEntity<ApiResponse<CurrentQuestionResponseDto>> getQuizQuestion(@PathVariable Long quizId, @PathVariable Long questionId) {
         return ResponseEntity.ok(ApiResponse.success(quizAnswerService.getQuizQuestion(quizId, questionId)));
     }
 

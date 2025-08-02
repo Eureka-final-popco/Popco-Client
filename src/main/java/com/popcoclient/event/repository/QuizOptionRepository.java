@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface QuizOptionRepository extends JpaRepository<QuizOption, QuizQuestionId> {
+public interface QuizOptionRepository extends JpaRepository<QuizOption, QuizOptionId> {
     @Query("SELECT new com.popcoclient.event.dto.response.QuizOptionDto( " +
             "qo.optionId.optionId, " +
             "qo.content, " +

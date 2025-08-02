@@ -16,8 +16,6 @@ import java.util.List;
 @Builder
 public class QuizQuestionResponseDto {
     private Long quizId;
-    private Long questionId;
-    private String content;
     private Long quizQuestionId;
     private Integer quizOrder;
     private String quizContent;
@@ -25,7 +23,6 @@ public class QuizQuestionResponseDto {
     private LocalDateTime finishedAt;
     private LocalDateTime serverTime;
     private Integer firstCapacity;
-    private List<QuizQuestionsOptionsResponseDto> options;
     private List<QuizOptionDto> optionList;
     private boolean isLastRound;
 
