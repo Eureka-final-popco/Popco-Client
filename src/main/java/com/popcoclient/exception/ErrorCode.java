@@ -59,10 +59,7 @@ public enum ErrorCode {
 
   // Quiz
   QUIZ_NOT_FOUND_FOR_TODAY(HttpStatus.NOT_FOUND, "QUIZ_NOT_FOUND_FOR_TODAY", "오늘 진행되는 퀴즈를 찾을 수 없습니다."),
-  QUIZ_ID_MISMATCH_FOR_TODAY(HttpStatus.BAD_REQUEST,"QUIZ_ID_MISMATCH_FOR_TODAY", "퀴즈 아이디와 오늘 퀴즈 아이디가 맞지 않습니다.");
-
-
-  QUESTION_NOT_FOUND(HttpStatus.NOT_FOUND, "QUESTION_NOT_FOUND", "해당 순서의 질문을 찾을 수 없습니다."),
+  QUIZ_ID_MISMATCH_FOR_TODAY(HttpStatus.BAD_REQUEST,"QUIZ_ID_MISMATCH_FOR_TODAY", "퀴즈 아이디와 오늘 퀴즈 아이디가 맞지 않습니다."),
 
   // Quiz
   QUIZ_NOT_FOUND(HttpStatus.NOT_FOUND, "QUIZ_NOT_FOUND", "존재하지 않는 이벤트 ID 입니다.");
