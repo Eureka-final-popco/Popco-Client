@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>WebSocket Test Harness</title>
+    <!-- 안정적인 이전 버전의 라이브러리를 사용합니다. -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.5.2/sockjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; background-color: #f4f7f9; color: #333; padding: 20px; }
+        #app { max-width: 700px; margin: 0 auto; background-color: #fff; padding: 25px; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+        h1, h3 { color: #1a237e; }
+        #connection-status { font-weight: bold; padding: 8px; border-radius: 5px; margin-bottom: 15px; text-align: center; transition: all 0.3s; }
+        .status-connecting { background-color: #e3f2fd; color: #0d47a1; }
+        .status-connected { background-color: #e8f5e9; color: #1b5e20; }
+        .status-disconnected { background-color: #ffebee; color: #b71c1c; }
+        .control-panel, #quiz-status { background-color: #fafafa; border: 1px solid #e0e0e0; padding: 15px; border-radius: 8px; margin-top: 20px; }
+        .control-panel div { margin-bottom: 10px; }
+        .button-group { margin-top: 20px; display: flex; gap: 10px; flex-wrap: wrap; }
+        button { background-color: #3f51b5; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; font-size: 14px; transition: background-color 0.3s; }
+        button:hover { background-color: #303f9f; }
+        button:disabled { background-color: #9fa8da; cursor: not-allowed; }
+        label { font-weight: 500; margin-right: 10px; }
+        input[type="text"] { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+    </style>
+</head>
+<body>
+<div id="app">
+    <h1>퀴즈 WebSocket 테스트</h1>
+    <div id="connection-status" class="status-disconnected">❌ 연결 해제됨</div>
+
+    <!-- ⭐️ [수정] 컨트롤 패널 추가 -->
+    <div class="control-panel">
+        <h3>1. 연결 설정</h3>
+        <div>
+            <label for="jwt-token">JWT Token:</label>
+            <input type="text" id="jwt-token" placeholder="Swagger 등에서 발급받은 Access Token을 여기에 붙여넣으세요.">
+        </div>
+        <div class="button-group">
+            <button id="connectBtn">연결</button>
+            <button id="disconnectBtn" disabled>연결 해제</button>
+        </div>
+    </div>
+
+    <div class="control-panel">
+        <h3>2. 구독 및 테스트</h3>
+        <div class="button-group">
+            <button id="subscribeBtn" disabled>퀴즈 구독</button>
+            <button id="sendBtn" disabled>테스트 메시지 발송</button>
+        </div>
+    </div>
+
+    <div id="quiz-status">
+        <h3>퀴즈 진행 상황</h3>
+        <div>현재 생존자: <span id="survivors">0</span>명</div>
+        <div>진행률: <span id="progress">0</span>%</div>
+        <div>메시지: <span id="quiz-message">대기 중...</span></div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        class QuizWebSocketManager {
+            constructor() { this.stompClient = null; this.isConnected = false; this.subscriptions = new Map(); }
+            connect(token) {
+                if (this.isConnected) { console.warn("이미 연결되어 있습니다."); return; }
+                if (!token || !token.startsWith("Bearer ")) {
+                    alert("유효한 Bearer 토큰을 입력해주세요.");
+                    updateConnectionStatus('❌ 토큰 오류', 'disconnected');
+                    return;
+                }
+                const socket = new SockJS('/ws-quiz');
+                this.stompClient = Stomp.over(socket);
+                this.stompClient.debug = null;
+                this.stompClient.connect({ 'Authorization': token },
+                    (frame) => this.onConnected(frame),
+                    (error) => this.onError(error)
+                );
+            }
+            subscribeToQuiz(quizId, questionId) {
+                if (!this.isConnected) { alert("먼저 연결 버튼을 눌러주세요."); return; }
+                const topic = `/topic/quiz/${quizId}/${questionId}`;
+                if (this.subscriptions.has(topic)) { alert(`이미 구독 중인 토픽입니다: ${topic}`); return; }
+                const subscription = this.stompClient.subscribe(topic, (message) => {
+                    try { this.onQuizUpdate(JSON.parse(message.body)); } catch (e) { console.error("메시지 파싱 오류:", e); }
+                });
+                this.subscriptions.set(topic, subscription);
+                alert(`구독 완료: ${topic}`);
+            }
+            disconnect() { if (this.stompClient && this.isConnected) { this.stompClient.disconnect(() => this.onDisconnected()); } }
+            onConnected(frame) { console.log('✅ WebSocket 연결 성공:', frame); this.isConnected = true; updateConnectionStatus('✅ 연결됨', 'connected'); updateButtons(true); }
+            onError(error) { console.error('❌ WebSocket 연결 실패:', error); this.isConnected = false; updateConnectionStatus('❌ 연결 실패', 'disconnected'); updateButtons(false); }
+            onDisconnected() { console.log('🔌 WebSocket 연결 해제됨'); this.isConnected = false; this.subscriptions.clear(); updateConnectionStatus('❌ 연결 해제됨', 'disconnected'); updateButtons(false); }
+            onQuizUpdate(data) {
+                console.log('📨 퀴즈 업데이트:', data);
+                if (data.currentSurvivors !== undefined) document.getElementById('survivors').textContent = data.currentSurvivors;
+                if (data.progressPercentage !== undefined) document.getElementById('progress').textContent = Math.round(data.progressPercentage);
+                if (data.message) document.getElementById('quiz-message').textContent = data.message;
+            }
+        }
+
+        const wsManager = new QuizWebSocketManager();
+        const tokenInput = document.getElementById('jwt-token');
+        const connectBtn = document.getElementById('connectBtn');
+        const subscribeBtn = document.getElementById('subscribeBtn');
+        const sendBtn = document.getElementById('sendBtn');
+        const disconnectBtn = document.getElementById('disconnectBtn');
+
+        connectBtn.addEventListener('click', () => {
+            updateConnectionStatus('🔄 연결 중...', 'connecting');
+            // ⭐️ [수정] 입력창에서 토큰 값을 읽어와서 연결합니다.
+            const token = tokenInput.value;
+            wsManager.connect(token.startsWith("Bearer ") ? token : `Bearer ${token}`);
+        });
+        subscribeBtn.addEventListener('click', () => {
+            const quizId = prompt("구독할 퀴즈 ID:", "123");
+            const questionId = prompt("구독할 문제 ID:", "1");
+            if (quizId && questionId) wsManager.subscribeToQuiz(quizId, questionId);
+        });
+        sendBtn.addEventListener('click', () => {
+            fetch('/ws/test/broadcast?message=테스트', { method: 'POST' })
+                .then(res => alert(res.ok ? '발송 요청 완료' : '발송 실패'));
+        });
+        disconnectBtn.addEventListener('click', () => wsManager.disconnect());
+
+        function updateConnectionStatus(message, statusClass) {
+            document.getElementById('connection-status').textContent = message;
+            document.getElementById('connection-status').className = `status-${statusClass}`;
+        }
+        function updateButtons(isConnected) {
+            connectBtn.disabled = isConnected;
+            disconnectBtn.disabled = !isConnected;
+            subscribeBtn.disabled = !isConnected;
+            sendBtn.disabled = !isConnected;
+            tokenInput.disabled = isConnected;
+        }
+    });
+</script>
+</body>
+</html>

@@ -3,12 +3,14 @@ package com.popcoclient.event.entity.key;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
 import lombok.Data;
+import lombok.ToString;
 
 import java.io.Serializable;
 import java.util.Objects;
 
 @Embeddable
 @Data
+@ToString
 public class QuizQuestionId implements Serializable {
 
     @Column(name = "question_id", nullable = false)

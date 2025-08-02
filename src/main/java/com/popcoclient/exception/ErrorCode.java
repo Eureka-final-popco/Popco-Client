@@ -51,7 +51,10 @@ public enum ErrorCode {
 
 
   // Persona
-  QUESTION_NOT_FOUND(HttpStatus.NOT_FOUND, "QUESTION_NOT_FOUND", "해당 순서의 질문을 찾을 수 없습니다.");
+  QUESTION_NOT_FOUND(HttpStatus.NOT_FOUND, "QUESTION_NOT_FOUND", "해당 순서의 질문을 찾을 수 없습니다."),
+
+  // Quiz
+  QUIZ_NOT_FOUND(HttpStatus.NOT_FOUND, "QUIZ_NOT_FOUND", "존재하지 않는 이벤트 ID 입니다.");
 
   private final HttpStatus status;
   private final String code;

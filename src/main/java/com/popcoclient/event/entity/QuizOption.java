@@ -39,4 +39,10 @@ public class QuizOption {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumns({
+            @JoinColumn(name = "question_id", referencedColumnName = "question_id", insertable = false, updatable = false),
+            @JoinColumn(name = "quiz_id", referencedColumnName = "quiz_id", insertable = false, updatable = false)
+    })
+    private QuizQuestion question;
 }

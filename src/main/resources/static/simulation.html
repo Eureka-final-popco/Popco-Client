@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>실시간 선착순 퀴즈 테스트 (실전 모드)</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.6.1/sockjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+        }
+
+        .quiz-container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            margin: 20px 0;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .timer-section {
+            text-align: center;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+        }
+
+        .timer {
+            font-size: 28px;
+            font-weight: bold;
+            color: #ff6b6b;
+            margin: 5px 0;
+        }
+
+        .server-timer {
+            font-size: 20px;
+            color: #3498db;
+            margin: 5px 0;
+        }
+
+        .timer-status {
+            font-size: 14px;
+            color: #bdc3c7;
+            margin-top: 10px;
+        }
+
+        .survivors {
+            font-size: 18px;
+            background: rgba(46, 204, 113, 0.3);
+            padding: 8px 15px;
+            border-radius: 20px;
+        }
+
+        .question-area {
+            text-align: center;
+            margin: 30px 0;
+        }
+
+        .question {
+            font-size: 24px;
+            margin-bottom: 30px;
+            line-height: 1.4;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 20px;
+            border-radius: 15px;
+        }
+
+        .options {
+            display: grid;
+            gap: 15px;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        .option-btn {
+            background: linear-gradient(45deg, #4ecdc4, #44a08d);
+            border: none;
+            padding: 20px;
+            border-radius: 15px;
+            color: white;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            transform: translateY(0);
+        }
+
+        .option-btn:hover:not(:disabled) {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        .option-btn:disabled {
+            background: #666;
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+
+        .result-area {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 20px;
+            border-radius: 15px;
+            margin-top: 20px;
+            text-align: center;
+            min-height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .success {
+            color: #2ecc71;
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .fail {
+            color: #e74c3c;
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .eliminated {
+            color: #f39c12;
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .control-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 12px 8px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 12px;
+            text-align: center;
+        }
+
+        .control-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .control-btn:disabled {
+            background: #666;
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+
+        .logs {
+            background: rgba(0, 0, 0, 0.5);
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+            height: 250px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+        }
+
+        .user-info {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .socket-status {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 12px;
+            margin: 0 5px;
+        }
+
+        .connected { background: #2ecc71; }
+        .disconnected { background: #e74c3c; }
+        .connecting { background: #f39c12; }
+
+        .progress-bar {
+            width: 100%;
+            height: 15px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #2ecc71, #27ae60);
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+
+        .auth-input {
+            width: 100%;
+            padding: 8px;
+            margin: 5px 0;
+            border: none;
+            border-radius: 5px;
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+        }
+
+        .quiz-info {
+            background: rgba(52, 152, 219, 0.3);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            border-left: 4px solid #3498db;
+        }
+
+        .question-meta {
+            font-size: 14px;
+            color: #bdc3c7;
+            margin-bottom: 15px;
+        }
+
+        .loading {
+            color: #f39c12;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+<div class="quiz-container">
+    <h1 style="text-align: center; margin-bottom: 30px;">🎯 실시간 선착순 퀴즈 (실전 모드)</h1>
+
+    <div class="user-info">
+        <h3>🔐 인증 및 설정</h3>
+        <input type="text" id="jwtToken" class="auth-input" placeholder="JWT 토큰을 입력하세요 (Bearer 없이)">
+        <div style="display: flex; gap: 10px; margin-top: 10px;">
+            <input type="number" id="userTestId" placeholder="테스트용 사용자 ID" value="1001" style="flex: 1; padding: 8px; border-radius: 5px; border: none;">
+            <div style="flex: 2;">
+                <span class="socket-status" id="socketStatus">소켓: 연결안됨</span>
+                <span class="socket-status" id="subscriptionStatus">구독: 없음</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="quiz-info" id="quizInfo">
+        <div class="loading">최신 퀴즈 정보를 로딩 중...</div>
+    </div>
+
+    <div class="controls">
+        <button class="control-btn" onclick="loadLatestQuiz()">최신 퀴즈 로드</button>
+        <button class="control-btn" onclick="connectSocket()">소켓 연결</button>
+        <button class="control-btn" onclick="loadQuestionData()">문제 데이터 로드</button>
+        <button class="control-btn" onclick="startQuiz()">퀴즈 시작</button>
+        <button class="control-btn" onclick="loadQuestionStatus()">상태 조회</button>
+        <button class="control-btn" onclick="loadSurvivors()">생존자 순위</button>
+        <button class="control-btn" onclick="disconnectSocket()">연결 해제</button>
+        <button class="control-btn" onclick="clearLogs()">로그 지우기</button>
+    </div>
+
+    <div class="timer-section">
+        <div class="timer" id="serverTimer">-- : --</div>
+        <div class="timer-status" id="timerStatus">서버 타이머 대기중 (1초마다 서버에서 브로드캐스트)</div>
+    </div>
+
+    <div class="status-bar">
+        <div class="survivors" id="survivors">생존자: --/--명</div>
+        <div id="connectionStatus">연결 대기중...</div>
+    </div>
+
+    <div class="progress-bar">
+        <div class="progress-fill" id="progressFill"></div>
+    </div>
+
+    <div class="question-area">
+        <div class="question-meta" id="questionMeta">문제 정보를 로딩해주세요.</div>
+        <div class="question" id="question">
+            JWT 토큰을 입력하고 최신 퀴즈를 로드한 후 시작하세요!
+        </div>
+
+        <div class="options" id="optionsContainer">
+            <!-- 동적으로 로드될 선택지들 -->
+        </div>
+    </div>
+
+    <div class="result-area" id="resultArea">
+        설정을 완료하고 퀴즈를 시작하세요!
+    </div>
+
+    <div class="logs" id="logs"></div>
+</div>
+
+<script>
+    // 전역 변수
+    let socket = null;
+    let stompClient = null;
+    let currentQuizId = null;
+    let currentQuestionId = 1;
+    let currentSubscription = null;
+    let questionData = null;
+    let hasSubmitted = false;
+
+    // 로그 함수
+    function addLog(message, type = 'info') {
+        const logs = document.getElementById('logs');
+        const time = new Date().toLocaleTimeString();
+        const logEntry = document.createElement('div');
+        logEntry.style.color = type === 'error' ? '#e74c3c' :
+            type === 'success' ? '#2ecc71' :
+                type === 'warning' ? '#f39c12' : '#ecf0f1';
+        logEntry.textContent = `[${time}] ${message}`;
+        logs.appendChild(logEntry);
+        logs.scrollTop = logs.scrollHeight;
+    }
+
+    // JWT 토큰 가져오기
+    function getAuthHeaders() {
+        const token = document.getElementById('jwtToken').value.trim();
+        if (!token) {
+            throw new Error('JWT 토큰이 필요합니다');
+        }
+        return {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+        };
+    }
+
+    // 최신 퀴즈 ID 로드
+    async function loadLatestQuiz() {
+        try {
+            addLog('🔍 최신 퀴즈 ID 조회 중...');
+
+            const response = await fetch('/quizzes/latest');
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+
+            const result = await response.json();
+            currentQuizId = result.data;
+
+            document.getElementById('quizInfo').innerHTML = `
+                <strong>📋 현재 퀴즈 정보</strong><br>
+                퀴즈 ID: ${currentQuizId} | 문제 ID: ${currentQuestionId}
+            `;
+
+            addLog(`✅ 최신 퀴즈 ID: ${currentQuizId}`, 'success');
+
+        } catch (error) {
+            addLog(`❌ 퀴즈 ID 조회 실패: ${error.message}`, 'error');
+        }
+    }
+
+    // 문제 데이터 로드
+    async function loadQuestionData() {
+        if (!currentQuizId) {
+            addLog('먼저 퀴즈 ID를 로드하세요!', 'warning');
+            return;
+        }
+
+        try {
+            addLog(`🔍 문제 데이터 로드 중... (퀴즈: ${currentQuizId}, 문제: ${currentQuestionId})`);
+
+            const response = await fetch(`/quizzes/${currentQuizId}/questions/${currentQuestionId}`);
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+
+            const result = await response.json();
+            questionData = result.data;
+
+            displayQuestionData(questionData);
+            addLog(`✅ 문제 데이터 로드 성공`, 'success');
+
+        } catch (error) {
+            addLog(`❌ 문제 데이터 로드 실패: ${error.message}`, 'error');
+        }
+    }
+
+    // 문제 데이터 화면에 표시
+    function displayQuestionData(data) {
+        document.getElementById('questionMeta').textContent =
+            `문제 ${data.questionId} | 정원: ${data.firstCapacity}명`;
+
+        document.getElementById('question').textContent = data.content;
+
+        const optionsContainer = document.getElementById('optionsContainer');
+        optionsContainer.innerHTML = '';
+
+        data.options.forEach((option, index) => {
+            const button = document.createElement('button');
+            button.className = `option-btn option-${index + 1}`;
+            button.textContent = `${index + 1}번: ${option.content}`;
+            button.onclick = () => submitAnswer(index + 1);
+            button.disabled = false; // ✅ 바로 활성화
+            optionsContainer.appendChild(button);
+        });
+
+        document.getElementById('survivors').textContent = `생존자: 0/${data.firstCapacity}명`;
+    }
+
+    // 소켓 연결
+    function connectSocket() {
+        if (stompClient && stompClient.connected) {
+            addLog('이미 소켓에 연결되어 있습니다.', 'warning');
+            return;
+        }
+
+        if (!currentQuizId) {
+            addLog('먼저 퀴즈 ID를 로드하세요!', 'warning');
+            return;
+        }
+
+        updateSocketStatus('connecting', '소켓: 연결중...');
+        addLog('소켓 연결 시도...');
+
+        socket = new SockJS('/ws-quiz');
+        stompClient = Stomp.over(socket);
+
+        stompClient.connect({}, function(frame) {
+            updateSocketStatus('connected', '소켓: 연결됨');
+            addLog('✅ 소켓 연결 성공!', 'success');
+            document.getElementById('connectionStatus').textContent = '소켓 연결됨';
+
+        }, function(error) {
+            updateSocketStatus('disconnected', '소켓: 연결실패');
+            addLog('❌ 소켓 연결 실패: ' + error, 'error');
+        });
+    }
+
+    // 퀴즈 시작 (구독 시작)
+    async function startQuiz() {
+        // 1. 소켓 구독
+        subscribeToQuestion(1);
+
+        // 2. 서버에 문제1 시작 요청
+        try {
+            const response = await fetch(`/quizzes/${currentQuizId}/start`, {
+                method: 'POST',
+                headers: getAuthHeaders()
+            });
+
+            if (response.ok) {
+                addLog('🚀 문제1 타이머 시작 요청 완료!', 'success');
+            }
+        } catch (error) {
+            addLog('❌ 문제1 시작 실패: ' + error.message, 'error');
+        }
+    }
+
+    // 문제별 구독
+    function subscribeToQuestion(questionId) {
+        const topic = `/topic/quiz/${currentQuizId}/question/${questionId}`;
+
+        addLog(`📡 문제 ${questionId} 채널 구독 시작: ${topic}`);
+
+        if (currentSubscription) {
+            currentSubscription.unsubscribe();
+        }
+
+        currentSubscription = stompClient.subscribe(topic, function(message) {
+            const data = JSON.parse(message.body);
+            addLog(`📨 서버 브로드캐스트 수신: ${JSON.stringify(data).substring(0, 100)}...`);
+            handleServerUpdate(data);
+        });
+
+        updateSubscriptionStatus(`문제 ${questionId} 구독중`);
+        document.getElementById('connectionStatus').textContent = `문제 ${questionId} 구독중`;
+    }
+
+    // 서버 업데이트 처리 (핵심!)
+    function handleServerUpdate(data) {
+        // 🕒 서버 타이머 업데이트 (1초마다 수신)
+        if (data.remainingTime !== undefined) {
+            const minutes = Math.floor(data.remainingTime / 60);
+            const seconds = data.remainingTime % 60;
+            document.getElementById('serverTimer').textContent =
+                `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+
+            if (data.remainingTime > 0) {
+                document.getElementById('timerStatus').textContent =
+                    `문제 진행중 (서버에서 1초마다 브로드캐스트 수신중)`;
+            } else {
+                document.getElementById('timerStatus').textContent = '시간 종료!';
+                disableAllOptions();
+            }
+        }
+
+        // 📊 생존자 수 업데이트
+        if (data.currentSurvivors !== undefined && data.maxSurvivors !== undefined) {
+            document.getElementById('survivors').textContent =
+                `생존자: ${data.currentSurvivors}/${data.maxSurvivors}명`;
+
+            const percentage = (data.currentSurvivors / data.maxSurvivors) * 100;
+            document.getElementById('progressFill').style.width = percentage + '%';
+        }
+
+        // 🚀 문제 시작/종료 메시지 처리
+        if (data.type === 'QUESTION_START') {
+            addLog('🚀 서버: 문제가 시작되었습니다!', 'success');
+            document.getElementById('resultArea').innerHTML =
+                '<div class="success">🚀 문제가 시작되었습니다! 30초의 시간이 주어집니다.</div>';
+        } else if (data.type === 'QUESTION_TIMEOUT') {
+            addLog('⏰ 서버: 시간이 종료되었습니다!', 'warning');
+            document.getElementById('resultArea').innerHTML =
+                '<div class="eliminated">⏰ 시간이 종료되었습니다!</div>';
+            disableAllOptions();
+            setTimeout(() => {
+                addLog('⏰ 타임아웃으로 소켓 연결을 해제합니다.', 'warning');
+                disconnectSocket();
+            }, 5000);
+        }
+    }
+
+
+    // 답안 제출 (실제 REST API 호출)
+    async function submitAnswer(optionId) {
+        if (hasSubmitted) {
+            addLog('이미 답안을 제출했습니다.', 'warning');
+            return;
+        }
+
+        if (!currentQuizId) {
+            addLog('퀴즈 ID가 설정되지 않았습니다.', 'error');
+            return;
+        }
+
+        try {
+            hasSubmitted = true;
+            disableAllOptions();
+
+            addLog(`🚀 답안 제출 중... (퀴즈: ${currentQuizId}, 문제: ${currentQuestionId}, 선택: ${optionId})`);
+
+            const response = await fetch(`/quizzes/${currentQuizId}/questions/${currentQuestionId}`, {
+                method: 'POST',
+                headers: getAuthHeaders(),
+                body: JSON.stringify({
+                    optionId: optionId
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+
+            const result = await response.json();
+            const data = result.data;
+
+            addLog(`✅ 답안 제출 성공: ${JSON.stringify(data)}`, 'success');
+
+            handleSubmissionResult(data);
+
+        } catch (error) {
+            addLog(`❌ 답안 제출 실패: ${error.message}`, 'error');
+            hasSubmitted = false;
+            enableAllOptions();
+        }
+    }
+
+    // 답안 제출 결과 처리
+    function handleSubmissionResult(data) {
+        if (data.survived) {
+            // 생존 → 다음 문제로 이동
+            setTimeout(() => {
+                moveToNextQuestion();
+            }, 3000);
+
+        } else {
+            // 탈락 → 5초 후 소켓 해제
+            setTimeout(() => {
+                addLog('💀 탈락으로 소켓 연결을 해제합니다.', 'warning');
+                disconnectSocket();
+            }, 5000);
+        }
+    }
+
+    // 다음 문제로 이동
+    function moveToNextQuestion() {
+        currentQuestionId++;
+
+        document.getElementById('quizInfo').innerHTML = `
+            <strong>📋 현재 퀴즈 정보</strong><br>
+            퀴즈 ID: ${currentQuizId} | 문제 ID: ${currentQuestionId}
+        `;
+
+        addLog(`➡️ 다음 문제 ${currentQuestionId}로 이동합니다...`, 'info');
+
+        // 문제 데이터 로드 및 구독 변경
+        loadQuestionData().then(() => {
+            subscribeToQuestion(currentQuestionId);
+            enableAllOptions();
+            hasSubmitted = false;
+
+            document.getElementById('resultArea').innerHTML = '다음 문제가 로드되었습니다!';
+            document.getElementById('serverTimer').textContent = '-- : --';
+            document.getElementById('timerStatus').textContent = '다음 문제 타이머 대기중';
+        });
+    }
+
+    // 퀴즈 상태 조회 (REST API)
+    async function loadQuestionStatus() {
+        if (!currentQuizId) {
+            addLog('퀴즈 ID가 설정되지 않았습니다.', 'warning');
+            return;
+        }
+
+        try {
+            addLog(`🔍 서버 상태 조회 중...`);
+
+            const response = await fetch(`/quizzes/${currentQuizId}/questions/${currentQuestionId}/status`);
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+
+            const result = await response.json();
+            const data = result.data;
+
+            addLog(`✅ 서버 상태: 생존자 ${data.currentSurvivors}/${data.maxSurvivors}, 남은시간 ${data.remainingTime}초`, 'success');
+
+            // 상태 업데이트
+            handleServerUpdate(data);
+
+        } catch (error) {
+            addLog(`❌ 서버 상태 조회 실패: ${error.message}`, 'error');
+        }
+    }
+
+    // 생존자 순위 조회
+    async function loadSurvivors() {
+        if (!currentQuizId) {
+            addLog('퀴즈 ID가 설정되지 않았습니다.', 'warning');
+            return;
+        }
+
+        try {
+            addLog(`🏆 생존자 순위 조회 중...`);
+
+            const response = await fetch(`/quizzes/${currentQuizId}/questions/${currentQuestionId}/survivors?page=0&size=10`);
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+
+            const result = await response.json();
+            const data = result.data;
+
+            addLog(`🏆 생존자 순위: 총 ${data.totalSurvivors}명, 1페이지 ${data.survivors.length}명 조회됨`, 'success');
+
+            if (data.survivors.length > 0) {
+                const top5 = data.survivors.slice(0, 5);
+                const rankingText = top5.map(s => `${s.rank}등: 사용자${s.userId}`).join(', ');
+                addLog(`Top 5: ${rankingText}`, 'info');
+            }
+
+        } catch (error) {
+            addLog(`❌ 생존자 순위 조회 실패: ${error.message}`, 'error');
+        }
+    }
+
+    // 소켓 상태 업데이트
+    function updateSocketStatus(status, text) {
+        const element = document.getElementById('socketStatus');
+        element.className = `socket-status ${status}`;
+        element.textContent = text;
+    }
+
+    // 구독 상태 업데이트
+    function updateSubscriptionStatus(text) {
+        const element = document.getElementById('subscriptionStatus');
+        element.className = 'socket-status connected';
+        element.textContent = text;
+    }
+
+    // 모든 옵션 활성화/비활성화
+    function disableAllOptions() {
+        document.querySelectorAll('.option-btn').forEach(btn => {
+            btn.disabled = true;
+        });
+    }
+
+    function enableAllOptions() {
+        document.querySelectorAll('.option-btn').forEach(btn => {
+            btn.disabled = false;
+        });
+    }
+
+    // 소켓 연결 해제
+    function disconnectSocket() {
+        if (currentSubscription) {
+            currentSubscription.unsubscribe();
+            currentSubscription = null;
+            updateSubscriptionStatus('구독: 없음');
+        }
+
+        if (stompClient && stompClient.connected) {
+            stompClient.disconnect();
+            updateSocketStatus('disconnected', '소켓: 연결안됨');
+            document.getElementById('connectionStatus').textContent = '연결 해제됨';
+        }
+
+        addLog('🔌 소켓 연결이 해제되었습니다.', 'warning');
+    }
+
+    // 로그 지우기
+    function clearLogs() {
+        document.getElementById('logs').innerHTML = '';
+    }
+
+    // 페이지 로드 시 자동 실행
+    window.addEventListener('load', function() {
+        addLog('🎯 실시간 선착순 퀴즈 테스트 페이지 로드됨');
+        addLog('💡 순서: 1) 최신 퀴즈 로드 → 2) 소켓 연결 → 3) 문제 데이터 로드 → 4) 퀴즈 시작', 'info');
+
+        // 자동으로 최신 퀴즈 로드
+        loadLatestQuiz();
+    });
+
+    // 페이지 언로드 시 연결 해제
+    window.addEventListener('beforeunload', function() {
+        disconnectSocket();
+    });
+</script>
+</body>
+</html>
