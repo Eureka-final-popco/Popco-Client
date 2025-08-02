@@ -7,7 +7,7 @@ import com.popcoclient.event.dto.request.SubmitAnswerRequestDto;
 import com.popcoclient.event.dto.response.QuizQuestionResponseDto;
 import com.popcoclient.event.dto.response.QuizStatusResponseDto;
 import com.popcoclient.event.dto.response.SurvivorRankingResponse;
-import com.popcoclient.event.service.impl.QuizServiceImpl;
+import com.popcoclient.event.service.impl.EventServiceImpl;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -30,7 +30,7 @@ import org.springframework.web.bind.annotation.*;
 @Tag(name = "실시간 이벤트 진행", description = "이벤트 진행중에 사용할 api 리스트")
 public class QuizAnswerController {
 
-    private final QuizServiceImpl quizAnswerService;
+    private final EventServiceImpl quizAnswerService;
     private final JwtProvider jwtProvider;
 
     @GetMapping("/latest")

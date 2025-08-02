@@ -2,7 +2,7 @@ package com.popcoclient.event.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.popcoclient.event.dto.request.QuizSubmissionResultDto;
-import com.popcoclient.event.service.impl.QuizServiceImpl;
+import com.popcoclient.event.service.impl.EventServiceImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -22,7 +22,7 @@ import java.util.stream.Collectors;
 public class WebSocketTestController {
     private final SimpMessagingTemplate messagingTemplate;
     private final ObjectMapper objectMapper; // ObjectMapper
-    private final QuizServiceImpl quizService;
+    private final EventServiceImpl quizService;
 
     @PostMapping("/broadcast")
     public void testBroadcast(@RequestParam String message) throws Exception{

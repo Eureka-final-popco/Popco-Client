@@ -17,7 +17,6 @@ import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.data.redis.core.script.RedisScript;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.scheduling.TaskScheduler;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,7 +31,7 @@ import java.util.concurrent.ScheduledFuture;
 @Service
 @Transactional
 @Slf4j
-public class QuizServiceImpl {
+public class EventServiceImpl {
 
     // ===== 의존성 주입 =====
     private final DistributeLockServiceImpl lockService;
@@ -50,7 +49,7 @@ public class QuizServiceImpl {
     // ===== 타이머 관리 (메모리) =====
     private final Map<String, Long> activeTimers = new ConcurrentHashMap<>(); // key: "quizId:questionId", value: 시작시간
 
-    public QuizServiceImpl(
+    public EventServiceImpl(
             DistributeLockServiceImpl lockService,
             @Qualifier("eventRedisTemplate") RedisTemplate<String, String> eventRedisTemplate,
             UserQuizAnswerRepository userQuizAnswerRepository,
