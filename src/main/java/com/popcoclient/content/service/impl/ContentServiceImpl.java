@@ -2,11 +2,9 @@ package com.popcoclient.content.service.impl;
 
 import com.popcoclient.content.dto.response.*;
 import com.popcoclient.content.entity.*;
+import com.popcoclient.content.entity.enums.ReactionType;
 import com.popcoclient.content.entity.key.ContentId;
-import com.popcoclient.content.repository.ContentRecommendationRepository;
-import com.popcoclient.content.repository.ContentRepository;
-import com.popcoclient.content.repository.DailyPopularContentRepository;
-import com.popcoclient.content.repository.GenreRepository;
+import com.popcoclient.content.repository.*;
 import com.popcoclient.content.service.ContentService;
 import com.popcoclient.exception.BusinessException;
 import com.popcoclient.exception.ErrorCode;
@@ -16,6 +14,7 @@ import com.popcoclient.user.entity.User;
 import com.popcoclient.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.data.domain.Pageable;
 
@@ -30,6 +29,7 @@ public class ContentServiceImpl implements ContentService {
     private final GenreRepository genreRepository;
     private final ReviewRepository reviewRepository;
     private final ContentRepository contentRepository;
+    private final ContentReactionRepository contentReactionRepository;
     private final UserRepository userRepository;
     private final ContentRecommendationRepository contentRecommendationRepository;
 
@@ -39,44 +39,67 @@ public class ContentServiceImpl implements ContentService {
     }
 
     @Override
-    public List<DailyPopularContentResponseDto> getDailyPopularContentList(String type) {
-        LocalDate today = LocalDate.now();
-        String batchType = type == null ? null : type.trim().toUpperCase();
+    public List<DailyPopularContentResponseDto> getDailyPopularContentList(Long userId, String type) {
+        List<DailyPopularContent> contents = loadPopularContents(type);
+        Map<Integer, String> genreMap = loadGenreMap(contents);
 
-        List<DailyPopularContent> popularContentList =
-                dailyPopularContentRepository.findByBatchContentTypeAndRankedDate(batchType, today);
+        Map<ContentId, ReactionType> userReactions = (userId == null)
+                ? Collections.emptyMap()
+                : loadUserReactions(userId, contents);
 
-        if(popularContentList.isEmpty()) {
-            LocalDate yesterday = today.minusDays(1);
-            popularContentList =
-                    dailyPopularContentRepository.findByBatchContentTypeAndRankedDate(batchType, yesterday);
-        }
+        System.out.println("==== 콘텐츠 ID 목록 ====");
+        contents.forEach(c -> System.out.println(c.getContent().getContentId()));
 
-        // 모든 장르 ID를 미리 조회해서 매핑 생성
-        Set<Integer> allGenreIds = popularContentList.stream()
-                .flatMap(pc -> pc.getContent().getGenreIds().stream())
-                .collect(Collectors.toSet());
+        System.out.println("==== 리액션 쿼리 결과 ====");
+        loadUserReactions(userId, contents).forEach((k, v) -> System.out.println(k + " -> " + v));
 
-        Map<Integer, String> genreMap = genreRepository.findAllById(allGenreIds).stream()
-                .collect(Collectors.toMap(Genre::getId, Genre::getName));
 
-        Map<ContentId, Double> reviewAvgMap = reviewRepository.findAverageScoreByContents(
-                popularContentList.stream()
-                        .map(DailyPopularContent::getContent)
-                        .map(Content::getContentId)
-                        .collect(Collectors.toSet())
-        );
-
-        // DTO 변환
-        return popularContentList.stream()
-                .map(pc -> mapToDto(pc, genreMap, reviewAvgMap))
+        return contents.stream()
+                .map(pc -> mapToDto(pc, genreMap, userReactions.get(pc.getContent().getContentId())))
                 .toList();
     }
 
+    private List<DailyPopularContent> loadPopularContents(String type) {
+        String batchType = (type == null) ? null : type.trim().toUpperCase();
+        LocalDate today = LocalDate.now();
+
+        List<DailyPopularContent> contents =
+                dailyPopularContentRepository.findByBatchContentTypeAndRankedDate(batchType, today);
+
+        if (contents.isEmpty()) {
+            LocalDate yesterday = today.minusDays(1);
+            contents = dailyPopularContentRepository.findByBatchContentTypeAndRankedDate(batchType, yesterday);
+        }
+
+        return contents;
+    }
+
+    private Map<Integer, String> loadGenreMap(List<DailyPopularContent> contents) {
+        Set<Integer> genreIds = contents.stream()
+                .flatMap(pc -> pc.getContent().getGenreIds().stream())
+                .collect(Collectors.toSet());
+
+        return genreRepository.findAllById(genreIds).stream()
+                .collect(Collectors.toMap(Genre::getId, Genre::getName));
+    }
+
+    private Map<ContentId, ReactionType> loadUserReactions(Long userId, List<DailyPopularContent> contents) {
+        Set<ContentId> contentIds = contents.stream()
+                .map(pc -> pc.getContent().getContentId())
+                .collect(Collectors.toSet());
+
+        System.out.println(contentIds.contains(new ContentId(254017L, "tv")));
+
+        return contentReactionRepository.findByUserIdAndContentIds(userId, contentIds).stream()
+                .collect(Collectors.toMap(
+                        cr -> cr.getContent().getContentId(),
+                        ContentReaction::getReaction
+                ));
+    }
+
     private DailyPopularContentResponseDto mapToDto(
-            DailyPopularContent pc, Map<Integer, String> genreMap, Map<ContentId, Double> reviewAvgMap) {
+            DailyPopularContent pc, Map<Integer, String> genreMap, ReactionType reactionType) {
         Content content = pc.getContent();
-        ContentId contentId = content.getContentId();
 
         // 장르 이름 합치기
         String genres = content.getGenreIds().stream()
@@ -84,10 +107,8 @@ public class ContentServiceImpl implements ContentService {
                 .filter(Objects::nonNull)
                 .collect(Collectors.joining(","));
 
-        // 리뷰 평점 평균 가져오기
-        Double reviewAvg = reviewAvgMap.get(contentId);
-
-        return DailyPopularContentResponseDto.of(pc, genres, reviewAvg);
+        System.out.println(reactionType+"뭔데");
+        return DailyPopularContentResponseDto.of(pc, genres, reactionType);
     }
 
     @Override
@@ -161,5 +182,17 @@ public class ContentServiceImpl implements ContentService {
         return ContentListResponseDto_40.builder()
                 .contents(contentDtoList)
                 .build();
+    }
+
+    @Override
+    public List<LikedContentResponseDto> getLikedContents(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("사용자를 찾을 수 없습니다. id : " + userId));
+
+        List<ContentReaction> reactions = contentReactionRepository.findByUserAndReactionWithContent(user, ReactionType.LIKE);
+
+        return reactions.stream()
+                .map(LikedContentResponseDto::from)
+                .collect(Collectors.toList());
     }
 }

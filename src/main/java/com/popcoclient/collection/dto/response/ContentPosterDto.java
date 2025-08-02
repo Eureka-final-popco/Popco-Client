@@ -1,4 +1,4 @@
-package com.popcoclient.collection.dto;
+package com.popcoclient.collection.dto.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

@@ -35,5 +35,23 @@ public interface CollectionRepository extends JpaRepository<Collection, Long> {
 
     // 모든 컬렉션 조회시 User 정보도 함께 가져오기
     @EntityGraph(attributePaths = {"user", "user.userDetail"})
-    Page<Collection> findAll(Pageable pageable);
+    Page<Collection> findAllByOrderByCreatedAtDesc(Pageable pageable);
+
+    // 특정 컨텐츠를 포함한 컬렉션 조회 - 인기순 (마크 수(saveCount) 기준)
+    @Query("SELECT DISTINCT c FROM Collection c " +
+            "JOIN CollectionContent cc ON cc.collection = c " +
+            "WHERE cc.content.contentId.id = :contentId AND cc.content.contentId.type = :contentType " +
+            "ORDER BY c.saveCount DESC")
+    Page<Collection> findByContentOrderByPopularity(@Param("contentId") Long contentId,
+                                                    @Param("contentType") String contentType,
+                                                    Pageable pageable);
+
+    // 특정 컨텐츠를 포함한 컬렉션 조회 - 최신순
+    @Query("SELECT DISTINCT c FROM Collection c " +
+            "JOIN CollectionContent cc ON cc.collection = c " +
+            "WHERE cc.content.contentId.id = :contentId AND cc.content.contentId.type = :contentType " +
+            "ORDER BY c.createdAt DESC")
+    Page<Collection> findByContentOrderByCreatedAt(@Param("contentId") Long contentId,
+                                                   @Param("contentType") String contentType,
+                                                   Pageable pageable);
 }

@@ -1,14 +1,16 @@
 package com.popcoclient.collection.service.impl;
 
-import com.popcoclient.collection.dto.ContentPosterDto;
+import com.popcoclient.collection.dto.response.ContentPosterDto;
 import com.popcoclient.collection.dto.request.CollectionRequestDto;
 import com.popcoclient.collection.dto.request.CollectionUpdateRequestDto;
 import com.popcoclient.collection.dto.response.CollectionListResponseDto;
 import com.popcoclient.collection.dto.response.CollectionResponseDto;
 import com.popcoclient.collection.entity.Collection;
 import com.popcoclient.collection.entity.CollectionContent;
+import com.popcoclient.collection.entity.MarkedCollection;
 import com.popcoclient.collection.repository.CollectionContentRepository;
 import com.popcoclient.collection.repository.CollectionRepository;
+import com.popcoclient.collection.repository.MarkedCollectionRepository;
 import com.popcoclient.collection.service.CollectionService;
 import com.popcoclient.exception.business.CollectionAlreadyExistsException;
 import com.popcoclient.exception.business.CollectionNotFoundException;
@@ -35,6 +37,7 @@ public class CollectionServiceImpl implements CollectionService {
     private final CollectionRepository collectionRepository;
     private final UserRepository userRepository;
     private final CollectionContentRepository collectionContentRepository;
+    private final MarkedCollectionRepository markedCollectionRepository;
 
     @Override
     @Transactional
@@ -63,9 +66,25 @@ public class CollectionServiceImpl implements CollectionService {
         Collection collection = collectionRepository.findById(collectionId)
                 .orElseThrow(() -> new CollectionNotFoundException("컬렉션을 찾을 수 없습니다. id : " + collectionId));
 
-        // 단일 컬렉션 조회시에도 포스터 정보 포함
         List<ContentPosterDto> posters = getCollectionPosters(collectionId);
         return CollectionResponseDto.from(collection, posters);
+    }
+
+    @Override
+    public CollectionResponseDto getCollection(Long collectionId, Long userId) {
+        Collection collection = collectionRepository.findById(collectionId)
+                .orElseThrow(() -> new CollectionNotFoundException("컬렉션을 찾을 수 없습니다. id : " + collectionId));
+
+        List<ContentPosterDto> posters = getCollectionPosters(collectionId);
+        boolean isMarked = false;
+        if (userId != null) {
+            User user = userRepository.findById(userId).orElse(null);
+            if (user != null) {
+                isMarked = markedCollectionRepository.existsByUserAndCollection(user, collection);
+            }
+        }
+
+        return CollectionResponseDto.from(collection, posters, isMarked);
     }
 
     @Override
@@ -73,7 +92,6 @@ public class CollectionServiceImpl implements CollectionService {
         Pageable pageable = PageRequest.of(pageNumber, pageSize);
         Page<Collection> collections = collectionRepository.findByUserUserId(userId, pageable);
 
-        // 컬렉션들의 포스터 정보를 가져오기
         Page<CollectionResponseDto> responseDtos = collections.map(collection -> {
             List<ContentPosterDto> posters = getCollectionPosters(collection.getCollectionId());
             return CollectionResponseDto.from(collection, posters);
@@ -83,31 +101,58 @@ public class CollectionServiceImpl implements CollectionService {
     }
 
     @Override
+    public CollectionListResponseDto getUserCollections(Long targetUserId, Long currentUserId, Integer pageNumber, Integer pageSize) {
+        Pageable pageable = PageRequest.of(pageNumber, pageSize);
+        Page<Collection> collections = collectionRepository.findByUserUserId(targetUserId, pageable);
+
+        Page<CollectionResponseDto> responseDtos = mapCollectionsWithPostersAndMarks(collections, currentUserId);
+        return CollectionListResponseDto.from(responseDtos);
+    }
+
+    @Override
     public CollectionListResponseDto searchCollections(String keyword, Integer pageNumber, Integer pageSize) {
         Pageable pageable = PageRequest.of(pageNumber, pageSize);
         Page<Collection> collections = collectionRepository.searchByKeyword(keyword, pageable);
 
-        // 컬렉션들의 포스터 정보를 배치로 가져오기
         Page<CollectionResponseDto> responseDtos = mapCollectionsWithPosters(collections);
+        return CollectionListResponseDto.from(responseDtos);
+    }
 
+    @Override
+    public CollectionListResponseDto searchCollections(String keyword, Long userId, Integer pageNumber, Integer pageSize) {
+        Pageable pageable = PageRequest.of(pageNumber, pageSize);
+        Page<Collection> collections = collectionRepository.searchByKeyword(keyword, pageable);
+
+        Page<CollectionResponseDto> responseDtos = mapCollectionsWithPostersAndMarks(collections, userId);
         return CollectionListResponseDto.from(responseDtos);
     }
 
     @Override
     public List<CollectionResponseDto> getCollections(Integer pageNumber, Integer pageSize) {
         Pageable pageable = PageRequest.of(pageNumber, pageSize);
-        Page<Collection> collections = collectionRepository.findAll(pageable);
+        Page<Collection> collections = collectionRepository.findAllByOrderByCreatedAtDesc(pageable);
 
-        // 배치로 포스터 정보 가져오기
         return mapCollectionsWithPostersList(collections.getContent());
+    }
+
+    @Override
+    public List<CollectionResponseDto> getCollections(Long userId, Integer pageNumber, Integer pageSize) {
+        Pageable pageable = PageRequest.of(pageNumber, pageSize);
+        Page<Collection> collections = collectionRepository.findAllByOrderByCreatedAtDesc(pageable);
+
+        return mapCollectionsWithPostersAndMarksList(collections.getContent(), userId);
     }
 
     @Override
     public List<CollectionResponseDto> getPopularCollections() {
         List<Collection> collections = collectionRepository.findTop10ByOrderBySaveCountDesc();
-
-        // 배치로 포스터 정보 가져오기
         return mapCollectionsWithPostersList(collections);
+    }
+
+    @Override
+    public List<CollectionResponseDto> getPopularCollections(Long userId) {
+        List<Collection> collections = collectionRepository.findTop10ByOrderBySaveCountDesc();
+        return mapCollectionsWithPostersAndMarksList(collections, userId);
     }
 
     @Override
@@ -141,32 +186,19 @@ public class CollectionServiceImpl implements CollectionService {
         Collection collection = collectionRepository.findByUserAndCollectionId(user, collectionId)
                 .orElseThrow(() -> new CollectionNotFoundException("컬렉션을 찾을 수 없거나 권한이 없습니다. id : " + collectionId));
 
-        List<CollectionContent> collectionContents = collectionContentRepository.findByCollection(collection);
+        // 컬렉션의 모든 컨텐츠 삭제
+        List<CollectionContent> collectionContents = collectionContentRepository.findAllByCollection(collection);
         collectionContentRepository.deleteAll(collectionContents);
+
+        // 컬렉션의 모든 마크 삭제
+        List<MarkedCollection> markedCollections = markedCollectionRepository.findAllByCollection(collection);
+        markedCollectionRepository.deleteAll(markedCollections);
+
+        // 컬렉션 삭제
         collectionRepository.delete(collection);
     }
 
-    @Override
-    @Transactional
-    public void incrementSaveCount(Long collectionId) {
-        Collection collection = collectionRepository.findById(collectionId)
-                .orElseThrow(() -> new CollectionNotFoundException("컬렉션을 찾을 수 없거나 권한이 없습니다. id : " + collectionId));
-        collection.setSaveCount(collection.getSaveCount() + 1);
-        collectionRepository.save(collection);
-    }
-
-    @Override
-    @Transactional
-    public void decrementSaveCount(Long collectionId) {
-        Collection collection = collectionRepository.findById(collectionId)
-                .orElseThrow(() -> new CollectionNotFoundException("컬렉션을 찾을 수 없거나 권한이 없습니다. id : " + collectionId));
-        if (collection.getSaveCount() > 0) {
-            collection.setSaveCount(collection.getSaveCount() - 1);
-            collectionRepository.save(collection);
-        }
-    }
-
-    // 단일 컬렉션의 포스터 정보 가져오기
+    // Helper methods
     private List<ContentPosterDto> getCollectionPosters(Long collectionId) {
         Pageable topSix = PageRequest.of(0, 6);
         List<CollectionContent> contents = collectionContentRepository
@@ -182,47 +214,49 @@ public class CollectionServiceImpl implements CollectionService {
                 .collect(Collectors.toList());
     }
 
-    // 여러 컬렉션의 포스터 정보를 배치로 가져오기 (N+1 문제 해결)
     private Page<CollectionResponseDto> mapCollectionsWithPosters(Page<Collection> collections) {
         if (collections.isEmpty()) {
             return collections.map(CollectionResponseDto::from);
         }
 
-        // 모든 컬렉션 ID 수집
         List<Long> collectionIds = collections.getContent().stream()
                 .map(Collection::getCollectionId)
                 .collect(Collectors.toList());
 
-        // 한 번의 쿼리로 모든 컬렉션의 컨텐츠 가져오기
-        List<CollectionContent> allContents = collectionContentRepository
-                .findByCollectionIdsWithContent(collectionIds);
+        Map<Long, List<ContentPosterDto>> postersMap = getPostersMap(collectionIds);
 
-        // 컬렉션별로 컨텐츠 그룹화 (최대 6개씩)
-        Map<Long, List<ContentPosterDto>> postersMap = new HashMap<>();
-        for (CollectionContent cc : allContents) {
-            Long collectionId = cc.getCollection().getCollectionId();
-
-            postersMap.computeIfAbsent(collectionId, k -> new ArrayList<>());
-
-            if (postersMap.get(collectionId).size() < 6) {
-                ContentPosterDto poster = ContentPosterDto.builder()
-                        .contentId(cc.getContent().getContentId().getId())
-                        .contentType(cc.getContent().getContentId().getType())
-                        .posterPath(cc.getContent().getPosterPath())
-                        .title(cc.getContent().getTitle())
-                        .build();
-                postersMap.get(collectionId).add(poster);
-            }
-        }
-
-        // 컬렉션과 포스터 정보 매핑
         return collections.map(collection ->
                 CollectionResponseDto.from(collection,
                         postersMap.getOrDefault(collection.getCollectionId(), new ArrayList<>()))
         );
     }
 
-    // List 버전
+    private Page<CollectionResponseDto> mapCollectionsWithPostersAndMarks(Page<Collection> collections, Long userId) {
+        if (collections.isEmpty()) {
+            return collections.map(CollectionResponseDto::from);
+        }
+
+        List<Long> collectionIds = collections.getContent().stream()
+                .map(Collection::getCollectionId)
+                .collect(Collectors.toList());
+
+        Map<Long, List<ContentPosterDto>> postersMap = getPostersMap(collectionIds);
+
+        Map<Long, Boolean> markedMap = new HashMap<>();
+
+        if (userId != null) {
+            List<Long> markedCollectionIds = markedCollectionRepository
+                    .findMarkedCollectionIdsByUserIdAndCollectionIds(userId, collectionIds);
+            markedCollectionIds.forEach(id -> markedMap.put(id, true));
+        }
+
+        return collections.map(collection -> {
+            List<ContentPosterDto> posters = postersMap.getOrDefault(collection.getCollectionId(), new ArrayList<>());
+            boolean isMarked = markedMap.getOrDefault(collection.getCollectionId(), false);
+            return CollectionResponseDto.from(collection, posters, isMarked);
+        });
+    }
+
     private List<CollectionResponseDto> mapCollectionsWithPostersList(List<Collection> collections) {
         if (collections.isEmpty()) {
             return collections.stream()
@@ -234,6 +268,45 @@ public class CollectionServiceImpl implements CollectionService {
                 .map(Collection::getCollectionId)
                 .collect(Collectors.toList());
 
+        Map<Long, List<ContentPosterDto>> postersMap = getPostersMap(collectionIds);
+
+        return collections.stream()
+                .map(collection -> CollectionResponseDto.from(collection,
+                        postersMap.getOrDefault(collection.getCollectionId(), new ArrayList<>())))
+                .collect(Collectors.toList());
+    }
+
+    private List<CollectionResponseDto> mapCollectionsWithPostersAndMarksList(List<Collection> collections, Long userId) {
+        if (collections.isEmpty()) {
+            return collections.stream()
+                    .map(CollectionResponseDto::from)
+                    .collect(Collectors.toList());
+        }
+
+        List<Long> collectionIds = collections.stream()
+                .map(Collection::getCollectionId)
+                .collect(Collectors.toList());
+
+        Map<Long, List<ContentPosterDto>> postersMap = getPostersMap(collectionIds);
+
+        Map<Long, Boolean> markedMap = new HashMap<>();
+
+        if (userId != null) {
+            List<Long> markedCollectionIds = markedCollectionRepository
+                    .findMarkedCollectionIdsByUserIdAndCollectionIds(userId, collectionIds);
+            markedCollectionIds.forEach(id -> markedMap.put(id, true));
+        }
+
+        return collections.stream()
+                .map(collection -> {
+                    List<ContentPosterDto> posters = postersMap.getOrDefault(collection.getCollectionId(), new ArrayList<>());
+                    boolean isMarked = markedMap.getOrDefault(collection.getCollectionId(), false);
+                    return CollectionResponseDto.from(collection, posters, isMarked);
+                })
+                .collect(Collectors.toList());
+    }
+
+    private Map<Long, List<ContentPosterDto>> getPostersMap(List<Long> collectionIds) {
         List<CollectionContent> allContents = collectionContentRepository
                 .findByCollectionIdsWithContent(collectionIds);
 
@@ -253,11 +326,7 @@ public class CollectionServiceImpl implements CollectionService {
                 postersMap.get(collectionId).add(poster);
             }
         }
-
-        return collections.stream()
-                .map(collection -> CollectionResponseDto.from(collection,
-                        postersMap.getOrDefault(collection.getCollectionId(), new ArrayList<>())))
-                .collect(Collectors.toList());
+        return postersMap;
     }
 
 }

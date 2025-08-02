@@ -1,7 +1,5 @@
 package com.popcoclient.auth.controller;
 
-import com.popcoclient.auth.dto.response.KakaoLoginResponseDto;
-import com.popcoclient.auth.dto.response.KakaoPreSignupResponseDto;
 import com.popcoclient.auth.dto.response.LoginResponseDto;
 import com.popcoclient.auth.dto.response.RefreshResponseDto;
 import com.popcoclient.auth.service.AuthService;
@@ -62,16 +60,10 @@ public class AuthController {
 
     @Operation(summary = "카카오 로그인", description = "카카오 OAuth2 연동을 통해 로그인하거나 회원가입이 필요한 경우 사용자 정보를 반환합니다.")
     @PostMapping("/kakao/login")
-    public ResponseEntity<ApiResponse<?>> kakaoLogin(
+    public ResponseEntity<ApiResponse<LoginResponseDto>> kakaoLogin(
             @RequestParam("code") String accessCode, HttpServletResponse response) {
-        KakaoLoginResponseDto kakaoLogin = authService.kakaoLogin(accessCode, response);
+        ApiResponse<LoginResponseDto> kakaoLogin = authService.kakaoLogin(accessCode, response);
 
-        if (kakaoLogin.isLoginSuccess()) {
-            ApiResponse<LoginResponseDto> loginData = kakaoLogin.getData();
-            return ResponseEntity.ok(loginData);
-        } else {
-            ApiResponse<KakaoPreSignupResponseDto> signupData = kakaoLogin.getData();
-            return ResponseEntity.ok(signupData);
-        }
+        return ResponseEntity.ok(kakaoLogin);
     }
 }

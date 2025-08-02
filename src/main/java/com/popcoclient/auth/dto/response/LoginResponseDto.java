@@ -10,14 +10,16 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Getter
 public class LoginResponseDto {
+    private Long userId;
     private LoginUserResponseDto loginUserResponseDto;
     private JwtResponseDto jwtResponseDto;
     private boolean isProfileComplete;
 
 
-    public static LoginResponseDto of(
+    public static LoginResponseDto of(Long userId,
             LoginUserResponseDto loginUserResponseDto, JwtResponseDto jwtResponse, boolean isProfileComplete) {
         return LoginResponseDto.builder()
+                .userId(userId)
                 .loginUserResponseDto(loginUserResponseDto)
                 .jwtResponseDto(jwtResponse)
                 .isProfileComplete(isProfileComplete)

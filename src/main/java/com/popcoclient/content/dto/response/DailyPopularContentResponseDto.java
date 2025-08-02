@@ -2,11 +2,13 @@ package com.popcoclient.content.dto.response;
 
 import com.popcoclient.content.entity.Content;
 import com.popcoclient.content.entity.DailyPopularContent;
+import com.popcoclient.content.entity.enums.ReactionType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @Getter
@@ -20,11 +22,12 @@ public class DailyPopularContentResponseDto {
     private String title;
     private String overview;
     private String posterPath;
-    private Double reviewRatingAvg;
+    private BigDecimal reviewRatingAvg;
     private String genres;
+    private ReactionType userReaction;
 
     public static DailyPopularContentResponseDto of(
-            DailyPopularContent popularContent, String genres, Double reviewRatingAvg) {
+            DailyPopularContent popularContent, String genres, ReactionType userReaction) {
         return DailyPopularContentResponseDto.builder()
                 .contentId(popularContent.getContent().getContentId().getId())
                 .type(popularContent.getContent().getContentId().getType())
@@ -32,8 +35,9 @@ public class DailyPopularContentResponseDto {
                 .rank(popularContent.getRanking())
                 .overview(popularContent.getContent().getOverview())
                 .posterPath(popularContent.getContent().getPosterPath())
-                .reviewRatingAvg(reviewRatingAvg)
+                .reviewRatingAvg(popularContent.getContent().getRatingAverage())
                 .genres(genres)
+                .userReaction(userReaction)
                 .build();
     }
 }

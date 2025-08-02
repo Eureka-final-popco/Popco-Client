@@ -1,6 +1,5 @@
 package com.popcoclient.persona.dto.response;
 
-import com.popcoclient.persona.entity.Persona;
 import com.popcoclient.persona.entity.PersonaQuestion;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

@@ -6,6 +6,7 @@ import com.popcoclient.user.dto.request.PasswordChangeRequest;
 import com.popcoclient.user.dto.request.UserDetailCreateRequestDto;
 import com.popcoclient.user.dto.request.UserDetailUpdateRequestDto;
 import com.popcoclient.user.dto.request.UserSignupRequestDto;
+import com.popcoclient.user.dto.response.UserCreateResponseDto;
 import com.popcoclient.user.dto.response.UserDetailResponseDto;
 import com.popcoclient.user.dto.response.UserResponseDto;
 import com.popcoclient.user.service.UserDetailService;
@@ -15,6 +16,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -56,16 +58,16 @@ public class UserController {
     @Operation(summary = "userId로 사용자 상세 입력", description = "userId로 사용자 상세 입력")
     @SecurityRequirement(name = "bearerAuth")
     @PostMapping("/details")
-    public ResponseEntity<ApiResponse<Void>> createUserDetail(@Valid @RequestBody UserDetailCreateRequestDto request) {
+    public ResponseEntity<ApiResponse<UserCreateResponseDto>> createUserDetail(@Valid @RequestBody UserDetailCreateRequestDto request) {
         Long userId = jwtProvider.getRequiredUserId();
-        userDetailService.createUserDetail(request, userId);
-        return ResponseEntity.ok(ApiResponse.success("Create UserDetail Success", null));
+        UserCreateResponseDto response = userDetailService.createUserDetail(request, userId);
+        return ResponseEntity.ok(ApiResponse.success("Create UserDetail Success", response));
     }
 
     @Operation(summary = "userId로 사용자 상세 수정", description = "userId로 사용자 상세 수정")
     @SecurityRequirement(name = "bearerAuth")
-    @PutMapping("/details")
-    public ResponseEntity<ApiResponse<Void>> updateUserDetail(@Valid @RequestBody UserDetailUpdateRequestDto request) {
+    @PutMapping(value = "/details", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<ApiResponse<Void>> updateUserDetail(@ModelAttribute UserDetailUpdateRequestDto request) {
         Long userId = jwtProvider.getRequiredUserId();
         userDetailService.updateUserDetail(request, userId);
         return ResponseEntity.ok(ApiResponse.success("Update UserDetail Success", null));

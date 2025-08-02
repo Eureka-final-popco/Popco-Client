@@ -43,11 +43,17 @@ public class Quiz {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
+    @Column(name = "quiz_poster_path")
+    private String quizPosterPath;
+
     @Column(name = "banner_path")
     private String bannerPath;
 
     @Column(name = "round_count")
     private Integer roundCount;
+
+    @Column(name="quiz_reward")
+    private String quizReward;
 
     @OneToMany(mappedBy = "quiz", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default

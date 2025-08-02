@@ -8,8 +8,12 @@ import com.popcoclient.user.entity.User;
 
 import java.util.Optional;
 
+import java.util.List;
+
 @Repository
 public interface UserQuizAttemptRepository extends JpaRepository<UserQuizAttempt, Long> {
+    Integer countByUser_UserId(Long userId);
+    Integer countByUser_UserIdIn(List<Long> samePerUserIds);
     // 🔍 사용자의 특정 퀴즈 참가 기록 조회
     Optional<UserQuizAttempt> findByQuizAndUser(Quiz quiz, User user);
 

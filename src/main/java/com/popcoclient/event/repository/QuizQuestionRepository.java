@@ -1,5 +1,6 @@
 package com.popcoclient.event.repository;
 
+import com.popcoclient.event.entity.Quiz;
 import com.popcoclient.event.entity.QuizQuestion;
 import com.popcoclient.event.entity.key.QuizQuestionId;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -10,4 +11,5 @@ import java.util.Optional;
 
 @Repository
 public interface QuizQuestionRepository extends JpaRepository<QuizQuestion, QuizQuestionId> {
+    QuizQuestion findByQuizAndQuestionOrder(Quiz quiz, int questionOrder);
 }

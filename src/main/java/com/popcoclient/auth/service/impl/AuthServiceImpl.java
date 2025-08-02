@@ -45,14 +45,7 @@ public class AuthServiceImpl implements AuthService {
             throw new InvalidPasswordException("비밀번호가 올바르지 않습니다.");
         }
 
-        JwtToken token = jwtUtil.generateToken(user.getUserId());
-
-        Cookie cookie = jwtUtil.setRefreshTokenCookie(token.getRefreshToken());
-        LoginResponseDto responseDto = buildLoginResponse(user, token);
-
-        response.addCookie(cookie);
-
-        return ApiResponse.success("LOGIN", responseDto);
+        return ApiResponse.success("LOGIN", issueLoginResponse(user, response));
     }
 
     @Override
@@ -63,7 +56,7 @@ public class AuthServiceImpl implements AuthService {
 
         response.addCookie(cookie);
 
-        return ApiResponse.success("LOGIN", RefreshResponseDto.from(token));
+        return ApiResponse.success("REFRESH TOKEN", RefreshResponseDto.from(token));
     }
 
     @Override
@@ -73,8 +66,8 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public KakaoLoginResponseDto kakaoLogin(String accessCode, HttpServletResponse response) {
-        KakaoToken token = kakaoUtil.requestToken(accessCode);
+    public ApiResponse<LoginResponseDto> kakaoLogin(String KakaoAccessCode, HttpServletResponse response) {
+        KakaoToken token = kakaoUtil.requestToken(KakaoAccessCode);
         KakaoProfile kakaoProfile = kakaoUtil.requestProfile(token);
 
         if (kakaoProfile == null || kakaoProfile.getKakao_account() == null) {
@@ -97,20 +90,27 @@ public class AuthServiceImpl implements AuthService {
         Optional<User> userOpt = userRepository.findByEmail(email);
 
         if (userOpt.isPresent()) {
-            // ✅ 로그인 완료 → JWT 발급
-            JwtToken jwt = jwtUtil.generateToken(userOpt.get().getUserId());
-
-            Cookie cookie = jwtUtil.setRefreshTokenCookie(jwt.getRefreshToken());
-            response.addCookie(cookie);
-
-            LoginResponseDto loginResponse = buildLoginResponse(userOpt.get(), jwt);
-            return KakaoLoginResponseDto.loginSuccess(ApiResponse.success("LOGIN", loginResponse));
+            LoginResponseDto loginResponse = issueLoginResponse(userOpt.get(), response);
+            return ApiResponse.success("LOGIN", loginResponse);
         } else {
-            // ❗아직 회원가입 안됨 → 추가 정보 필요
-            KakaoPreSignupResponseDto preSignup = KakaoPreSignupResponseDto.of(email,nickname);
-            return KakaoLoginResponseDto.signupRequired(ApiResponse.success("SIGNUP", preSignup));
+            User user = saveNewUser(email);
+            LoginResponseDto firstLoginResponse = issueLoginResponse(user, response);
+            return ApiResponse.success("SIGNUP", firstLoginResponse);
         }
     }
+
+    private User saveNewUser(String email) {
+        User user = User.of(email, null);
+        return userRepository.save(user);
+    }
+
+    private LoginResponseDto issueLoginResponse(User user, HttpServletResponse response) {
+        JwtToken jwt = jwtUtil.generateToken(user.getUserId());
+        Cookie cookie = jwtUtil.setRefreshTokenCookie(jwt.getRefreshToken());
+        response.addCookie(cookie);
+        return buildLoginResponse(user, jwt);
+    }
+
 
     private LoginResponseDto buildLoginResponse(User user, JwtToken token) {
         Optional<UserDetail> userDetailOpt = userDetailRepository.findById(user.getUserId());
@@ -122,7 +122,7 @@ public class AuthServiceImpl implements AuthService {
             isProfileComplete = true;
         }
 
-        return LoginResponseDto.of(userResponseDto, JwtResponseDto.from(token), isProfileComplete);
+        return LoginResponseDto.of(user.getUserId(), userResponseDto, JwtResponseDto.from(token), isProfileComplete);
     }
 
 }
