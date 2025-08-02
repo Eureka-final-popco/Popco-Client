@@ -11,8 +11,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Getter
-@Builder
-@NoArgsConstructor
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
