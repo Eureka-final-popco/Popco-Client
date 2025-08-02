@@ -1,5 +1,6 @@
 package com.popcoclient.event.dto.response;
 
+import com.popcoclient.event.entity.enums.QuizStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -21,4 +22,5 @@ public class QuizStatusResponseDto {
     private int remainingTime;          // 남은 시간 (초)
     private boolean isTimerRunning;     // 타이머가 실행중인지
     private long timerStartedAt;        // 타이머 시작 시간 (밀리초)
+    private QuizStatus status;              // 문제 상태 (대기 / 진행 / 종료)
 }

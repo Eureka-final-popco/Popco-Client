@@ -3,6 +3,7 @@ package com.popcoclient.event.service.impl;
 import com.popcoclient.event.dto.request.QuizSubmissionResultDto;
 import com.popcoclient.event.dto.response.*;
 import com.popcoclient.event.entity.*;
+import com.popcoclient.event.entity.enums.QuizStatus;
 import com.popcoclient.event.entity.key.QuizOptionId;
 import com.popcoclient.event.entity.key.QuizQuestionId;
 import com.popcoclient.event.repository.*;
@@ -48,6 +49,7 @@ public class EventServiceImpl {
 
     // ===== 타이머 관리 (메모리) =====
     private final Map<String, Long> activeTimers = new ConcurrentHashMap<>(); // key: "quizId:questionId", value: 시작시간
+    private final Map<String, ScheduledFuture<?>> activeBroadcasts = new ConcurrentHashMap<>();
 
     public EventServiceImpl(
             DistributeLockServiceImpl lockService,
@@ -172,13 +174,13 @@ public class EventServiceImpl {
             String timerKey = quizId + ":" + questionId;
             Long startTime = activeTimers.get(timerKey);
 
-            boolean isActive = false;
             int remainingTime = 0;
+            QuizStatus status = QuizStatus.fromTimerStatus(startTime);
+            boolean isActive = (status == QuizStatus.ACTIVE);
 
             if (startTime != null) {
                 long elapsed = System.currentTimeMillis() - startTime;
                 remainingTime = Math.max(0, 30 - (int)(elapsed / 1000)); // 30초에서 경과시간 빼기
-                isActive = remainingTime > 0;
             }
 
             return QuizStatusResponseDto.builder()
@@ -188,6 +190,7 @@ public class EventServiceImpl {
                     .maxSurvivors(maxSurvivors)
                     .isActive(isActive)
                     .remainingTime(remainingTime)
+                    .status(status)
                     .build();
 
         } catch (Exception e) {
@@ -260,7 +263,7 @@ public class EventServiceImpl {
      * 다음 문제 준비 체크 및 시작
      */
     private void checkAndStartNextQuestion(Long quizId, Long questionId) {
-
+        log.info("🔍 다음 문제 체크 시작 - 현재 문제: {}", questionId);
 
         // 🎯 현재 문제의 정원 확인
         QuizQuestionId currentQuestionKey = QuizQuestionId.of(questionId, quizId);
@@ -270,29 +273,43 @@ public class EventServiceImpl {
         int currentSurvivors = getTotalSurvivors(questionId);
         int currentCapacity = currentQuestion.getFirstCapacity();
 
-        // 🚀 현재 문제 정원이 다 찼으면 다음 문제 시작
+        log.info("📊 현재 상황 - 생존자: {}/{}, 정원 달성: {}",
+                currentSurvivors, currentCapacity, currentSurvivors >= currentCapacity);
+
+                // 🚀 현재 문제 정원이 다 찼으면 다음 문제 시작
         if (currentSurvivors >= currentCapacity) {
             Long nextQuestionId = questionId + 1;
+            log.info("✅ 정원 달성! 다음 문제 {} 준비 중...", nextQuestionId);
 
             // 다음 문제가 존재하는지 확인
             QuizQuestionId nextQuestionKey = QuizQuestionId.of(nextQuestionId, quizId);
             if (!quizQuestionRepository.existsById(nextQuestionKey)) {
                 log.info("마지막 문제 완료! 퀴즈 종료");
+
+                String currentTimerKey = quizId + ":" + questionId;
+                activeTimers.remove(currentTimerKey);
                 return;
             }
 
             String timerKey = quizId + ":" + nextQuestionId;
 
+            log.info("🔍 다음 문제 중복 시작 체크 - timerKey: {}, 이미 존재: {}",
+                    timerKey, activeTimers.containsKey(timerKey));
+
             // 이미 시작된 문제는 중복 시작 방지
             if (!activeTimers.containsKey(timerKey)) {
-                log.info("문제 {} 정원 달성({}/{})! 다음 문제 {} 5초 후 시작",
-                        questionId, currentSurvivors, currentCapacity, nextQuestionId);
+                log.info("🚀 다음 문제 {} 5초 후 시작 예약", nextQuestionId);
 
                 // 🕒 5초 후 다음 문제 시작
                 taskScheduler.schedule(() -> {
+                    log.info("⏰ 5초 지연 후 문제 {} 시작 실행", nextQuestionId);
                     startQuestion(quizId, nextQuestionId);
                 }, Instant.now().plus(5, ChronoUnit.SECONDS));
+            } else{
+                log.warn("⚠️ 문제 {} 이미 시작됨 - 중복 방지", nextQuestionId);
             }
+        } else{
+            log.info("❌ 정원 미달성 - 다음 문제 시작 안 함");
         }
     }
 
@@ -305,7 +322,7 @@ public class EventServiceImpl {
 
         // 메모리에 시작시간 저장
         activeTimers.put(timerKey, questionStartTime);
-        log.info("문제 {} 시작! 30초 타이머 가동", questionId);
+        log.info("✅ 문제 {} 시작! activeTimers 저장: {} (전체 {}개)", questionId, timerKey, activeTimers.size());
 
         // 🆕 1초마다 타이머 브로드캐스트 시작
         ScheduledFuture<?> timerBroadcast = taskScheduler.scheduleAtFixedRate(() -> {
@@ -314,21 +331,33 @@ public class EventServiceImpl {
                 String questionTopic = "/topic/quiz/" + quizId + "/question/" + questionId;
                 messagingTemplate.convertAndSend(questionTopic, currentStatus);
 
-                log.debug("Timer broadcast - topic: {}, remaining: {}s",
-                        questionTopic, currentStatus.getRemainingTime());
+                log.debug("📡 문제 {} 브로드캐스트: {}초 남음", questionId, currentStatus.getRemainingTime());
+
             } catch (Exception e) {
                 log.error("Failed to broadcast timer - quizId: {}, questionId: {}", quizId, questionId, e);
             }
         }, Instant.now().plus(1, ChronoUnit.SECONDS), Duration.ofSeconds(1));
 
+        activeBroadcasts.put(timerKey, timerBroadcast);
+        log.info("✅ 문제 {} 브로드캐스트 저장: {} (전체 {}개)", questionId, timerKey, activeBroadcasts.size());
+
         // 🕒 30초 후 자동 종료
         taskScheduler.schedule(() -> {
+            log.info("⏰ 문제 {} 30초 타임아웃 실행", questionId);
             activeTimers.remove(timerKey);
-            log.info("문제 {} 시간 종료! 타이머 제거됨", questionId);
+            log.info("🗑️ activeTimers에서 제거: {} (남은 {}개)", timerKey, activeTimers.size());
+
+            ScheduledFuture<?> broadcast = activeBroadcasts.remove(timerKey);
+            if (broadcast != null && !broadcast.isCancelled()) {
+                broadcast.cancel(false);
+                log.info("🗑️ activeBroadcasts에서 제거: {} (남은 {}개)", timerKey, activeBroadcasts.size());
+            }
+
+            log.info("문제 {} 시간 종료! 타이머 및 브로드캐스트 제거됨", questionId);
 
             // 타이머 종료 브로드캐스트
             broadcastQuestionTimeout(quizId, questionId);
-
+            checkAndStartNextQuestionAfterTimeout(quizId, questionId);
         }, Instant.now().plus(30, ChronoUnit.SECONDS));
 
         // 문제 시작 브로드캐스트
@@ -389,6 +418,42 @@ public class EventServiceImpl {
 
         } catch (Exception e) {
             log.error("Failed to broadcast question timeout - quizId: {}, questionId: {}", quizId, questionId, e);
+        }
+    }
+
+    /**
+     * 30초 타임아웃 후 다음 문제 시작 체크
+     */
+    private void checkAndStartNextQuestionAfterTimeout(Long quizId, Long questionId) {
+        try {
+            Long nextQuestionId = questionId + 1;
+
+            // 다음 문제가 존재하는지 확인
+            QuizQuestionId nextQuestionKey = QuizQuestionId.of(nextQuestionId, quizId);
+            if (!quizQuestionRepository.existsById(nextQuestionKey)) {
+                log.info("🏁 마지막 문제 완료! 퀴즈 종료");
+                return;
+            }
+
+            // 현재 생존자가 있는지 확인
+            int currentSurvivors = getTotalSurvivors(questionId);
+            if (currentSurvivors > 0) {
+                log.info("🚀 30초 타임아웃 - 생존자 {}명과 함께 다음 문제 {} 5초 후 시작",
+                        currentSurvivors, nextQuestionId);
+
+                String timerKey = quizId + ":" + nextQuestionId;
+                if (!activeTimers.containsKey(timerKey)) {
+                    taskScheduler.schedule(() -> {
+                        log.info("⏰ 타임아웃 후 5초 지연 - 문제 {} 시작 실행", nextQuestionId);
+                        startQuestion(quizId, nextQuestionId);
+                    }, Instant.now().plus(5, ChronoUnit.SECONDS));
+                }
+            } else {
+                log.info("💀 생존자가 없어서 퀴즈 종료");
+            }
+
+        } catch (Exception e) {
+            log.error("❌ 타임아웃 후 다음 문제 시작 체크 실패", e);
         }
     }
 

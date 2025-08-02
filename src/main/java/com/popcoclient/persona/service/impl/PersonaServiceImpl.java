@@ -83,9 +83,9 @@ public class PersonaServiceImpl implements PersonaService {
 
         List<String> mainPerGenres = personaGenreRepository.findGenreNamesByPersona(mainPersona);
 
-        if (calcMap.get("main_percentage") - calcMap.get("sub_percentage") < 3){ // 아기팝코
+        if (calcMap.get("main_percentage") - calcMap.get("sub_percentage") < 8){ // 아기팝코
              MyPersonaResponseDto myPersonaResponseDto = MyPersonaResponseDto.builder()
-                    .myPersonaName(mainPersona.getName())
+                    .myPersonaName("아기" + mainPersona.getName())
                     .myPersonaImgPath(mainPersona.getBabyImgPath())
                     .myPersonaTags(mainPersona.getTag())
                     .myPersonaGenres(mainPerGenres)

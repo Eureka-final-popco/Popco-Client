@@ -65,7 +65,7 @@ public class QuizWebSocketInterceptor implements ChannelInterceptor {
         try {
             // 🔐 JWT 토큰 검증
             String token = extractToken(accessor);
-            
+            log.info("추출된 토큰 : " + token, "검증 예상 결과 : " + jwtTokenProvider.validateToken(token,"ACCESS"));
             if (token != null && jwtTokenProvider.validateToken(token,"ACCESS")) {
                 // ✅ 인증 성공
                 Long userId = Long.valueOf(jwtTokenProvider.getUserIdFromToken(token));
