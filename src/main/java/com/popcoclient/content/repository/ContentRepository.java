@@ -17,6 +17,22 @@ public interface ContentRepository extends JpaRepository<Content, ContentId> {
 
     Page<Content> findAll(Pageable pageable);
 
+    @Query(
+            value = "SELECT c FROM Content c " +
+                    "LEFT JOIN ContentReaction cr ON c.contentId.id = cr.content.contentId.id " +
+                    "  AND c.contentId.type = cr.content.contentId.type " +
+                    "GROUP BY c " +
+                    "ORDER BY " +
+                    "  SUM(CASE WHEN cr.reaction = 'LIKE' THEN 1 ELSE 0 END) - " +
+                    "  SUM(CASE WHEN cr.reaction = 'DISLIKE' THEN 1 ELSE 0 END) DESC, " +
+                    "  (c.ratingAverage * 100 + c.ratingCount * 0.1) DESC, " +
+                    "  c.releaseDate DESC",
+            countQuery = "SELECT COUNT(DISTINCT c) FROM Content c " +
+                    "LEFT JOIN ContentReaction cr ON c.contentId.id = cr.content.contentId.id " +
+                    "  AND c.contentId.type = cr.content.contentId.type"
+    )
+    Page<Content> findAllOrderByPopularity(Pageable pageable);
+
     @Query("SELECT DISTINCT c FROM Content c " +
             "LEFT JOIN FETCH c.genreIds " +
             "WHERE c.contentId = :contentId")
