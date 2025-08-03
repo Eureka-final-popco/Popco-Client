@@ -16,9 +16,11 @@ public class FilterRequestDto {
     private List<String> genres;
     private BigDecimal minRating;
     private BigDecimal maxRating;
-    private String platform;
+    private List<String> platforms;
     private Integer minReleaseYear;
     private Integer maxReleaseYear;
-    private String filterType;
-    private Map<String, Object> filterParams;
+    private Map<String, Object> ageGroupFilter;
+    private Map<String, Object> personaFilter;
+    private Map<String, Object> popcorithmFilter;
+
 }

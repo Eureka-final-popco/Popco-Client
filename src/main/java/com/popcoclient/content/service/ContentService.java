@@ -8,7 +8,7 @@ import org.springframework.data.domain.Pageable;
 import java.util.List;
 
 public interface ContentService {
-    Page<Content> getAllContents(Pageable pageable);
+    Page<Content> getAllContents(Pageable pageable, String sortType);
 
     List<DailyPopularContentResponseDto> getDailyPopularContentList(Long userId, String type);
 

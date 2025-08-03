@@ -27,15 +27,23 @@ import java.util.stream.Collectors;
 public class ContentServiceImpl implements ContentService {
     private final DailyPopularContentRepository dailyPopularContentRepository;
     private final GenreRepository genreRepository;
-    private final ReviewRepository reviewRepository;
     private final ContentRepository contentRepository;
     private final ContentReactionRepository contentReactionRepository;
     private final UserRepository userRepository;
     private final ContentRecommendationRepository contentRecommendationRepository;
 
-    @Override
-    public Page<Content> getAllContents(Pageable pageable) {
-        return contentRepository.findAll(pageable);
+    public Page<Content> getAllContents(Pageable pageable, String sortType) {
+        if (sortType == null) {
+            sortType = "recent";
+        }
+
+        if ("recent".equalsIgnoreCase(sortType)) {
+            return contentRepository.findAll(pageable);
+        } else if ("popular".equalsIgnoreCase(sortType)) {
+            return contentRepository.findAllOrderByPopularity(pageable);
+        } else {
+            throw new IllegalArgumentException("지원하지 않는 정렬 타입입니다: " + sortType);
+        }
     }
 
     @Override

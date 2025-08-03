@@ -26,15 +26,18 @@ public class ContentController {
     private final ContentService contentService;
     private final JwtProvider jwtProvider;
 
-    @Operation(summary = "전체 콘텐츠 조회", description = "최근 발매된 작품부터 기본 40개씩 조회할 수 있다.")
+    @Operation(summary = "전체 콘텐츠 조회", description = "최신순, 인기순 각 40개씩 조회할 수 있다.")
     @GetMapping
     public ResponseEntity<ApiResponse<ContentPageDto>> getAllContents(
             @RequestParam(name = "pageNumber", defaultValue = "0") Integer pageNumber,
             @RequestParam(name = "pageSize", defaultValue = "40") Integer pageSize,
             @RequestParam(name = "sort", defaultValue = "recent") String sort) {
         Sort sortOrder;
+
         if ("recent".equalsIgnoreCase(sort)) {
             sortOrder = Sort.by("releaseDate").descending();
+        } else if ("popular".equalsIgnoreCase(sort)) {
+            sortOrder = Sort.unsorted();
         } else {
             String[] sortParams = sort.split(",");
             if (sortParams.length == 2) {
@@ -48,7 +51,7 @@ public class ContentController {
 
         Pageable pageable = PageRequest.of(pageNumber, pageSize, sortOrder);
 
-        Page<Content> contentsPage = contentService.getAllContents(pageable);
+        Page<Content> contentsPage = contentService.getAllContents(pageable, sort);
 
         ContentPageDto responseDto = new ContentPageDto(contentsPage);
         return ResponseEntity.ok(ApiResponse.success("전체 콘텐츠 조회 성공", responseDto));

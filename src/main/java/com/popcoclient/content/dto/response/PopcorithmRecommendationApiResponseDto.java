@@ -14,6 +14,4 @@ import java.util.List;
 public class PopcorithmRecommendationApiResponseDto {
     private int userId;
     private List<PopularContentResponseDto> recommendations;
-    private int totalCount;
-    private String generatedAt;
 }

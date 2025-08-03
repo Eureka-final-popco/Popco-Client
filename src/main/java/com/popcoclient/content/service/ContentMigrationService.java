@@ -139,6 +139,7 @@ public class ContentMigrationService {
                         return ContentFilterDocument.builder()
                                 .id(esContent.getId())
                                 .contentId(esContent.getContentId())
+                                .title(esContent.getTitle())
                                 .genres(genres)
                                 .platforms(platforms)
                                 .contentType(esContent.getContentType())

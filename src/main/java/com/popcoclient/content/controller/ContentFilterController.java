@@ -36,11 +36,12 @@ public class ContentFilterController {
                 filterRequest.getGenres(),
                 filterRequest.getMinRating(),
                 filterRequest.getMaxRating(),
-                filterRequest.getPlatform(),
+                filterRequest.getPlatforms(),
                 filterRequest.getMinReleaseYear(),
                 filterRequest.getMaxReleaseYear(),
-                filterRequest.getFilterType(),
-                filterRequest.getFilterParams(),
+                filterRequest.getAgeGroupFilter(),
+                filterRequest.getPersonaFilter(),
+                filterRequest.getPopcorithmFilter(),
                 page,
                 size
         );

@@ -1,5 +1,6 @@
 package com.popcoclient.content.document;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.*;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
@@ -20,19 +21,23 @@ import java.util.List;
 public class ContentFilterDocument {
 
     @Id
+    @JsonIgnore
     private String id;
 
     @Field(type = FieldType.Long)
     private Long contentId;
 
     @Field(type = FieldType.Keyword)
+    private String contentType;
+
+    @Field(type = FieldType.Text)
+    private String title;
+
+    @Field(type = FieldType.Keyword)
     private List<String> genres;
 
     @Field(type = FieldType.Keyword)
     private List<String> platforms;
-
-    @Field(type = FieldType.Keyword)
-    private String contentType;
 
     @Field(type = FieldType.Double)
     private BigDecimal ratingAverage;
