@@ -1,9 +1,13 @@
 package com.popcoclient.persona.repository;
 
+import com.popcoclient.persona.dto.response.PersonaDetailDto;
 import com.popcoclient.persona.entity.UserPersona;
 import com.popcoclient.persona.entity.key.UserPersonaId;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -14,4 +18,13 @@ public interface UserPersonaRepository extends JpaRepository<UserPersona, UserPe
             "(SELECT MAX(up2.score) FROM UserPersona up2 WHERE up2.userPersonaId.userId = up.userPersonaId.userId)")
     List<UserPersona> findAllUsersMainPersonas();
     List<UserPersona> findTop2ByUserPersonaId_UserIdOrderByScoreDesc(Long userId);
+
+    // Repository
+    @Query("SELECT up FROM UserPersona up " +
+            "JOIN FETCH up.persona p " +
+            "JOIN FETCH p.personaGenre pg " +
+            "JOIN FETCH pg.genre g " +
+            "WHERE up.userPersonaId.userId = :userId " +
+            "ORDER BY up.score DESC")
+    List<UserPersona> findUserPersonasWithGenres(@Param("userId") Long userId, Pageable pageable);
 }

@@ -6,6 +6,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.BatchSize;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -35,6 +36,7 @@ public class Persona {
     @LastModifiedDate
     private LocalDateTime updatedAt;
 
+    @BatchSize(size = 10)
     @OneToMany(mappedBy = "persona", cascade = CascadeType.ALL)
     private List<PersonaGenre> personaGenre;
 

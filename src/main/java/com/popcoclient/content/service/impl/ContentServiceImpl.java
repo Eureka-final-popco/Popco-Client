@@ -9,12 +9,10 @@ import com.popcoclient.content.service.ContentService;
 import com.popcoclient.exception.BusinessException;
 import com.popcoclient.exception.ErrorCode;
 import com.popcoclient.exception.business.UserNotFoundException;
-import com.popcoclient.review.repository.ReviewRepository;
 import com.popcoclient.user.entity.User;
 import com.popcoclient.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.data.domain.Pageable;
 
@@ -27,7 +25,6 @@ import java.util.stream.Collectors;
 public class ContentServiceImpl implements ContentService {
     private final DailyPopularContentRepository dailyPopularContentRepository;
     private final GenreRepository genreRepository;
-    private final ReviewRepository reviewRepository;
     private final ContentRepository contentRepository;
     private final ContentReactionRepository contentReactionRepository;
     private final UserRepository userRepository;
@@ -46,13 +43,6 @@ public class ContentServiceImpl implements ContentService {
         Map<ContentId, ReactionType> userReactions = (userId == null)
                 ? Collections.emptyMap()
                 : loadUserReactions(userId, contents);
-
-        System.out.println("==== 콘텐츠 ID 목록 ====");
-        contents.forEach(c -> System.out.println(c.getContent().getContentId()));
-
-        System.out.println("==== 리액션 쿼리 결과 ====");
-        loadUserReactions(userId, contents).forEach((k, v) -> System.out.println(k + " -> " + v));
-
 
         return contents.stream()
                 .map(pc -> mapToDto(pc, genreMap, userReactions.get(pc.getContent().getContentId())))
@@ -107,7 +97,6 @@ public class ContentServiceImpl implements ContentService {
                 .filter(Objects::nonNull)
                 .collect(Collectors.joining(","));
 
-        System.out.println(reactionType+"뭔데");
         return DailyPopularContentResponseDto.of(pc, genres, reactionType);
     }
 
