@@ -62,7 +62,7 @@ public class ContentFilterService {
         }
 
         if (platforms != null && !platforms.isEmpty()) {
-            criteria = criteria.and("platforms").is(platforms);
+            criteria = criteria.and("platforms").in(platforms);
         }
 
         if (minReleaseYear != null || maxReleaseYear != null) {
@@ -81,8 +81,8 @@ public class ContentFilterService {
 
         if (ageGroupFilter != null && !ageGroupFilter.isEmpty()) {
             anyDynamicFilterRequested.set(true);
-            Integer minAgeParam = (Integer) ageGroupFilter.get("minAge");
-            Integer maxAgeParam = (Integer) ageGroupFilter.get("maxAge");
+            int minAgeParam = ageGroupFilter.get("minAge") != null ? ((Number) ageGroupFilter.get("minAge")).intValue() : 0;
+            int maxAgeParam = ageGroupFilter.get("maxAge") != null ? ((Number) ageGroupFilter.get("maxAge")).intValue() : 100;
             int requestedLimit = ageGroupFilter.getOrDefault("limit", 50) instanceof Integer ? (Integer) ageGroupFilter.get("limit") : 50;
             int fastapiLimit = Math.min(requestedLimit, 50);
 
@@ -99,7 +99,7 @@ public class ContentFilterService {
         if (personaFilter != null && !personaFilter.isEmpty()) {
             anyDynamicFilterRequested.set(true);
             Object personaIdObj = personaFilter.get("personaId");
-            int personaId = personaIdObj instanceof Integer ? (Integer) personaIdObj : Integer.parseInt(personaIdObj.toString());
+            int personaId = personaIdObj != null ? ((Number) personaIdObj).intValue() : 0;
             int limit = personaFilter.getOrDefault("limit", 50) instanceof Integer ? (Integer) personaFilter.get("limit") : 50;
             try {
                 List<Long> fetchedIds = callFastApiForPersonaPopular(personaId, limit).block();
