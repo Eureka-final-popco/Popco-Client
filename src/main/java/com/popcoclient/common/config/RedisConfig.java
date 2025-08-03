@@ -146,19 +146,19 @@ public class RedisConfig {
         return template;
     }
 
-    /**
-     * Redis Pub/Sub용 MessageListenerContainer
-     */
-    @Bean
-    public RedisMessageListenerContainer redisMessageListenerContainer() {
-        RedisMessageListenerContainer container = new RedisMessageListenerContainer();
-        container.setConnectionFactory(eventRedisConnectionFactory());
-
-        // 스레드 풀 설정 (동시성 처리를 위해)
-        container.setTaskExecutor(Executors.newFixedThreadPool(10));
-
-        return container;
-    }
+//    /**
+//     * Redis Pub/Sub용 MessageListenerContainer
+//     */
+//    @Bean
+//    public RedisMessageListenerContainer redisMessageListenerContainer() {
+//        RedisMessageListenerContainer container = new RedisMessageListenerContainer();
+//        container.setConnectionFactory(eventRedisConnectionFactory());
+//
+//        // 스레드 풀 설정 (동시성 처리를 위해)
+//        container.setTaskExecutor(Executors.newFixedThreadPool(10));
+//
+//        return container;
+//    }
 
     @Bean
     public MessageListenerAdapter notificationRedisMessageListenerAdapter() {
@@ -168,11 +168,13 @@ public class RedisConfig {
     @Bean("notificationRedisMessageListenerContainer")
     public RedisMessageListenerContainer notificationRedisMessageListenerContainer(
             RedisConnectionFactory connectionFactory,
-            MessageListenerAdapter notificationRedisMessageListenerContainer
+            MessageListenerAdapter notificationRedisMessageListenerAdapter
     ) {
         RedisMessageListenerContainer container = new RedisMessageListenerContainer();
-        container.setConnectionFactory(connectionFactory);
-        container.addMessageListener(notificationRedisMessageListenerContainer, new ChannelTopic("notifications"));
+        container.setConnectionFactory(eventRedisConnectionFactory());
+        container.addMessageListener(notificationRedisMessageListenerAdapter, new ChannelTopic("notifications"));
+        container.setTaskExecutor(Executors.newFixedThreadPool(10));
+
         return container;
     }
 
