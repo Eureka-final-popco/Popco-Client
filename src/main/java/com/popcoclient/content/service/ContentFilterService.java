@@ -114,8 +114,8 @@ public class ContentFilterService {
 
         if (popcorithmFilter != null && !popcorithmFilter.isEmpty()) {
             anyDynamicFilterRequested.set(true);
-            Integer userId = (Integer) popcorithmFilter.get("userId");
-            Integer limit = (Integer) popcorithmFilter.get("limit");
+            Integer userId = popcorithmFilter.get("userId") != null ? ((Number) popcorithmFilter.get("userId")).intValue() : null;
+            Integer limit = popcorithmFilter.get("limit") != null ? ((Number) popcorithmFilter.get("limit")).intValue() : 50;
             try {
                 List<Long> fetchedIds = callFastApiForPopcorithmRecommendations(userId, limit).block();
                 if (fetchedIds != null) {
