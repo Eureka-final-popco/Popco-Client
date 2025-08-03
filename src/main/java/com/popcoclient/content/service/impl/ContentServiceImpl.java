@@ -27,15 +27,17 @@ import java.util.stream.Collectors;
 public class ContentServiceImpl implements ContentService {
     private final DailyPopularContentRepository dailyPopularContentRepository;
     private final GenreRepository genreRepository;
-    private final ReviewRepository reviewRepository;
     private final ContentRepository contentRepository;
     private final ContentReactionRepository contentReactionRepository;
     private final UserRepository userRepository;
     private final ContentRecommendationRepository contentRecommendationRepository;
 
-    @Override
-    public Page<Content> getAllContents(Pageable pageable) {
-        return contentRepository.findAll(pageable);
+    public Page<Content> getAllContents(Pageable pageable, String sortType) {
+        if ("recent".equalsIgnoreCase(sortType)) {
+            return contentRepository.findAll(pageable);
+        } else {
+            return contentRepository.findAllOrderByPopularity(pageable);
+        }
     }
 
     @Override
