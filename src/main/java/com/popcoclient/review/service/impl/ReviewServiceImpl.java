@@ -226,12 +226,8 @@ public class ReviewServiceImpl implements ReviewService {
         LocalDateTime start = ym.atDay(1).atStartOfDay();
         LocalDateTime end   = ym.plusMonths(1).atDay(1).atStartOfDay();
 
-        List<Review> reviews = reviewRepository
-                .findByUserAndCreatedAtBetweenOrderByCreatedAtDesc(user, start, end);
-
-        return reviews.stream()
-                .map(MyReviewResponseDto::of)
-                .collect(Collectors.toList());
+        return reviewRepository
+                .findReviewListByUserIdAndMonth(user, start, end);
     }
 
     @Override
@@ -254,7 +250,9 @@ public class ReviewServiceImpl implements ReviewService {
             return MyContentReviewResponseDto.from(null, true, false);
         }
 
-        MyReviewResponseDto myReview = MyReviewResponseDto.of(optReview.get());
+        Review review = optReview.get();
+        boolean isLiked = reviewReactionRepository.existsByReviewAndUser(review, user);
+        MyReviewResponseDto myReview = MyReviewResponseDto.from(review, isLiked);
 
         return MyContentReviewResponseDto.from(myReview, true, true);
     }

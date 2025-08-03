@@ -1,5 +1,6 @@
 package com.popcoclient.review.repository;
 
+import com.popcoclient.content.entity.Content;
 import com.popcoclient.review.entity.Review;
 import com.popcoclient.review.entity.ReviewReaction;
 import com.popcoclient.user.entity.User;
@@ -11,4 +12,5 @@ import java.util.Optional;
 @Repository
 public interface ReviewReactionRepository extends JpaRepository<ReviewReaction, Long> {
     Optional<ReviewReaction> findByReviewAndUser(Review review, User user);
+    boolean existsByReviewAndUser(Review review, User user);
 }
