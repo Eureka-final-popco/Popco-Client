@@ -1,17 +1,22 @@
 package com.popcoclient.common.config;
 
+import com.popcoclient.event.service.impl.NotificationSubscriber;
+import lombok.RequiredArgsConstructor;
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.cache.RedisCacheConfiguration;
 import org.springframework.data.redis.cache.RedisCacheManager;
+import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.connection.lettuce.LettucePoolingClientConfiguration;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.listener.ChannelTopic;
 import org.springframework.data.redis.listener.RedisMessageListenerContainer;
+import org.springframework.data.redis.listener.adapter.MessageListenerAdapter;
 import org.springframework.data.redis.repository.configuration.EnableRedisRepositories;
 import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.RedisSerializationContext;
@@ -22,6 +27,7 @@ import java.util.concurrent.Executors;
 
 @Configuration
 @EnableRedisRepositories
+@RequiredArgsConstructor
 public class RedisConfig {
     @Value("${spring.data.redis.host}")
     private String host;
@@ -49,6 +55,8 @@ public class RedisConfig {
 
     @Value("${spring.redis.jedis.pool.max-wait:-1}")
     private long maxWait;
+
+    private final NotificationSubscriber notificationSubscriber;
 
 //    @Bean
 //    public RedisConnectionFactory redisConnectionFactory() {
@@ -149,6 +157,22 @@ public class RedisConfig {
         // 스레드 풀 설정 (동시성 처리를 위해)
         container.setTaskExecutor(Executors.newFixedThreadPool(10));
 
+        return container;
+    }
+
+    @Bean
+    public MessageListenerAdapter notificationRedisMessageListenerAdapter() {
+        return new MessageListenerAdapter(notificationSubscriber);
+    }
+
+    @Bean("notificationRedisMessageListenerContainer")
+    public RedisMessageListenerContainer notificationRedisMessageListenerContainer(
+            RedisConnectionFactory connectionFactory,
+            MessageListenerAdapter notificationRedisMessageListenerContainer
+    ) {
+        RedisMessageListenerContainer container = new RedisMessageListenerContainer();
+        container.setConnectionFactory(connectionFactory);
+        container.addMessageListener(notificationRedisMessageListenerContainer, new ChannelTopic("notifications"));
         return container;
     }
 
