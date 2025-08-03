@@ -33,10 +33,16 @@ public class ContentServiceImpl implements ContentService {
     private final ContentRecommendationRepository contentRecommendationRepository;
 
     public Page<Content> getAllContents(Pageable pageable, String sortType) {
+        if (sortType == null) {
+            sortType = "recent";
+        }
+
         if ("recent".equalsIgnoreCase(sortType)) {
             return contentRepository.findAll(pageable);
-        } else {
+        } else if ("popular".equalsIgnoreCase(sortType)) {
             return contentRepository.findAllOrderByPopularity(pageable);
+        } else {
+            throw new IllegalArgumentException("지원하지 않는 정렬 타입입니다: " + sortType);
         }
     }
 
