@@ -66,4 +66,5 @@ public interface ReviewRepository extends JpaRepository<Review, Long>, ReviewRep
     Integer countByUser_UserIdInAndCreatedAtBetween(List<Long> userIds, LocalDateTime start, LocalDateTime end);
 
     Optional<Review> findByContentAndUser(Content content, User user);
+    boolean existsByContentAndUser(Content content, User user);
 }

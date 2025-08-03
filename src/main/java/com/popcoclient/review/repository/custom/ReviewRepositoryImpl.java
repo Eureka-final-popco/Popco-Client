@@ -1,10 +1,9 @@
 package com.popcoclient.review.repository.custom;
 
 import com.popcoclient.content.entity.Content;
-import com.popcoclient.content.entity.key.ContentId;
+import com.popcoclient.review.dto.response.MyReviewResponseDto;
 import com.popcoclient.review.entity.QReview;
-import com.querydsl.core.BooleanBuilder;
-import com.querydsl.core.Tuple;
+import com.popcoclient.user.entity.User;
 import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
@@ -19,11 +18,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.support.PageableExecutionUtils;
 import org.springframework.stereotype.Repository;
 
-import java.util.Collections;
+import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 import static com.popcoclient.review.entity.QReview.review;
 import static com.popcoclient.review.entity.QReviewReaction.reviewReaction;
@@ -57,14 +53,14 @@ public class ReviewRepositoryImpl implements ReviewRepositoryCustom {
     }
 
     // 로그인한 사용자면 리뷰 신고 여부 판단, 비로그인 False 반환
-    private BooleanExpression reviewDeclarationUserIdExist(Long userId, QReview review) {
+    private BooleanExpression reviewDeclarationUserIdExist(Long userId) {
         if(userId == null)
             return Expressions.FALSE;
         return JPAExpressions
                 .selectOne()
                 .from(declaration)
                 .where(declaration.user.userId.eq(userId)
-                        .and(declaration.review.reviewId.eq(review.reviewId)))
+                        .and(declaration.review.reviewId.eq(QReview.review.reviewId)))
                 .exists();
     }
 
@@ -92,7 +88,7 @@ public class ReviewRepositoryImpl implements ReviewRepositoryCustom {
                         review.likeCount,
                         reviewLikeUserIdExist(userId),
                         reviewUserIdExist(userId),
-                        reviewDeclarationUserIdExist(userId, review)
+                        reviewDeclarationUserIdExist(userId)
                 ))
                 .from(review)
                 .join(review.user, user)
@@ -112,6 +108,31 @@ public class ReviewRepositoryImpl implements ReviewRepositoryCustom {
         return PageableExecutionUtils.getPage(reviewList, pageable, count::fetchOne);
     }
 
+    @Override
+    public List<MyReviewResponseDto> findReviewListByUserIdAndMonth(User user, LocalDateTime start, LocalDateTime end) {
+        return jpaQueryFactory
+                .select(Projections.constructor(MyReviewResponseDto.class,
+                        review.reviewId,
+                        review.content.contentId.id,
+                        review.content.contentId.type,
+                        review.content.title,
+                        review.content.posterPath,
+                        review.score,
+                        review.text,
+                        review.createdAt,
+                        review.status.as("status"),
+                        review.likeCount,
+                        reviewLikeUserIdExist(user.getUserId())
+                ))
+                .from(review)
+                .where(
+                        review.user.eq(user),
+                        review.createdAt.between(start, end)
+                )
+                .orderBy(review.likeCount.desc())
+                .fetch();
+    }
+
     // 별점 평균
     @Override
     public Double avgStar(Content content) {
@@ -121,38 +142,5 @@ public class ReviewRepositoryImpl implements ReviewRepositoryCustom {
                 .where(review.content.eq(content))
                 .fetchOne();
     }
-
-    @Override
-    public Map<ContentId, Double> findAverageScoreByContents(Set<ContentId> contentIds) {
-        if (contentIds.isEmpty()) return Collections.emptyMap();
-
-        // 조건을 수동으로 조합
-        BooleanBuilder builder = new BooleanBuilder();
-        for (ContentId contentId : contentIds) {
-            builder.or(
-                    review.content.contentId.id.eq(contentId.getId())
-                            .and(review.content.contentId.type.eq(contentId.getType()))
-            );
-        }
-
-        List<Tuple> results = jpaQueryFactory
-                .select(
-                        review.content.contentId.id,
-                        review.content.contentId.type,
-                        review.score.avg()
-                )
-                .from(review)
-                .where(builder)
-                .groupBy(review.content.contentId.id, review.content.contentId.type)
-                .fetch();
-
-        // Map<ContentId, BigDecimal> 으로 변환
-        return results.stream()
-                .collect(Collectors.toMap(
-                        tuple -> new ContentId(tuple.get(review.content.contentId.id), tuple.get(review.content.contentId.type)),
-                        tuple -> tuple.get(review.score.avg())
-                ));
-    }
-
 
 }
