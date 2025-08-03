@@ -85,6 +85,7 @@ public class QuizAnswerController {
      * 🏆 현재 생존자 순위 조회 API
      */
     @Operation(summary = "선착순 순위 조회", description = "사용자가 어떤 quiz 의 몇 번째 question 을 몇 등으로 통과했는지 조회하는 api")
+    @SecurityRequirement(name = "bearerAuth")
     @GetMapping("/{quizId}/questions/{questionId}/survivors")
     public ResponseEntity<ApiResponse<SurvivorRankingResponse>> getSurvivors(
             @PathVariable Long quizId,
