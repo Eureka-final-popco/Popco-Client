@@ -2,6 +2,7 @@ package com.popcoclient.persona.service.impl;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.popcoclient.exception.business.UserNotFoundException;
 import com.popcoclient.persona.dto.openai.GptRequest;
 import com.popcoclient.persona.dto.openai.GptResponse;
 import com.popcoclient.persona.dto.response.PersonaDetailDto;
@@ -11,6 +12,7 @@ import com.popcoclient.user.entity.User;
 import com.popcoclient.user.repository.UserRepository;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
@@ -35,6 +37,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class GptService {
 
     @Value("${openai.api.key}")
@@ -134,14 +137,14 @@ public class GptService {
                     .replace("{score}", diff.toString());
         }
 
-        System.out.println(prompt);
+        log.debug(prompt);
         return prompt;
     }
 
     private Mono<String> generatePersonalizedResponse(Long userId) {
         return Mono.fromCallable(() -> {
                     User user = userRepository.findById(userId)
-                            .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다: " + userId));
+                            .orElseThrow(() -> new UserNotFoundException("사용자를 찾을 수 없습니다: " + userId));
 
                     List<PersonaDetailDto> personaDetails = getPersonaDetails(user.getUserId(), PageRequest.of(0,2));
 
@@ -158,11 +161,11 @@ public class GptService {
                             0.7
                     );
 
-                    System.out.println("[generatePersonalizedResponse] 생성된 요청: " + request);  // 요청 로그
+                    log.debug("[generatePersonalizedResponse] 생성된 요청: {}", request);  // 요청 로그
                     return request;
                 })
                 .subscribeOn(Schedulers.boundedElastic())
-                .doOnSubscribe(sub -> System.out.println("[generatePersonalizedResponse] API 호출 시작"))
+                .doOnSubscribe(sub -> log.info("[generatePersonalizedResponse] API 호출 시작"))
                 .flatMap(gptRequest ->
                         webClient.post()
                                 .uri(apiUrl)
@@ -170,17 +173,17 @@ public class GptService {
                                 .bodyValue(gptRequest)
                                 .retrieve()
                                 .bodyToMono(GptResponse.class)
-                                .doOnNext(response -> System.out.println("[generatePersonalizedResponse] API 응답: " + response))
+                                .doOnNext(response -> log.debug("[generatePersonalizedResponse] API 응답: {}", response))
                                 .map(response -> {
                                     if (response.getChoices() != null && !response.getChoices().isEmpty()) {
                                         String content = response.getChoices().get(0).getMessage().getContent();
-                                        System.out.println("[generatePersonalizedResponse] 응답 내용: " + content);
+                                        log.debug("[generatePersonalizedResponse] 응답 내용: {}", content);
                                         return content;
                                     }
                                     return "응답을 생성할 수 없습니다.";
                                 })
                 )
-                .doOnError(error -> System.err.println("[generatePersonalizedResponse] 오류 발생: " + error.getMessage()))
+                .doOnError(error -> log.error("[generatePersonalizedResponse] 오류 발생: {}", error.getMessage()))
                 .onErrorReturn("오류가 발생했습니다. 사용자 정보를 확인하거나 다시 시도해주세요.");
     }
 

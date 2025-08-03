@@ -53,9 +53,9 @@ public class personaController {
     }
 
     @Operation(summary = "페르소나 대사 출력", description = "사용자의 페르소나 순위에 따라 대사를 출력합니다.")
-    @PostMapping("/texts")
+    @GetMapping("/texts")
     @SecurityRequirement(name = "bearerAuth")
-    public Mono<ResponseEntity<ApiResponse<PersonaTextResponseDto>>> chat() {
+    public Mono<ResponseEntity<ApiResponse<PersonaTextResponseDto>>> getPersonaText() {
         Long userId = jwtProvider.getRequiredUserId();
         return gptService.getPersonaText(userId)
                 .map(result -> ResponseEntity.ok(ApiResponse.success(result)));
