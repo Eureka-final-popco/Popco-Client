@@ -250,8 +250,9 @@ public class ReviewServiceImpl implements ReviewService {
             return MyContentReviewResponseDto.from(null, true, false);
         }
 
-        boolean isLiked = reviewRepository.existsByContentAndUser(content, user);
-        MyReviewResponseDto myReview = MyReviewResponseDto.from(optReview.get(), isLiked);
+        Review review = optReview.get();
+        boolean isLiked = reviewReactionRepository.existsByReviewAndUser(review, user);
+        MyReviewResponseDto myReview = MyReviewResponseDto.from(review, isLiked);
 
         return MyContentReviewResponseDto.from(myReview, true, true);
     }
