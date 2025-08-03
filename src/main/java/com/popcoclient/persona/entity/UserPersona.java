@@ -21,4 +21,9 @@ public class UserPersona {
     private UserPersonaId userPersonaId;
 
     private BigDecimal score;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "persona_id", insertable = false, updatable = false)
+    private Persona persona;
+
 }
