@@ -68,17 +68,21 @@ public class ContentServiceImpl implements ContentService {
                             ContentReaction::getReaction
                     ));
 
-            responseDto.getContents().forEach(dto -> {
-                ContentId dtoContentId = new ContentId(dto.getId(), dto.getType());
-                ReactionType reaction = userReactionMap.get(dtoContentId);
-                System.out.println("DEBUG: Processing DTO: " + dtoContentId + ", Found Reaction: " + reaction);
+            responseDto.setContents(
+                    responseDto.getContents().stream()
+                            .map(dto -> {
+                                ContentId dtoContentId = new ContentId(dto.getId(), dto.getType());
 
-                if (reaction != null) {
-                    dto.setUserReaction(reaction == ReactionType.LIKE, reaction == ReactionType.DISLIKE);
-                } else {
-                    dto.setUserReaction(false, false);
-                }
-            });
+                                ReactionType reaction = userReactionMap.get(dtoContentId);
+
+                                if(reaction != null) {
+                                    return dto.withUserReaction(reaction == ReactionType.LIKE, reaction == ReactionType.DISLIKE);
+                                } else {
+                                    return dto.withUserReaction(false, false);
+                                }
+                            })
+                            .collect(Collectors.toList())
+            );
         }
         return responseDto;
     }

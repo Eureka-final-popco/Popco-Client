@@ -30,8 +30,15 @@ public class ContentDto {
                 .build();
     }
 
-    public void setUserReaction(Boolean userLiked, Boolean userDisliked) {
-        this.userLiked = userLiked;
-        this.userDisliked = userDisliked;
-    }
+   public ContentDto withUserReaction(Boolean userLiked, Boolean userDisliked) {
+        return ContentDto.builder()
+                .id(this.id)
+                .type(this.type)
+                .title(this.title)
+                .releaseDate(this.releaseDate)
+                .posterPath(this.posterPath)
+                .userLiked(userLiked)
+                .userDisliked(userDisliked)
+                .build();
+   }
 }
