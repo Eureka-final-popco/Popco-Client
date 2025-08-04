@@ -29,7 +29,7 @@ public interface MarkedCollectionRepository extends JpaRepository<MarkedCollecti
             "JOIN FETCH c.user u " +
             "LEFT JOIN FETCH u.userDetail " +
             "WHERE mc.user.userId = :userId " +
-            "ORDER BY mc.createdAt DESC")
+            "ORDER BY mc.createdAt ASC")
     Page<MarkedCollection> findByUserIdWithCollection(@Param("userId") Long userId, Pageable pageable);
 
     // 최근 일주일간 마크된 컬렉션 중 인기 컬렉션 (saveCount 높은 순)
