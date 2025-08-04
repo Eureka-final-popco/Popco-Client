@@ -643,9 +643,9 @@ public class EventServiceImpl {
             
             -- TTL 설정
             if currentRank == 1 then
-                redis.call('EXPIRE', survivorKey, 7200)
-                redis.call('EXPIRE', countKey, 7200)
-                redis.call('EXPIRE', progressKey, 7200)
+                redis.call('EXPIRE', survivorKey, 180)
+                redis.call('EXPIRE', countKey, 180)
+                redis.call('EXPIRE', progressKey, 180)
             end
             
             return currentRank
