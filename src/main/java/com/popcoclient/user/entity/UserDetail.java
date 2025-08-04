@@ -41,7 +41,7 @@ public class UserDetail {
         return UserDetail.builder()
                 .user(user)
                 .nickname(request.getNickname())
-                .profilePath("/default")
+                .profilePath(null)
                 .birthdate(request.getBirthday())
                 .gender(request.getGender())
                 .build();
