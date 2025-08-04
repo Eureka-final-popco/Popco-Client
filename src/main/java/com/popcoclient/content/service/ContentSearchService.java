@@ -150,7 +150,7 @@ public class ContentSearchService {
                 .forEach(entry -> {
                     results.add(AutocompleteResponse.builder()
                             .value(entry.getKey())
-                            .type("actor")
+                            .type("actors")
                             .build());
                 });
 
