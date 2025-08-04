@@ -4,6 +4,10 @@ import co.elastic.clients.elasticsearch._types.query_dsl.BoolQuery;
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 import com.popcoclient.content.document.ContentDocument;
 import com.popcoclient.content.dto.response.AutocompleteResponse;
+import com.popcoclient.content.dto.response.ContentSearchResponse;
+import com.popcoclient.content.entity.ContentReaction;
+import com.popcoclient.content.entity.enums.ReactionType;
+import com.popcoclient.content.repository.ContentReactionRepository;
 import com.popcoclient.content.repository.search.ContentSearchRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,6 +30,7 @@ public class ContentSearchService {
 
     private final ContentSearchRepository searchRepository;
     private final ElasticsearchOperations elasticsearchOperations;
+    private final ContentReactionRepository contentReactionRepository;
 
     // 기본 검색
     public Page<ContentDocument> searchContents(String keyword, Pageable pageable) {
@@ -158,14 +163,15 @@ public class ContentSearchService {
     }
 
     // 고급 검색 - 배우 검색 기능 추가
-    public Page<ContentDocument> advancedSearch(String keyword, String contentType,
-                                                List<String> actors, Pageable pageable) {
-        log.info("Advanced search - keyword: {}, type: {}, actors: {}, page: {}",
-                keyword, contentType, actors, pageable.getPageNumber());
+    public Page<ContentSearchResponse> advancedSearch(String keyword, String contentType,
+                                                      List<String> actors, Long userId,
+                                                      Pageable pageable) {
+        log.info("Advanced search - keyword: {}, type: {}, actors: {}, userId: {}, page: {}",
+                keyword, contentType, actors, userId, pageable.getPageNumber());
 
+        // Elasticsearch 검색 로직 (기존과 동일)
         BoolQuery.Builder boolBuilder = new BoolQuery.Builder();
 
-        // 키워드 검색 (keyword가 있을 때만)
         if (keyword != null && !keyword.trim().isEmpty()) {
             boolBuilder.must(m -> m
                     .multiMatch(mm -> mm
@@ -178,7 +184,6 @@ public class ContentSearchService {
             );
         }
 
-        // 콘텐츠 타입 필터
         if (contentType != null && !contentType.isEmpty()) {
             boolBuilder.filter(f -> f
                     .term(t -> t
@@ -188,7 +193,6 @@ public class ContentSearchService {
             );
         }
 
-        // 배우 검색 - 모든 배우가 포함된 콘텐츠만 검색
         if (actors != null && !actors.isEmpty()) {
             for (String actor : actors) {
                 boolBuilder.must(m -> m
@@ -215,12 +219,43 @@ public class ContentSearchService {
         SearchHits<ContentDocument> searchHits =
                 elasticsearchOperations.search(searchQuery, ContentDocument.class);
 
-        List<ContentDocument> results = searchHits.stream()
+        List<ContentDocument> documents = searchHits.stream()
                 .map(SearchHit::getContent)
                 .collect(Collectors.toList());
 
+        // ContentDocument를 ContentSearchResponse로 변환
+        List<ContentSearchResponse> responses = documents.stream()
+                .map(ContentSearchResponse::from)
+                .collect(Collectors.toList());
+
+        // 로그인한 사용자인 경우 좋아요 정보 추가
+        if (userId != null) {
+            addLikeInfo(responses, userId);
+        }
+
         log.info("Advanced search found {} results", searchHits.getTotalHits());
 
-        return new PageImpl<>(results, pageable, searchHits.getTotalHits());
+        return new PageImpl<>(responses, pageable, searchHits.getTotalHits());
+    }
+
+    private void addLikeInfo(List<ContentSearchResponse> responses, Long userId) {
+        if (responses.isEmpty()) {
+            return;
+        }
+
+        // 각 컨텐츠에 대해 개별적으로 좋아요 정보 조회
+        responses.forEach(response -> {
+            // contentType과 contentId 분리
+            String[] idParts = response.getId().split("_");
+            Long contentId = Long.parseLong(idParts[0]);
+            String contentType = idParts[1];
+
+            // 해당 컨텐츠에 대한 사용자의 좋아요 여부 확인
+            Optional<ContentReaction> reaction = contentReactionRepository
+                    .findByUserAndContentAndReaction(userId, contentId, contentType, ReactionType.LIKE);
+
+            // 좋아요 여부 설정
+            response.setIsLiked(reaction.isPresent());
+        });
     }
 }
