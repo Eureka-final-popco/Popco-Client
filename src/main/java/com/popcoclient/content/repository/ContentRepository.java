@@ -15,7 +15,11 @@ import java.util.Optional;
 @Repository
 public interface ContentRepository extends JpaRepository<Content, ContentId> {
 
-    Page<Content> findAll(Pageable pageable);
+    Page<Content> findAllByOrderByReleaseDateDesc(Pageable pageable);
+
+    @Query(value = "SELECT c FROM Content c ORDER BY c.contentId.id ASC",
+            countQuery = "SELECT COUNT(c) FROM Content c")
+    Page<Content> findAllByContentIdAsc(Pageable pageable);
 
     @Query(
             value = "SELECT c FROM Content c " +

@@ -30,18 +30,61 @@ public class ContentServiceImpl implements ContentService {
     private final UserRepository userRepository;
     private final ContentRecommendationRepository contentRecommendationRepository;
 
-    public Page<Content> getAllContents(Pageable pageable, String sortType) {
+    @Override
+    public ContentPageDto getAllContents(Pageable pageable, String sortType, Long userId) {
         if (sortType == null) {
-            sortType = "recent";
+            sortType = "id_asc";
         }
 
+        Page<Content> contentsPage;
         if ("recent".equalsIgnoreCase(sortType)) {
-            return contentRepository.findAll(pageable);
+            contentsPage = contentRepository.findAllByOrderByReleaseDateDesc(pageable);
         } else if ("popular".equalsIgnoreCase(sortType)) {
-            return contentRepository.findAllOrderByPopularity(pageable);
+            contentsPage = contentRepository.findAllOrderByPopularity(pageable);
+        } else if("id_asc".equalsIgnoreCase(sortType)) {
+            contentsPage = contentRepository.findAllByContentIdAsc(pageable);
         } else {
-            throw new IllegalArgumentException("지원하지 않는 정렬 타입입니다: " + sortType);
+            throw new IllegalArgumentException("Unsupported sort type: " + sortType);
         }
+
+        ContentPageDto responseDto = new ContentPageDto(contentsPage);
+
+        if (userId != null && !contentsPage.isEmpty()) {
+            User user = userRepository.findById(userId).orElse(null);
+
+            if (user == null) {
+                return responseDto;
+            }
+
+            Set<ContentId> contentIdsOnPage = contentsPage.getContent().stream()
+                    .map(Content::getContentId)
+                    .collect(Collectors.toSet());
+
+            List<ContentReaction> userReactionsOnPage = contentReactionRepository.findByUserIdAndContentIds(user.getUserId(), contentIdsOnPage);
+
+            Map<ContentId, ReactionType> userReactionMap = userReactionsOnPage.stream()
+                    .collect(Collectors.toMap(
+                            cr -> cr.getContent().getContentId(),
+                            ContentReaction::getReaction
+                    ));
+
+            responseDto.setContents(
+                    responseDto.getContents().stream()
+                            .map(dto -> {
+                                ContentId dtoContentId = new ContentId(dto.getId(), dto.getType());
+
+                                ReactionType reaction = userReactionMap.get(dtoContentId);
+
+                                if(reaction != null) {
+                                    return dto.withUserReaction(reaction == ReactionType.LIKE, reaction == ReactionType.DISLIKE);
+                                } else {
+                                    return dto.withUserReaction(false, false);
+                                }
+                            })
+                            .collect(Collectors.toList())
+            );
+        }
+        return responseDto;
     }
 
     @Override

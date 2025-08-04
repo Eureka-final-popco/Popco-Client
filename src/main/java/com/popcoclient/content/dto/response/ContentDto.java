@@ -15,6 +15,9 @@ public class ContentDto {
     private LocalDate releaseDate;
     private String posterPath;
 
+    private Boolean userLiked;
+    private Boolean userDisliked;
+
     public static ContentDto from(Content content) {
         return ContentDto.builder()
                 .id(content.getContentId().getId())
@@ -22,6 +25,20 @@ public class ContentDto {
                 .title(content.getTitle())
                 .releaseDate(content.getReleaseDate())
                 .posterPath(content.getPosterPath())
+                .userLiked(false)
+                .userDisliked(false)
                 .build();
     }
+
+   public ContentDto withUserReaction(Boolean userLiked, Boolean userDisliked) {
+        return ContentDto.builder()
+                .id(this.id)
+                .type(this.type)
+                .title(this.title)
+                .releaseDate(this.releaseDate)
+                .posterPath(this.posterPath)
+                .userLiked(userLiked)
+                .userDisliked(userDisliked)
+                .build();
+   }
 }
