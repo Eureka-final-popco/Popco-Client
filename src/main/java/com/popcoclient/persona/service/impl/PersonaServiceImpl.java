@@ -152,8 +152,19 @@ public class PersonaServiceImpl implements PersonaService {
         Double myRatingAvg = reviewRepository.findAvgScoreByUserId(userId);
         Double perRatingAvg = reviewRepository.findAvgScoreForUsersInList(samePersonaUserList);
 
-        ratingDistribution.add(Math.round(myRatingAvg * 100.0) / 100.0);
-        ratingDistribution.add(Math.round(perRatingAvg * 100.0) / 100.0);
+        if(perRatingAvg == null){
+            ratingDistribution.add(0.0);
+            ratingDistribution.add(0.0);
+            return ratingDistribution;
+        }
+
+        if(myRatingAvg == null){
+            ratingDistribution.add(0.0);
+            ratingDistribution.add(Math.round(perRatingAvg * 100.0) / 100.0);
+        } else{
+            ratingDistribution.add(Math.round(myRatingAvg * 100.0) / 100.0);
+            ratingDistribution.add(Math.round(perRatingAvg * 100.0) / 100.0);
+        }
 
         return ratingDistribution;
     }
