@@ -104,8 +104,42 @@ public class UtilServiceImpl {
             }
         }
 
-        List<Integer> ageDistribution = Arrays.stream(ageBrackets).boxed().collect(Collectors.toList());
-        return ageDistribution;
+        int totalUsers = Arrays.stream(ageBrackets).sum();
+        if (totalUsers == 0) {
+            return Arrays.asList(0, 0, 0, 0, 0, 0);
+        }
+
+        double[] percentages = new double[6];
+        int[] finalPercentages = new int[6];
+        double[] remainders = new double[6];
+        int sumOfPercentages = 0;
+
+        for (int i = 0; i < ageBrackets.length; i++) {
+            percentages[i] = (double) ageBrackets[i] / totalUsers * 100;
+            finalPercentages[i] = (int) percentages[i];
+            remainders[i] = percentages[i] - finalPercentages[i];
+            sumOfPercentages += finalPercentages[i];
+        }
+
+        int diff = 100 - sumOfPercentages;
+        Integer[] remainderIndices = new Integer[6];
+        for (int i = 0; i < 6; i++) {
+            remainderIndices[i] = i;
+        }
+
+        Arrays.sort(remainderIndices, (Integer a, Integer b) ->
+                Double.compare(remainders[b], remainders[a]));
+
+        for (int i = 0; i < diff; i++) {
+            finalPercentages[remainderIndices[i]]++;
+        }
+
+        List<Integer> result = new ArrayList<>();
+        for (int p : finalPercentages) {
+            result.add(p);
+        }
+
+        return result;
     }
 
     public static List<Integer> calcPerAvg(Integer myAction, Integer personaAction, Integer max){
