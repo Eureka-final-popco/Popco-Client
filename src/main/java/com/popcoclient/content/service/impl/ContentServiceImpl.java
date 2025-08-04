@@ -9,12 +9,10 @@ import com.popcoclient.content.service.ContentService;
 import com.popcoclient.exception.BusinessException;
 import com.popcoclient.exception.ErrorCode;
 import com.popcoclient.exception.business.UserNotFoundException;
-import com.popcoclient.review.repository.ReviewRepository;
 import com.popcoclient.user.entity.User;
 import com.popcoclient.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.data.domain.Pageable;
 
@@ -32,18 +30,57 @@ public class ContentServiceImpl implements ContentService {
     private final UserRepository userRepository;
     private final ContentRecommendationRepository contentRecommendationRepository;
 
-    public Page<Content> getAllContents(Pageable pageable, String sortType) {
+    @Override
+    public ContentPageDto getAllContents(Pageable pageable, String sortType, Long userId) {
         if (sortType == null) {
-            sortType = "recent";
+            sortType = "id_asc";
         }
 
+        Page<Content> contentsPage;
         if ("recent".equalsIgnoreCase(sortType)) {
-            return contentRepository.findAll(pageable);
+            contentsPage = contentRepository.findAllByOrderByReleaseDateDesc(pageable);
         } else if ("popular".equalsIgnoreCase(sortType)) {
-            return contentRepository.findAllOrderByPopularity(pageable);
+            contentsPage = contentRepository.findAllOrderByPopularity(pageable);
+        } else if("id_asc".equalsIgnoreCase(sortType)) {
+            contentsPage = contentRepository.findAllByContentIdAsc(pageable);
         } else {
-            throw new IllegalArgumentException("지원하지 않는 정렬 타입입니다: " + sortType);
+            throw new IllegalArgumentException("Unsupported sort type: " + sortType);
         }
+
+        ContentPageDto responseDto = new ContentPageDto(contentsPage);
+
+        if (userId != null && !contentsPage.isEmpty()) {
+            User user = userRepository.findById(userId).orElse(null);
+
+            if (user == null) {
+                return responseDto;
+            }
+
+            Set<ContentId> contentIdsOnPage = contentsPage.getContent().stream()
+                    .map(Content::getContentId)
+                    .collect(Collectors.toSet());
+
+            List<ContentReaction> userReactionsOnPage = contentReactionRepository.findByUserIdAndContentIds(user.getUserId(), contentIdsOnPage);
+
+            Map<ContentId, ReactionType> userReactionMap = userReactionsOnPage.stream()
+                    .collect(Collectors.toMap(
+                            cr -> cr.getContent().getContentId(),
+                            ContentReaction::getReaction
+                    ));
+
+            responseDto.getContents().forEach(dto -> {
+                ContentId dtoContentId = new ContentId(dto.getId(), dto.getType());
+                ReactionType reaction = userReactionMap.get(dtoContentId);
+                System.out.println("DEBUG: Processing DTO: " + dtoContentId + ", Found Reaction: " + reaction);
+
+                if (reaction != null) {
+                    dto.setUserReaction(reaction == ReactionType.LIKE, reaction == ReactionType.DISLIKE);
+                } else {
+                    dto.setUserReaction(false, false);
+                }
+            });
+        }
+        return responseDto;
     }
 
     @Override
