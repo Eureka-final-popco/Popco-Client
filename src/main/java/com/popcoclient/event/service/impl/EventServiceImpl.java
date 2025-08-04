@@ -613,48 +613,48 @@ public class EventServiceImpl {
      */
     private RedisScript<Long> createSubmitAnswerScript() {
         String script = """
-        -- Redis Keys
-        local survivorKey = KEYS[1]     -- 생존자 랭킹 (Sorted Set)
-        local countKey = KEYS[2]        -- 선착순 순위 카운터 (String)
-        local progressKey = KEYS[3]     -- 문제 진행 정보 (Hash)
-        
-        -- Arguments
-        local userId = ARGV[1]          -- 사용자 ID
-        local submissionTime = tonumber(ARGV[2])  -- 제출 시간
-        local firstCapacity = tonumber(ARGV[3])   -- 선착순 인원 제한
-        
-        -- 1. 중복 참여 확인
-        if redis.call('ZSCORE', survivorKey, userId) then
-            return -1 -- 이미 참여함
-        end
-        
-        -- 2. 원자적으로 순위 할당
-        local currentRank = redis.call('INCR', countKey)
-        
-        -- 3. 정원 내 여부 확인
-        if currentRank <= firstCapacity then
-            -- 생존자 목록에 추가
-            redis.call('ZADD', survivorKey, submissionTime, userId)
-            
-            -- 진행 정보 업데이트
-            redis.call('HSET', progressKey, 'lastUpdate', submissionTime)
-            redis.call('HSET', progressKey, 'totalSubmissions', currentRank)
-            redis.call('HSET', progressKey, 'survivors', redis.call('ZCARD', survivorKey))
-            
-            -- TTL 설정
-            if currentRank == 1 then
-                redis.call('EXPIRE', survivorKey, 180)
-                redis.call('EXPIRE', countKey, 180)
-                redis.call('EXPIRE', progressKey, 180)
-            end
-            
-            return currentRank
-        else
-            -- 정원 초과
-            redis.call('HSET', progressKey, 'totalSubmissions', currentRank)
-            return 0
-        end
-        """;
+                -- Redis Keys
+                local survivorKey = KEYS[1]     -- 생존자 랭킹 (Sorted Set)
+                local countKey = KEYS[2]        -- 선착순 순위 카운터 (String)
+                local progressKey = KEYS[3]     -- 문제 진행 정보 (Hash)
+                
+                -- Arguments
+                local userId = ARGV[1]          -- 사용자 ID
+                local submissionTime = tonumber(ARGV[2])  -- 제출 시간
+                local firstCapacity = tonumber(ARGV[3])   -- 선착순 인원 제한
+                
+                -- 1. 중복 참여 확인
+                if redis.call('ZSCORE', survivorKey, userId) then
+                    return -1 -- 이미 참여함
+                end
+                
+                -- 2. 원자적으로 순위 할당
+                local currentRank = redis.call('INCR', countKey)
+                
+                -- 3. 정원 내 여부 확인
+                if currentRank <= firstCapacity then
+                    -- 생존자 목록에 추가
+                    redis.call('ZADD', survivorKey, submissionTime, userId)
+                
+                    -- 진행 정보 업데이트
+                    redis.call('HSET', progressKey, 'lastUpdate', submissionTime)
+                    redis.call('HSET', progressKey, 'totalSubmissions', currentRank)
+                    redis.call('HSET', progressKey, 'survivors', redis.call('ZCARD', survivorKey))
+                
+                    -- TTL 설정
+                    if currentRank == 1 then
+                        redis.call('EXPIRE', survivorKey, 30)
+                        redis.call('EXPIRE', countKey, 30)
+                        redis.call('EXPIRE', progressKey, 30)
+                    end
+                
+                    return currentRank
+                else
+                    -- 정원 초과
+                    redis.call('HSET', progressKey, 'totalSubmissions', currentRank)
+                    return 0
+                end
+                """;
 
         DefaultRedisScript<Long> redisScript = new DefaultRedisScript<>();
         redisScript.setScriptText(script);

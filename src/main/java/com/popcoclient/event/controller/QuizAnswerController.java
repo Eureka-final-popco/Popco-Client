@@ -65,7 +65,6 @@ public class QuizAnswerController {
             @Valid @RequestBody SubmitAnswerRequestDto request) {
 
         Long userId = jwtProvider.getRequiredUserId();
-        // 🎯 모든 로직을 서비스에 위임
         return ResponseEntity.ok(ApiResponse.success(quizAnswerService.submitAnswer(quizId, questionId, userId, request.getOptionId())));
     }
 
