@@ -50,6 +50,7 @@ public class EventServiceImpl {
     // ===== 타이머 관리 (메모리) =====
     private final Map<String, Long> activeTimers = new ConcurrentHashMap<>(); // key: "quizId:questionId", value: 시작시간
     private final Map<String, ScheduledFuture<?>> activeBroadcasts = new ConcurrentHashMap<>();
+    private final Map<Long, ScheduledFuture<?>> waitingTimerBroadcasts = new ConcurrentHashMap<>();
 
     public EventServiceImpl(
             DistributeLockServiceImpl lockService,
@@ -142,11 +143,6 @@ public class EventServiceImpl {
 
             // 🏁 5단계: 정답자 선착순 처리
             QuizSubmissionResultDto result = processCorrectAnswer(question, selectedOption, attempt, startTime);
-
-//            // 🚀 6단계: 통과자라면 다음 문제 준비 체크
-//            if (result.isSurvived()) {
-//                checkAndStartNextQuestionAfterTimeout(quizId, questionId);
-//            }
 
             return result;
 
@@ -506,6 +502,121 @@ public class EventServiceImpl {
         }
     }
 
+    /**
+     * ⏰ 이벤트 시작까지 남은 시간 조회
+     */
+    public QuizWaitingResponseDto getEventTimer(Long quizId) {
+        try {
+            Quiz quiz = quizRepository.findById(quizId)
+                    .orElseThrow(() -> new BusinessException(ErrorCode.QUIZ_NOT_FOUND));
+
+            LocalDateTime currentTime = LocalDateTime.now();
+            LocalDateTime eventStartTime = quiz.getStartAt(); // Quiz 엔티티의 시작 시간 필드명에 맞게 수정 필요
+
+            Duration duration = Duration.between(currentTime, eventStartTime);
+            long remainingSeconds = Math.max(0, duration.getSeconds());
+
+            // 이벤트 상태 판단
+            boolean isEventStarted = currentTime.isAfter(eventStartTime) || currentTime.isEqual(eventStartTime);
+            QuizStatus quizStatus;
+
+            if (isEventStarted) {
+                // 이미 시작되었는지 확인 (첫 번째 문제가 활성화되어 있는지)
+                String firstQuestionTimerKey = quizId + ":" + 1L;
+                if (activeTimers.containsKey(firstQuestionTimerKey)) {
+                    quizStatus = QuizStatus.ACTIVE;
+                } else {
+                    quizStatus = QuizStatus.FINISHED;
+                }
+            } else {
+                quizStatus = QuizStatus.WAITING;
+            }
+
+            // 포맷된 시간 문자열 생성
+            List<Long> formattedTime = formatRemainingTime(remainingSeconds);
+
+            return QuizWaitingResponseDto.builder()
+                    .quizId(quiz.getQuizId())
+                    .remainingHour(formattedTime.get(0))
+                    .remainingMin(formattedTime.get(1))
+                    .remainingSec(formattedTime.get(2))
+                    .quizStatus(quizStatus)
+                    .remainingTime(remainingSeconds)
+                    .build();
+
+        } catch (BusinessException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("Failed to get event timer - quizId: {}", quizId, e);
+            throw new RuntimeException("이벤트 타이머 조회에 실패했습니다.", e);
+        }
+    }
+
+    /**
+     * ⏰ 이벤트 대기 타이머 브로드캐스트 시작
+     */
+    public Void startEventWaitingBroadcast(Long quizId) {
+        try {
+            // 이미 브로드캐스트 중인지 확인
+            if (waitingTimerBroadcasts.containsKey(quizId)) {
+                log.info("이미 대기 타이머 브로드캐스트 중 - quizId: {}", quizId);
+            }
+
+            Quiz quiz = quizRepository.findById(quizId)
+                    .orElseThrow(() -> new BusinessException(ErrorCode.QUIZ_NOT_FOUND));
+
+            LocalDateTime eventStartTime = quiz.getStartAt(); // 실제 필드명에 맞게 수정 필요
+            LocalDateTime currentTime = LocalDateTime.now();
+
+            // 이미 시작된 이벤트는 브로드캐스트하지 않음
+            if (currentTime.isAfter(eventStartTime) || currentTime.isEqual(eventStartTime)) {
+                log.info("이미 시작된 이벤트 - 대기 타이머 브로드캐스트 생략 - quizId: {}", quizId);
+            }
+
+            log.info("🚀 이벤트 대기 타이머 브로드캐스트 시작 - quizId: {}", quizId);
+
+            // 1초마다 타이머 브로드캐스트
+            ScheduledFuture<?> waitingBroadcast = taskScheduler.scheduleAtFixedRate(() -> {
+                try {
+                    QuizWaitingResponseDto timerInfo = getEventTimer(quizId);
+                    String waitingTopic = "/topic/quiz/" + quizId + "/waiting";
+                    messagingTemplate.convertAndSend(waitingTopic, timerInfo);
+
+                    // 이벤트 시작되면 대기 브로드캐스트 중단
+                    if (timerInfo.getQuizStatus() != QuizStatus.WAITING || timerInfo.getRemainingTime() <= 0) {
+                        log.info("⏰ 이벤트 시작! 대기 타이머 브로드캐스트 중단 - quizId: {}", quizId);
+                        stopEventWaitingBroadcast(quizId);
+                    }
+
+                } catch (Exception e) {
+                    log.error("대기 타이머 브로드캐스트 실패 - quizId: {}", quizId, e);
+                }
+            }, Instant.now(), Duration.ofSeconds(1));
+
+            waitingTimerBroadcasts.put(quizId, waitingBroadcast);
+            log.info("✅ 대기 타이머 브로드캐스트 등록 완료 - quizId: {} (전체 {}개)",
+                    quizId, waitingTimerBroadcasts.size());
+
+        } catch (Exception e) {
+            log.error("대기 타이머 브로드캐스트 시작 실패 - quizId: {}", quizId, e);
+        }
+
+        return null;
+    }
+
+    /**
+     * ⏰ 이벤트 대기 타이머 브로드캐스트 중단
+     */
+    public void stopEventWaitingBroadcast(Long quizId) {
+        ScheduledFuture<?> broadcast = waitingTimerBroadcasts.remove(quizId);
+        if (broadcast != null && !broadcast.isCancelled()) {
+            broadcast.cancel(false);
+            log.info("🗑️ 대기 타이머 브로드캐스트 중단 - quizId: {} (남은 {}개)",
+                    quizId, waitingTimerBroadcasts.size());
+        }
+    }
+
+
     // ===== 🛠️ 헬퍼 메서드들 =====
 
     private QuizSubmissionResultDto createErrorResult(QuizSubmissionResultDto.SubmissionStatus status, String message) {
@@ -597,6 +708,21 @@ public class EventServiceImpl {
                 .build();
         attempt.addAnswer(correctAnswer);
         return userQuizAnswerRepository.save(correctAnswer);
+    }
+
+    /**
+     * 남은 시간을 사용자 친화적 형식으로 포맷
+     */
+    private List<Long> formatRemainingTime(long seconds) {
+        long hours = seconds / 3600;
+        long minutes = (seconds % 3600) / 60;
+        long secs = seconds % 60;
+
+        List<Long> timers = new ArrayList<>();
+        timers.add(hours);
+        timers.add(minutes);
+        timers.add(secs);
+        return timers;
     }
 
     /**
