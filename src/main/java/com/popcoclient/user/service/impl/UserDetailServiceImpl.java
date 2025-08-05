@@ -48,7 +48,8 @@ public class UserDetailServiceImpl implements UserDetailService {
             throw new UserDetailAlreadyExistsException("이미 작성된 유저 정보가 존재합니다.");
         }
 
-        UserDetail userDetail = UserDetail.of(request, user);
+        String gender = UserDetail.parseGender(request.getGender());
+        UserDetail userDetail = UserDetail.of(request, user, gender);
         userDetailRepository.save(userDetail);
 
         return new UserCreateResponseDto(user.getUserId());

@@ -37,13 +37,24 @@ public class UserDetail {
     @JoinColumn(name = "user_id")
     private User user;
 
-    public static UserDetail of(UserDetailCreateRequestDto request, User user) {
+    public static UserDetail of(UserDetailCreateRequestDto request, User user, String gender) {
         return UserDetail.builder()
                 .user(user)
                 .nickname(request.getNickname())
                 .profilePath(null)
                 .birthdate(request.getBirthday())
-                .gender(request.getGender())
+                .gender(gender)
                 .build();
     }
+
+    public static String parseGender(String gender) {
+        if (gender == null) return null;
+
+        return switch (gender.toUpperCase()) {
+            case "MALE" -> "M";
+            case "FEMALE" -> "F";
+            default -> null; // 또는 gender 그대로 반환
+        };
+    }
+
 }
