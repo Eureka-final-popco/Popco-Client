@@ -32,6 +32,10 @@ public interface ContentReactionRepository extends JpaRepository<ContentReaction
     List<ContentReaction> findByUserIdAndContentIds(@Param("userId") Long userId,
                                                     @Param("contentIds") Set<ContentId> contentIds);
 
+    @Query("SELECT new com.popcoclient.content.entity.key.ContentId(cr.content.contentId.id, cr.content.contentId.type) " +
+            "FROM ContentReaction cr WHERE cr.user.userId = :userId AND cr.reaction = :reactionType")
+    Set<ContentId> findContentIdsByUserAndReaction(@Param("userId") Long userId, @Param("reactionType") ReactionType reactionType);
+
     @Query("SELECT cr FROM ContentReaction cr " +
             "WHERE cr.user.userId = :userId " +
             "AND cr.content.contentId.id = :contentId " +

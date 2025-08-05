@@ -44,4 +44,10 @@ public class ContentFilterDocument {
 
     @Field(type = FieldType.Date, format = DateFormat.date)
     private LocalDate releaseDate;
+
+    @Field(type = FieldType.Keyword)
+    private String posterPath;
+
+    @Field(type = FieldType.Float)
+    private Float popularityScore;
 }
