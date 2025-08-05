@@ -47,12 +47,19 @@ public class QuizAnswerController {
     }
 
     @PostMapping("/{quizId}/start")
-    @Operation(summary = "퀴즈 시작 (문제1 타이머 시작)", description = "이벤트 시작 시간이 되면 해당 메서드 호출, 이후 2번 문제부터는 자동화")
+    @Operation(summary = "퀴즈 시작 (문제1 타이머 시작), 테스트용", description = "이벤트 시작 시간이 되면 해당 메서드 호출, 이후 2번 문제부터는 자동화, 본 서버에서는 스케줄링으로 알아서 호출 예정, 프론트에서 요청하지 않아도 됨")
     public ResponseEntity<ApiResponse<String>> startQuiz(@PathVariable Long quizId) {
         quizAnswerService.startFirstQuestion(quizId);
         return ResponseEntity.ok(ApiResponse.success("퀴즈가 시작되었습니다"));
     }
 
+    @PostMapping("/{quizId}/waiting")
+    @SecurityRequirement(name = "bearerAuth")
+    @Operation(summary = "이벤트 페이지 접근 시 브로드캐스트", description = "사용자가 이벤트 페이지에 접근하면서 실행, 브로드캐스트의 트리거")
+    public ResponseEntity<ApiResponse<Void>> waitQuiz(@PathVariable Long quizId) {
+        Long userId = jwtProvider.getRequiredUserId();
+        return ResponseEntity.ok(ApiResponse.success(quizAnswerService.startEventWaitingBroadcast(quizId)));
+    }
     /**
      * 🎯 답안 제출 API
      */
