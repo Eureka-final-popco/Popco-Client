@@ -13,13 +13,13 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class PaginatedContentFilterResponseDto {
-    private List<ContentFilterDocument> contents;
+    private List<FilteredContentItemResponseDto> contents;
     private long totalElements;
     private int page;
     private int size;
     private int totalPages;
 
-    public PaginatedContentFilterResponseDto(List<ContentFilterDocument> contents, long totalElements, int page, int size) {
+    public PaginatedContentFilterResponseDto(List<FilteredContentItemResponseDto> contents, long totalElements, int page, int size) {
         this.contents = contents;
         this.totalElements = totalElements;
         this.page = page;

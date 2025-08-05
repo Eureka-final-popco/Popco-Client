@@ -13,15 +13,18 @@ import com.popcoclient.exception.business.UserNotFoundException;
 import com.popcoclient.user.entity.User;
 import com.popcoclient.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Optional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class QuizServiceImpl implements QuizService {
@@ -103,10 +106,11 @@ public class QuizServiceImpl implements QuizService {
     }
 
     private Optional<Quiz> getTodayQuiz() {
-        LocalDate today = LocalDate.now(); // 테스트 용이성 ↑
+        LocalDate today = LocalDate.now(ZoneId.of("Asia/Seoul"));
         LocalDateTime start = today.atStartOfDay();
         LocalDateTime end = today.plusDays(1).atStartOfDay();
 
+        log.info("today : " + today + ", start : " + start + ", end : " + end);
         return quizRepository.findFirstByStartAtBetween(start, end);
     }
 

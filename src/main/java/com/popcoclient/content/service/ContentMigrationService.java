@@ -1,23 +1,19 @@
 package com.popcoclient.content.service;
 
-import com.popcoclient.content.document.ContentDocument;
 import com.popcoclient.content.document.ContentFilterDocument;
 import com.popcoclient.content.repository.filter.ContentFilterRepository;
-import com.popcoclient.content.repository.search.ContentSearchRepository; // ElasticContentRepository로 이름 변경됨
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import jakarta.annotation.PostConstruct;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -25,16 +21,16 @@ import java.util.stream.Collectors;
 @Slf4j
 public class ContentMigrationService {
 
-    private final ContentSearchRepository contentSearchRepository;
     private final ContentFilterRepository contentFilterRepository;
     private final JdbcTemplate jdbcTemplate;
 
     private Map<Integer, String> allGenresMap;
     private Map<Integer, String> allProvidersMap;
+    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
     @PostConstruct
     public void init() {
-        log.info("Loading all genres from DB...");
+        log.info("DB에서 모든 장르 로드 중...");
         allGenresMap = jdbcTemplate.query(
                 "SELECT id, name FROM genres",
                 (rs, rowNum) -> Map.entry(rs.getInt("id"), rs.getString("name"))
@@ -42,9 +38,9 @@ public class ContentMigrationService {
                 Map.Entry::getKey,
                 Map.Entry::getValue
         ));
-        log.info("Loaded {} genres.", allGenresMap.size());
+        log.info("{}개의 장르 로드 완료.", allGenresMap.size());
 
-        log.info("Loading all providers from DB...");
+        log.info("DB에서 모든 제공자 로드 중...");
         allProvidersMap = jdbcTemplate.query(
                 "SELECT id, name FROM providers",
                 (rs, rowNum) -> Map.entry(rs.getInt("id"), rs.getString("name"))
@@ -52,112 +48,94 @@ public class ContentMigrationService {
                 Map.Entry::getKey,
                 Map.Entry::getValue
         ));
-        log.info("Loaded {} providers.", allProvidersMap.size());
+        log.info("{}개의 제공자 로드 완료.", allProvidersMap.size());
     }
 
     @PostConstruct
     @Transactional(readOnly = true)
     public void migrateContentDataToFilterIndex() {
-        log.info("Starting content data migration to contents_filter index...");
+        log.info("RDB에서 contents_filter 인덱스로 콘텐츠 데이터 마이그레이션 시작...");
 
-        if (contentSearchRepository.count() == 0) {
-            log.warn("No documents found in 'contents' index. Skipping migration.");
-            return;
+        Map<String, List<Integer>> contentGenresMap = new java.util.HashMap<>();
+        jdbcTemplate.query(
+                "SELECT content_id, content_type, genre_id FROM content_genres",
+                (rs) -> {
+                    String key = rs.getLong("content_id") + "_" + rs.getString("content_type");
+                    contentGenresMap.computeIfAbsent(key, k -> new java.util.ArrayList<>()).add(rs.getInt("genre_id"));
+                }
+        );
+        log.info("콘텐츠-장르 매핑 로드 완료. 총 {}개의 매핑 항목.", contentGenresMap.size());
+
+        Map<String, List<Integer>> contentPlatformsMap = new java.util.HashMap<>();
+        jdbcTemplate.query(
+                "SELECT content_id, type AS content_type, provider_id FROM watch_providers",
+                (rs) -> {
+                    String key = rs.getLong("content_id") + "_" + rs.getString("content_type");
+                    contentPlatformsMap.computeIfAbsent(key, k -> new java.util.ArrayList<>()).add(rs.getInt("provider_id"));
+                }
+        );
+        log.info("콘텐츠-플랫폼 매핑 로드 완료. 총 {}개의 매핑 항목.", contentPlatformsMap.size());
+
+        String contentSql = "SELECT id, type, title, rating_average, release_date, poster_path FROM contents";
+        int batchSize = 1000;
+        List<ContentFilterDocument> filterDocuments = new ArrayList<>(batchSize);
+
+        jdbcTemplate.query(contentSql, rs -> {
+            Long contentId = ((Number) rs.getObject("id")).longValue();
+            String contentType = (String) rs.getObject("type");
+            String compositeKeyString = contentId + "_" + contentType;
+
+            List<String> genres = contentGenresMap.getOrDefault(compositeKeyString, Collections.emptyList())
+                    .stream()
+                    .map(genreId -> allGenresMap.getOrDefault(genreId, null))
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toList());
+
+            List<String> platforms = contentPlatformsMap.getOrDefault(compositeKeyString, Collections.emptyList())
+                    .stream()
+                    .map(providerId -> allProvidersMap.getOrDefault(providerId, null))
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toList());
+
+            BigDecimal ratingAverage = rs.getObject("rating_average") instanceof BigDecimal ?
+                    (BigDecimal) rs.getObject("rating_average") :
+                    null;
+
+            ContentFilterDocument doc = ContentFilterDocument.builder()
+                    .id(compositeKeyString)
+                    .contentId(contentId)
+                    .title((String) rs.getObject("title"))
+                    .genres(genres)
+                    .platforms(platforms)
+                    .contentType(contentType)
+                    .releaseDate(rs.getObject("release_date") != null ? LocalDate.parse(rs.getObject("release_date").toString(), DATE_FORMATTER) : null)
+                    .ratingAverage(ratingAverage)
+                    .posterPath((String) rs.getObject("poster_path"))
+                    .popularityScore(null)
+                    .build();
+
+            filterDocuments.add(doc);
+
+            if (filterDocuments.size() >= batchSize) {
+                try {
+                    contentFilterRepository.saveAll(filterDocuments);
+                    log.info("contents_filter 인덱스로 {}개의 문서 마이그레이션 완료.", filterDocuments.size());
+                } catch (Exception e) {
+                    log.error("배치 저장 중 오류 발생: {}", e.getMessage());
+                }
+                filterDocuments.clear();
+            }
+        });
+
+        if (!filterDocuments.isEmpty()) {
+            try {
+                contentFilterRepository.saveAll(filterDocuments);
+                log.info("contents_filter 인덱스로 {}개의 문서 마이그레이션 완료.", filterDocuments.size());
+            } catch (Exception e) {
+                log.error("배치 저장 중 오류 발생: {}", e.getMessage());
+            }
         }
 
-        int pageNumber = 0;
-        int pageSize = 1000;
-        Page<ContentDocument> contentPage;
-
-        do {
-            contentPage = contentSearchRepository.findAll(PageRequest.of(pageNumber, pageSize));
-
-            List<Map.Entry<Long, String>> compositeKeys = contentPage.getContent().stream()
-                    .map(esContent -> Map.entry(esContent.getContentId(), esContent.getContentType()))
-                    .collect(Collectors.toList());
-
-            if (compositeKeys.isEmpty() && !contentPage.isEmpty()) {
-                break;
-            } else if (compositeKeys.isEmpty()) {
-                break;
-            }
-
-            String contentIdPlaceholders = compositeKeys.stream()
-                    .map(key -> "(?, ?)")
-                    .collect(Collectors.joining(","));
-
-            Object[] params = new Object[compositeKeys.size() * 2];
-            for (int i = 0; i < compositeKeys.size(); i++) {
-                params[i * 2] = compositeKeys.get(i).getKey();
-                params[i * 2 + 1] = compositeKeys.get(i).getValue();
-            }
-
-            Map<String, List<Integer>> contentGenresMap = jdbcTemplate.query(
-                    String.format("SELECT cg.content_id, cg.content_type, cg.genre_id FROM content_genres cg " +
-                            "WHERE (cg.content_id, cg.content_type) IN (%s)", contentIdPlaceholders),
-                    params,
-                    (rs) -> {
-                        Map<String, List<Integer>> map = new java.util.HashMap<>();
-                        while (rs.next()) {
-                            String key = rs.getLong("content_id") + "_" + rs.getString("content_type");
-                            map.computeIfAbsent(key, k -> new java.util.ArrayList<>()).add(rs.getInt("genre_id"));
-                        }
-                        return map;
-                    }
-            );
-
-            Map<String, List<Integer>> contentPlatformsMap = jdbcTemplate.query(
-                    String.format("SELECT wp.content_id, wp.type AS content_type, wp.provider_id FROM watch_providers wp " +
-                            "WHERE (wp.content_id, wp.type) IN (%s)", contentIdPlaceholders),
-                    params,
-                    (rs) -> {
-                        Map<String, List<Integer>> map = new java.util.HashMap<>();
-                        while (rs.next()) {
-                            String key = rs.getLong("content_id") + "_" + rs.getString("content_type");
-                            map.computeIfAbsent(key, k -> new java.util.ArrayList<>()).add(rs.getInt("provider_id"));
-                        }
-                        return map;
-                    }
-            );
-
-            List<ContentFilterDocument> filterDocuments = contentPage.getContent().stream()
-                    .map(esContent -> {
-                        String compositeKeyString = esContent.getContentId() + "_" + esContent.getContentType();
-
-                        List<String> genres = contentGenresMap.getOrDefault(compositeKeyString, Collections.emptyList())
-                                .stream()
-                                .map(genreId -> allGenresMap.getOrDefault(genreId, null))
-                                .filter(name -> name != null)
-                                .collect(Collectors.toList());
-
-                        List<String> platforms = contentPlatformsMap.getOrDefault(compositeKeyString, Collections.emptyList())
-                                .stream()
-                                .map(providerId -> allProvidersMap.getOrDefault(providerId, null))
-                                .filter(name -> name != null)
-                                .collect(Collectors.toList());
-
-                        return ContentFilterDocument.builder()
-                                .id(esContent.getId())
-                                .contentId(esContent.getContentId())
-                                .title(esContent.getTitle())
-                                .genres(genres)
-                                .platforms(platforms)
-                                .contentType(esContent.getContentType())
-                                .ratingAverage(esContent.getRatingAverage())
-                                .releaseDate(esContent.getReleaseDate())
-                                .build();
-                    })
-                    .collect(Collectors.toList());
-
-            if (!filterDocuments.isEmpty()) {
-                contentFilterRepository.saveAll(filterDocuments);
-                log.info("Migrated {} documents to contents_filter index. Total migrated so far: {}",
-                        filterDocuments.size(), (pageNumber + 1) * pageSize);
-            }
-
-            pageNumber++;
-        } while (contentPage.hasNext());
-
-        log.info("Content data migration to contents_filter index finished.");
+        log.info("RDB에서 contents_filter 인덱스로 콘텐츠 데이터 마이그레이션이 성공적으로 완료되었습니다.");
     }
 }

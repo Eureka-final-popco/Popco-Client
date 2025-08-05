@@ -210,7 +210,7 @@ public class RedisConfig {
     @Bean
     public RedisCacheConfiguration quizCacheConfiguration() {
         return RedisCacheConfiguration.defaultCacheConfig()
-                .entryTtl(Duration.ofHours(2)) // 퀴즈 이벤트는 2시간 캐시
+                .entryTtl(Duration.ofMinutes(5)) // 퀴즈 이벤트는 2시간 캐시
                 .serializeKeysWith(RedisSerializationContext.SerializationPair.fromSerializer(new StringRedisSerializer()))
                 .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(new Jackson2JsonRedisSerializer<>(Object.class)))
                 .prefixCacheNameWith("quiz:")
