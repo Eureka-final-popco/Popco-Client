@@ -56,9 +56,6 @@ public class ContentMigrationService {
     public void migrateContentDataToFilterIndex() {
         log.info("RDB에서 contents_filter 인덱스로 콘텐츠 데이터 마이그레이션 시작...");
 
-        log.info("새로운 마이그레이션을 위해 contents_filter 인덱스의 기존 문서들을 모두 삭제합니다.");
-        contentFilterRepository.deleteAll();
-
         Map<String, List<Integer>> contentGenresMap = new java.util.HashMap<>();
         jdbcTemplate.query(
                 "SELECT content_id, content_type, genre_id FROM content_genres",
@@ -83,7 +80,6 @@ public class ContentMigrationService {
         int batchSize = 1000;
         List<ContentFilterDocument> filterDocuments = new ArrayList<>(batchSize);
 
-        // Stream 방식으로 데이터를 처리하여 메모리 효율성 개선
         jdbcTemplate.query(contentSql, rs -> {
             Long contentId = ((Number) rs.getObject("id")).longValue();
             String contentType = (String) rs.getObject("type");
@@ -115,23 +111,29 @@ public class ContentMigrationService {
                     .releaseDate(rs.getObject("release_date") != null ? LocalDate.parse(rs.getObject("release_date").toString(), DATE_FORMATTER) : null)
                     .ratingAverage(ratingAverage)
                     .posterPath((String) rs.getObject("poster_path"))
-                    .popularityScore(null) // FastAPI에서 가져오는 점수이므로 초기값은 null
+                    .popularityScore(null)
                     .build();
 
             filterDocuments.add(doc);
 
             if (filterDocuments.size() >= batchSize) {
-                contentFilterRepository.saveAll(filterDocuments);
-                log.info("contents_filter 인덱스로 {}개의 문서 마이그레이션 완료.", filterDocuments.size());
+                try {
+                    contentFilterRepository.saveAll(filterDocuments);
+                    log.info("contents_filter 인덱스로 {}개의 문서 마이그레이션 완료.", filterDocuments.size());
+                } catch (Exception e) {
+                    log.error("배치 저장 중 오류 발생: {}", e.getMessage());
+                }
                 filterDocuments.clear();
             }
         });
 
         if (!filterDocuments.isEmpty()) {
-            contentFilterRepository.saveAll(filterDocuments);
-            log.info("contents_filter 인덱스로 남은 {}개의 문서 마이그레이션 완료. 총 문서 수: {}",
-                    filterDocuments.size(),
-                    contentFilterRepository.count());
+            try {
+                contentFilterRepository.saveAll(filterDocuments);
+                log.info("contents_filter 인덱스로 {}개의 문서 마이그레이션 완료.", filterDocuments.size());
+            } catch (Exception e) {
+                log.error("배치 저장 중 오류 발생: {}", e.getMessage());
+            }
         }
 
         log.info("RDB에서 contents_filter 인덱스로 콘텐츠 데이터 마이그레이션이 성공적으로 완료되었습니다.");
