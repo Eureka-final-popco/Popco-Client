@@ -6,6 +6,7 @@ import com.popcoclient.event.dto.response.ConnectionStatusResponseDto;
 import com.popcoclient.event.service.impl.SseNotificationManagementService;
 import com.popcoclient.event.service.impl.SseNotificationService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -29,6 +30,7 @@ public class SseController {
     private final JwtProvider jwtProvider;
 
     @Operation(summary = "SSE 채널 구독 API", description = "프론트에서 new EventSource('/notifications/stream') 으로 이벤트 서버 연결, 이후 송신은 자동처리됨")
+    @SecurityRequirement(name = "bearerAuth")
     @GetMapping(value = "/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public SseEmitter streamNotifications(
             HttpServletRequest request
