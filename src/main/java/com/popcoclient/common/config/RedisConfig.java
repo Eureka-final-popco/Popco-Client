@@ -171,7 +171,7 @@ public class RedisConfig {
             MessageListenerAdapter notificationRedisMessageListenerAdapter
     ) {
         RedisMessageListenerContainer container = new RedisMessageListenerContainer();
-        container.setConnectionFactory(eventRedisConnectionFactory());
+        container.setConnectionFactory(connectionFactory);
         container.addMessageListener(notificationRedisMessageListenerAdapter, new ChannelTopic("notifications"));
         container.setTaskExecutor(Executors.newFixedThreadPool(10));
 
