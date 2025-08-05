@@ -72,13 +72,13 @@ public class ElasticsearchIndexInitializer {
               "ngram_tokenizer": {
                 "type": "ngram",
                 "min_gram": 2,
-                "max_gram": 3,
+                "max_gram": 10,
                 "token_chars": ["letter", "digit"]
               },
               "edge_ngram_tokenizer": {
                 "type": "edge_ngram",
                 "min_gram": 1,
-                "max_gram": 10,
+                "max_gram": 20,
                 "token_chars": ["letter", "digit"]
               }
             }

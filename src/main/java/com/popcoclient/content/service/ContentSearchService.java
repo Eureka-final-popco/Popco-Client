@@ -162,28 +162,81 @@ public class ContentSearchService {
         return results;
     }
 
-    // 고급 검색 - 배우 검색 기능 추가
+    // 고급 검색
     public Page<ContentSearchResponse> advancedSearch(String keyword, String contentType,
                                                       List<String> actors, Long userId,
                                                       Pageable pageable) {
         log.info("Advanced search - keyword: {}, type: {}, actors: {}, userId: {}, page: {}",
                 keyword, contentType, actors, userId, pageable.getPageNumber());
 
-        // Elasticsearch 검색 로직 (기존과 동일)
         BoolQuery.Builder boolBuilder = new BoolQuery.Builder();
 
+        // 키워드 검색 개선
         if (keyword != null && !keyword.trim().isEmpty()) {
+            String keywordNoSpace = keyword.replaceAll("\\s+", "");
+
             boolBuilder.must(m -> m
-                    .multiMatch(mm -> mm
-                            .query(keyword)
-                            .fields("title^3", "title.ngram^2", "overview",
-                                    "cast.actorName", "cast.characterName",
-                                    "crew.name")
-                            .type(co.elastic.clients.elasticsearch._types.query_dsl.TextQueryType.BestFields)
-                    )
+                    .bool(b -> {
+                        // 원본 키워드 검색
+                        b.should(s -> s
+                                .multiMatch(mm -> mm
+                                        .query(keyword)
+                                        .fields("title^5", "title.keyword^4", "overview",
+                                                "cast.actorName", "cast.characterName",
+                                                "crew.name")
+                                        .type(co.elastic.clients.elasticsearch._types.query_dsl.TextQueryType.BestFields)
+                                )
+                        );
+
+                        // 공백 제거 버전
+                        if (!keyword.equals(keywordNoSpace)) {
+                            b.should(s -> s
+                                    .wildcard(w -> w
+                                            .field("title.keyword")
+                                            .value("*" + keywordNoSpace + "*")
+                                            .caseInsensitive(true)
+                                    )
+                            );
+
+                            b.should(s -> s
+                                    .match(match -> match
+                                            .field("title.ngram")
+                                            .query(keywordNoSpace)
+                                    )
+                            );
+                        }
+
+                        // Fuzzy 검색
+                        b.should(s -> s
+                                .fuzzy(f -> f
+                                        .field("title")
+                                        .value(keyword)
+                                        .fuzziness("AUTO")
+                                )
+                        );
+
+                        // 각 단어로 분리해서 검색
+                        String[] words = keyword.split("\\s+");
+                        if (words.length > 1) {
+                            BoolQuery.Builder mustBuilder = new BoolQuery.Builder();
+                            for (String word : words) {
+                                mustBuilder.must(m2 -> m2
+                                        .match(match -> match
+                                                .field("title")
+                                                .query(word)
+                                        )
+                                );
+                            }
+                            b.should(s -> s.bool(mustBuilder.build()));
+                        }
+
+                        b.minimumShouldMatch("1");
+                        return b;
+                    })
             );
         }
 
+        // 콘텐츠 타입 필터
         if (contentType != null && !contentType.isEmpty()) {
             boolBuilder.filter(f -> f
                     .term(t -> t
@@ -193,16 +246,48 @@ public class ContentSearchService {
             );
         }
 
+        // 배우 검색 - 모든 배우가 포함된 콘텐츠만 검색
         if (actors != null && !actors.isEmpty()) {
             for (String actor : actors) {
+                // 배우 이름도 공백 처리
+                String actorNoSpace = actor.replaceAll("\\s+", "");
+
                 boolBuilder.must(m -> m
                         .nested(n -> n
                                 .path("cast")
                                 .query(q -> q
-                                        .match(match -> match
-                                                .field("cast.actorName")
-                                                .query(actor)
-                                        )
+                                        .bool(b -> {
+                                            // 원본 배우 이름
+                                            b.should(s -> s
+                                                    .match(match -> match
+                                                            .field("cast.actorName")
+                                                            .query(actor)
+                                                    )
+                                            );
+
+                                            // 공백 제거한 배우 이름
+                                            if (!actor.equals(actorNoSpace)) {
+                                                b.should(s -> s
+                                                        .wildcard(w -> w
+                                                                .field("cast.actorName.keyword")
+                                                                .value("*" + actorNoSpace + "*")
+                                                                .caseInsensitive(true)
+                                                        )
+                                                );
+                                            }
+
+                                            // Fuzzy 매칭
+                                            b.should(s -> s
+                                                    .fuzzy(f -> f
+                                                            .field("cast.actorName")
+                                                            .value(actor)
+                                                            .fuzziness("AUTO")
+                                                    )
+                                            );
+
+                                            b.minimumShouldMatch("1");
+                                            return b;
+                                        })
                                 )
                         )
                 );
