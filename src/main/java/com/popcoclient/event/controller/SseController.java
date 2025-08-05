@@ -1,5 +1,6 @@
 package com.popcoclient.event.controller;
 
+import com.popcoclient.auth.jwt.JwtProvider;
 import com.popcoclient.common.response.ApiResponse;
 import com.popcoclient.event.dto.response.ConnectionStatusResponseDto;
 import com.popcoclient.event.service.impl.SseNotificationManagementService;
@@ -25,14 +26,15 @@ import java.util.UUID;
 public class SseController {
 
     private final SseNotificationManagementService sseManagementService;
+    private final JwtProvider jwtProvider;
 
     @Operation(summary = "SSE 채널 구독 API", description = "프론트에서 new EventSource('/notifications/stream') 으로 이벤트 서버 연결, 이후 송신은 자동처리됨")
     @GetMapping(value = "/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public SseEmitter streamNotifications(
-            @RequestParam(required = false) String clientId,
             HttpServletRequest request
     ) {
-        return sseManagementService.createSseConnection(clientId, request);
+        Long userId = jwtProvider.getRequiredUserId();
+        return sseManagementService.createSseConnection(userId.toString(), request);
     }
 
     @Operation(summary = "SSE 테스트 및 모니터링", description = "SSE 상태를 간단히 테스트해볼 수 있는 Api, 상태 파악 가능, healthCheck")
