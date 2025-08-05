@@ -96,13 +96,6 @@ public class ContentServiceImpl implements ContentService {
                 ? Collections.emptyMap()
                 : loadUserReactions(userId, contents);
 
-        System.out.println("==== 콘텐츠 ID 목록 ====");
-        contents.forEach(c -> System.out.println(c.getContent().getContentId()));
-
-        System.out.println("==== 리액션 쿼리 결과 ====");
-        loadUserReactions(userId, contents).forEach((k, v) -> System.out.println(k + " -> " + v));
-
-
         return contents.stream()
                 .map(pc -> mapToDto(pc, genreMap, userReactions.get(pc.getContent().getContentId())))
                 .toList();
@@ -156,7 +149,6 @@ public class ContentServiceImpl implements ContentService {
                 .filter(Objects::nonNull)
                 .collect(Collectors.joining(","));
 
-        System.out.println(reactionType+"뭔데");
         return DailyPopularContentResponseDto.of(pc, genres, reactionType);
     }
 

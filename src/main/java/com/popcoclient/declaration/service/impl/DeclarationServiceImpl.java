@@ -51,6 +51,8 @@ public class DeclarationServiceImpl implements DeclarationService {
             throw new DeclarationAlreadyExistsException("이미 해당 리뷰를 신고하였습니다.");
         }
 
+        Declaration declaration = Declaration.of(user, review, dto);
+        declarationRepository.save(declaration);
         updateReviewStatusByDeclaration(review);
     }
 

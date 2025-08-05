@@ -2,20 +2,16 @@ package com.popcoclient.persona.controller;
 
 import com.popcoclient.auth.jwt.JwtProvider;
 import com.popcoclient.common.response.ApiResponse;
-import com.popcoclient.persona.dto.response.MyPersonaResponseDto;
-import com.popcoclient.persona.dto.response.PersonaAnalysisResponseDto;
-import com.popcoclient.persona.dto.response.PersonaListResponseDto;
-import com.popcoclient.persona.dto.response.PersonaQuestionResponseDto;
+import com.popcoclient.persona.dto.response.*;
 import com.popcoclient.persona.service.PersonaService;
+import com.popcoclient.persona.service.impl.GptService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+import reactor.core.publisher.Mono;
 
 @Tag(name = "페르소나", description = "페르소나 관련 API")
 @RestController
@@ -24,6 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class personaController {
     private final PersonaService personaService;
     private final JwtProvider jwtProvider;
+    private final GptService gptService;
 
     @Operation(summary = "나의 페르소나 조회", description = "페르소나 페이지의 Section 1 + 2 에 사용될 데이터, 나의 메인&서브&최종 페르소나를 조회합니다.")
     @SecurityRequirement(name = "bearerAuth")
@@ -53,5 +50,14 @@ public class personaController {
     public ResponseEntity<ApiResponse<PersonaQuestionResponseDto>> getQuestionList(@PathVariable("questionNumber") Integer questionNumber) {
         PersonaQuestionResponseDto response = personaService.getPersonaQuestion(questionNumber);
         return ResponseEntity.ok(ApiResponse.success("get question success", response));
+    }
+
+    @Operation(summary = "페르소나 대사 출력", description = "사용자의 페르소나 순위에 따라 대사를 출력합니다.")
+    @GetMapping("/texts")
+    @SecurityRequirement(name = "bearerAuth")
+    public Mono<ResponseEntity<ApiResponse<PersonaTextResponseDto>>> getPersonaText() {
+        Long userId = jwtProvider.getRequiredUserId();
+        return gptService.getPersonaText(userId)
+                .map(result -> ResponseEntity.ok(ApiResponse.success(result)));
     }
 }

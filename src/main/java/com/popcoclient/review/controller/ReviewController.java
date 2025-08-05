@@ -108,7 +108,7 @@ public class ReviewController {
         return ResponseEntity.ok(ApiResponse.success(reviewService.getMyReviewsByContent(userId, contentId, type)));
     }
 
-    @Operation(summary = "나의 리뷰 목록 월별 조회", description = "나의 리뷰 목록을 조회합니다. 마이페이지에 달력이랑 나의 리뷰에 사용 가능. (month 값 예시 : 2025-07")
+    @Operation(summary = "나의 리뷰 목록 월별 조회", description = "나의 리뷰 목록을 조회합니다. 마이페이지에 달력이랑 나의 리뷰에 사용 가능. (month 값 예시 : 2025-07)")
     @SecurityRequirement(name = "bearerAuth")
     @GetMapping("/my/monthly")
     public ResponseEntity<ApiResponse<List<MyReviewResponseDto>>> getMyReviewsByMonth(@RequestParam String month) {
