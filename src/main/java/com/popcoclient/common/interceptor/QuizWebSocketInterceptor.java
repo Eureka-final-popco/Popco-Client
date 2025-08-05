@@ -79,9 +79,6 @@ public class QuizWebSocketInterceptor implements ChannelInterceptor {
             } else {
                 // ❌ 인증 실패
                 log.warn("WebSocket connection failed - invalid token, sessionId: {}", sessionId);
-                
-                // 인증 실패 시에도 연결은 허용 (비회원도 구경 가능하게 할 수 있음)
-                accessor.getSessionAttributes().put("authenticated", false);
             }
             
         } catch (Exception e) {
@@ -158,8 +155,8 @@ public class QuizWebSocketInterceptor implements ChannelInterceptor {
                 Long quizId = Long.parseLong(parts[3]);
                 Long questionId = Long.parseLong(parts[5]);
                 
-                // 🔍 이전 문제 통과 여부 확인 로직
-                // boolean canSubscribe = quizProgressService.canAccessQuestion(userId, quizId, questionId);
+//                 🔍 이전 문제 통과 여부 확인 로직
+//                 boolean canSubscribe = quizProgressService.canAccessQuestion(userId, quizId, questionId);
                 
                 // if (!canSubscribe) {
                 //     log.warn("User cannot access question - userId: {}, quizId: {}, questionId: {}", 
