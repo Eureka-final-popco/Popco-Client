@@ -48,6 +48,10 @@ public class S3Service {
 
     // 파일 다운로드 URL 생성
     public String getFileUrl(String fileName) {
+        if (fileName == null || fileName.isBlank()) {
+            return null;
+        }
+
         GetUrlRequest request = GetUrlRequest.builder()
                 .bucket(bucketName)
                 .key(fileName)
