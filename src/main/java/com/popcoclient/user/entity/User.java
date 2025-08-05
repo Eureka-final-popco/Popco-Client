@@ -41,6 +41,9 @@ public class User {
     public String getNickname() {
         return userDetail != null ? userDetail.getNickname() : null;
     }
+    public String getProfileUrl() {
+        return userDetail != null ? userDetail.getProfilePath() : null;
+    }
 
     public static User of(String email, String encodedPassword) {
         return User.builder()

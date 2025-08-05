@@ -19,6 +19,7 @@ public class CollectionResponseDto {
     private Long collectionId;
     private Long userId;
     private String userNickname;
+    private String userProfileUrl;
     private String title;
     private String description;
     private Integer saveCount;
@@ -32,7 +33,7 @@ public class CollectionResponseDto {
     @Builder.Default
     private Boolean isMarked = false;
 
-    public static CollectionResponseDto from(Collection collection) {
+    public static CollectionResponseDto of(Collection collection) {
         return CollectionResponseDto.builder()
                 .collectionId(collection.getCollectionId())
                 .userId(collection.getUser().getUserId())
@@ -44,6 +45,23 @@ public class CollectionResponseDto {
                 .createdAt(collection.getCreatedAt())
                 .updatedAt(collection.getUpdatedAt())
                 .contentPosters(new ArrayList<>())
+                .isMarked(false)
+                .build();
+    }
+
+    public static CollectionResponseDto from(Collection collection, List<ContentPosterDto> posters, String userProfileUrl) {
+        return CollectionResponseDto.builder()
+                .collectionId(collection.getCollectionId())
+                .userId(collection.getUser().getUserId())
+                .userNickname(collection.getUser().getNickname())
+                .userProfileUrl(userProfileUrl)
+                .title(collection.getTitle())
+                .description(collection.getDescription())
+                .saveCount(collection.getSaveCount())
+                .contentCount(collection.getContentCount())
+                .createdAt(collection.getCreatedAt())
+                .updatedAt(collection.getUpdatedAt())
+                .contentPosters(posters != null ? posters : new ArrayList<>())
                 .isMarked(false)
                 .build();
     }
@@ -61,6 +79,23 @@ public class CollectionResponseDto {
                 .updatedAt(collection.getUpdatedAt())
                 .contentPosters(posters != null ? posters : new ArrayList<>())
                 .isMarked(false)
+                .build();
+    }
+
+    public static CollectionResponseDto from(Collection collection, List<ContentPosterDto> posters, boolean isMarked, String userProfileUrl) {
+        return CollectionResponseDto.builder()
+                .collectionId(collection.getCollectionId())
+                .userId(collection.getUser().getUserId())
+                .userNickname(collection.getUser().getNickname())
+                .title(collection.getTitle())
+                .userProfileUrl(userProfileUrl)
+                .description(collection.getDescription())
+                .saveCount(collection.getSaveCount())
+                .contentCount(collection.getContentCount())
+                .createdAt(collection.getCreatedAt())
+                .updatedAt(collection.getUpdatedAt())
+                .contentPosters(posters != null ? posters : new ArrayList<>())
+                .isMarked(isMarked)
                 .build();
     }
 

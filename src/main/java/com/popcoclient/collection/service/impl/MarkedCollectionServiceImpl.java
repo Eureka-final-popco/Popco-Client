@@ -198,7 +198,7 @@ public class MarkedCollectionServiceImpl implements MarkedCollectionService {
 
     private Page<CollectionResponseDto> mapCollectionsWithPostersAndMarks(Page<Collection> collections, Long userId) {
         if (collections.isEmpty()) {
-            return collections.map(CollectionResponseDto::from);
+            return collections.map(CollectionResponseDto::of);
         }
 
         // 컬렉션 ID 목록

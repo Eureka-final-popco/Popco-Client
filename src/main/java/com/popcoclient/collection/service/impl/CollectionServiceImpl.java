@@ -12,6 +12,7 @@ import com.popcoclient.collection.repository.CollectionContentRepository;
 import com.popcoclient.collection.repository.CollectionRepository;
 import com.popcoclient.collection.repository.MarkedCollectionRepository;
 import com.popcoclient.collection.service.CollectionService;
+import com.popcoclient.common.s3.service.S3Service;
 import com.popcoclient.exception.business.CollectionAlreadyExistsException;
 import com.popcoclient.exception.business.CollectionNotFoundException;
 import com.popcoclient.exception.business.UserNotFoundException;
@@ -38,6 +39,7 @@ public class CollectionServiceImpl implements CollectionService {
     private final UserRepository userRepository;
     private final CollectionContentRepository collectionContentRepository;
     private final MarkedCollectionRepository markedCollectionRepository;
+    private final S3Service s3Service;
 
     @Override
     @Transactional
@@ -58,7 +60,7 @@ public class CollectionServiceImpl implements CollectionService {
                 .build();
 
         Collection savedCollection = collectionRepository.save(collection);
-        return CollectionResponseDto.from(savedCollection);
+        return CollectionResponseDto.of(savedCollection);
     }
 
     @Override
@@ -67,7 +69,8 @@ public class CollectionServiceImpl implements CollectionService {
                 .orElseThrow(() -> new CollectionNotFoundException("컬렉션을 찾을 수 없습니다. id : " + collectionId));
 
         List<ContentPosterDto> posters = getCollectionPosters(collectionId);
-        return CollectionResponseDto.from(collection, posters);
+        String userProfilePath = s3Service.getFileUrl(collection.getUser().getProfileUrl());
+        return CollectionResponseDto.from(collection, posters, userProfilePath);
     }
 
     @Override
@@ -84,7 +87,8 @@ public class CollectionServiceImpl implements CollectionService {
             }
         }
 
-        return CollectionResponseDto.from(collection, posters, isMarked);
+        String userProfilePath = s3Service.getFileUrl(collection.getUser().getProfileUrl());
+        return CollectionResponseDto.from(collection, posters, isMarked, userProfilePath);
     }
 
     @Override
@@ -216,7 +220,7 @@ public class CollectionServiceImpl implements CollectionService {
 
     private Page<CollectionResponseDto> mapCollectionsWithPosters(Page<Collection> collections) {
         if (collections.isEmpty()) {
-            return collections.map(CollectionResponseDto::from);
+            return collections.map(CollectionResponseDto::of);
         }
 
         List<Long> collectionIds = collections.getContent().stream()
@@ -233,7 +237,7 @@ public class CollectionServiceImpl implements CollectionService {
 
     private Page<CollectionResponseDto> mapCollectionsWithPostersAndMarks(Page<Collection> collections, Long userId) {
         if (collections.isEmpty()) {
-            return collections.map(CollectionResponseDto::from);
+            return collections.map(CollectionResponseDto::of);
         }
 
         List<Long> collectionIds = collections.getContent().stream()
@@ -260,7 +264,7 @@ public class CollectionServiceImpl implements CollectionService {
     private List<CollectionResponseDto> mapCollectionsWithPostersList(List<Collection> collections) {
         if (collections.isEmpty()) {
             return collections.stream()
-                    .map(CollectionResponseDto::from)
+                    .map(CollectionResponseDto::of)
                     .collect(Collectors.toList());
         }
 
@@ -279,7 +283,7 @@ public class CollectionServiceImpl implements CollectionService {
     private List<CollectionResponseDto> mapCollectionsWithPostersAndMarksList(List<Collection> collections, Long userId) {
         if (collections.isEmpty()) {
             return collections.stream()
-                    .map(CollectionResponseDto::from)
+                    .map(CollectionResponseDto::of)
                     .collect(Collectors.toList());
         }
 
