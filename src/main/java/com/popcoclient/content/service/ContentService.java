@@ -12,7 +12,7 @@ public interface ContentService {
 
     List<DailyPopularContentResponseDto> getDailyPopularContentList(Long userId, String type);
 
-    ContentDetailDto getContentDetail(Long id, String type);
+    ContentDetailDto getContentDetail(Long id, String type, Long userId);
 
     List<ContentRecommendResponseDto> getContentRecommendList(Long userId, String type);
     ContentListResponseDto_40 getContentPreferenceList(Long userId);

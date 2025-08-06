@@ -42,28 +42,5 @@ public interface ContentRepository extends JpaRepository<Content, ContentId> {
             "WHERE c.contentId = :contentId")
     Optional<Content> findByIdWithGenres(@Param("contentId") ContentId contentId);
 
-    @Query("SELECT DISTINCT c FROM Content c " +
-            "LEFT JOIN FETCH c.casts cast " +
-            "LEFT JOIN FETCH cast.actor " +
-            "WHERE c.contentId = :contentId")
-    Optional<Content> findByIdWithCasts(@Param("contentId") ContentId contentId);
-
-    @Query("SELECT DISTINCT c FROM Content c " +
-            "LEFT JOIN FETCH c.crews crew " +
-            "LEFT JOIN FETCH crew.crewMember " +
-            "WHERE c.contentId = :contentId")
-    Optional<Content> findByIdWithCrews(@Param("contentId") ContentId contentId);
-
-    @Query("SELECT DISTINCT c FROM Content c " +
-            "LEFT JOIN FETCH c.videos " +
-            "WHERE c.contentId = :contentId")
-    Optional<Content> findByIdWithVideos(@Param("contentId") ContentId contentId);
-
-    @Query("SELECT DISTINCT c FROM Content c " +
-            "LEFT JOIN FETCH c.watchProviders wp " +
-            "LEFT JOIN FETCH wp.provider " +
-            "WHERE c.contentId = :contentId")
-    Optional<Content> findByIdWithWatchProviders(@Param("contentId") ContentId contentId);
-
     List<Content> findAllByTitleIn(List<String> titles);
 }
