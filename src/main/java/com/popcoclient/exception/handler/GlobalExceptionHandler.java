@@ -7,6 +7,7 @@ import com.popcoclient.exception.ErrorCode;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -25,7 +26,9 @@ public class GlobalExceptionHandler {
           BusinessException e, HttpServletRequest request) {
 
     log.error("Business error at {}: {}", request.getRequestURI(), e.getMessage(), e);
-    return ResponseEntity.ok(ApiResponse.fail(e.getErrorCode()));
+    return ResponseEntity
+            .status(e.getErrorCode().getStatus())
+            .body(ApiResponse.fail(e.getErrorCode()));
   }
 
   @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -55,6 +58,9 @@ public class GlobalExceptionHandler {
       Exception e, HttpServletRequest request) {
 
     log.error("Unexpected error at {}: {}", request.getRequestURI(), e.getMessage(), e);
-    return ResponseEntity.ok(ApiResponse.fail(ErrorCode.INTERNAL_SERVER_ERROR));
+    return ResponseEntity
+            .status(ErrorCode.INTERNAL_SERVER_ERROR.getStatus())
+            .contentType(MediaType.APPLICATION_JSON) // SSE 오류 발생 시 Content-Type을 덮어씌움
+            .body(ApiResponse.fail(ErrorCode.INTERNAL_SERVER_ERROR));
   }
 }
