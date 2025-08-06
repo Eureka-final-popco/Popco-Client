@@ -518,11 +518,8 @@ public class EventServiceImpl {
     /**
      * ⏰ 이벤트 시작까지 남은 시간 조회
      */
-    public QuizWaitingResponseDto getEventTimer(Long quizId) {
+    public QuizWaitingResponseDto getEventTimer(Quiz quiz) {
         try {
-            Quiz quiz = quizRepository.findById(quizId)
-                    .orElseThrow(() -> new BusinessException(ErrorCode.QUIZ_NOT_FOUND));
-
             LocalDateTime currentTime = LocalDateTime.now();
             LocalDateTime eventStartTime = quiz.getStartAt(); // Quiz 엔티티의 시작 시간 필드명에 맞게 수정 필요
 
@@ -535,7 +532,7 @@ public class EventServiceImpl {
 
             if (isEventStarted) {
                 // 이미 시작되었는지 확인 (첫 번째 문제가 활성화되어 있는지)
-                String firstQuestionTimerKey = quizId + ":" + 1L;
+                String firstQuestionTimerKey = quiz.getQuizId() + ":" + 1L;
                 if (activeTimers.containsKey(firstQuestionTimerKey)) {
                     quizStatus = QuizStatus.ACTIVE;
                 } else {
@@ -560,7 +557,7 @@ public class EventServiceImpl {
         } catch (BusinessException e) {
             throw e;
         } catch (Exception e) {
-            log.error("Failed to get event timer - quizId: {}", quizId, e);
+            log.error("Failed to get event timer - quizId: {}", quiz.getQuizId(), e);
             throw new RuntimeException("이벤트 타이머 조회에 실패했습니다.", e);
         }
     }
@@ -591,7 +588,7 @@ public class EventServiceImpl {
             // 1초마다 타이머 브로드캐스트
             ScheduledFuture<?> waitingBroadcast = taskScheduler.scheduleAtFixedRate(() -> {
                 try {
-                    QuizWaitingResponseDto timerInfo = getEventTimer(quizId);
+                    QuizWaitingResponseDto timerInfo = getEventTimer(quiz);
                     String waitingTopic = "/topic/quiz/" + quizId + "/waiting";
                     messagingTemplate.convertAndSend(waitingTopic, timerInfo);
 
