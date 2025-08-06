@@ -305,51 +305,51 @@ public class EventServiceImpl {
      * 문제 시작 이전 라운드 타임 아웃 시 즉시 시작
      */
     private void startQuestion(Long quizId, Long questionId) {
-        long questionStartTime = System.currentTimeMillis(); // 이 순간이 문제 시작시간!
         String timerKey = quizId + ":" + questionId;
 
         // 메모리에 시작시간 저장
-        activeTimers.put(timerKey, questionStartTime);
-        log.info("✅ 문제 {} 시작! activeTimers 저장: {} (전체 {}개)", questionId, timerKey, activeTimers.size());
+        activeTimers.computeIfAbsent(timerKey, k -> {
+            long questionStartTime = System.currentTimeMillis();
+            log.info("🚀 문제 {}를 새로 시작하고 타이머를 등록합니다.", questionId);
 
-        // 🆕 1초마다 타이머 브로드캐스트 시작
-        ScheduledFuture<?> timerBroadcast = taskScheduler.scheduleAtFixedRate(() -> {
-            try {
-                QuizStatusResponseDto currentStatus = getQuizStatus(quizId, questionId);
-                String questionTopic = "/topic/quiz/" + quizId + "/question/" + questionId;
-                messagingTemplate.convertAndSend(questionTopic, currentStatus);
+            // --- 이 블록 안의 로직은 단 한 번만 실행됨이 보장됩니다 ---
 
-                log.debug("📡 문제 {} 브로드캐스트: {}초 남음", questionId, currentStatus.getRemainingTime());
+            // 1초마다 타이머 브로드캐스트 시작
+            ScheduledFuture<?> timerBroadcast = taskScheduler.scheduleAtFixedRate(() -> {
+                try {
+                    QuizStatusResponseDto currentStatus = getQuizStatus(quizId, questionId);
+                    String questionTopic = "/topic/quiz/" + quizId + "/question/" + questionId;
+                    messagingTemplate.convertAndSend(questionTopic, currentStatus);
+                    log.debug("📡 문제 {} 브로드캐스트: {}초 남음", questionId, currentStatus.getRemainingTime());
+                } catch (Exception e) {
+                    log.error("Failed to broadcast timer for question: {}", questionId, e);
+                }
+            }, Instant.now().plus(1, ChronoUnit.SECONDS), Duration.ofSeconds(1));
 
-            } catch (Exception e) {
-                log.error("Failed to broadcast timer - quizId: {}, questionId: {}", quizId, questionId, e);
-            }
-        }, Instant.now().plus(1, ChronoUnit.SECONDS), Duration.ofSeconds(1));
+            activeBroadcasts.put(timerKey, timerBroadcast);
+            log.info("✅ 문제 {} 브로드캐스트 저장: {} (전체 {}개)", questionId, timerKey, activeBroadcasts.size());
 
-        activeBroadcasts.put(timerKey, timerBroadcast);
-        log.info("✅ 문제 {} 브로드캐스트 저장: {} (전체 {}개)", questionId, timerKey, activeBroadcasts.size());
+            // 10초 후 자동 종료
+            taskScheduler.schedule(() -> {
+                log.info("⏰ 문제 {} 10초 타임아웃 실행", questionId);
+                activeTimers.remove(timerKey);
+                log.info("🗑️ activeTimers에서 제거: {} (남은 {}개)", timerKey, activeTimers.size());
 
-        // 🕒 10초 후 자동 종료
-        taskScheduler.schedule(() -> {
-            log.info("⏰ 문제 {} 10초 타임아웃 실행", questionId);
-            activeTimers.remove(timerKey);
-            log.info("🗑️ activeTimers에서 제거: {} (남은 {}개)", timerKey, activeTimers.size());
+                ScheduledFuture<?> broadcast = activeBroadcasts.remove(timerKey);
+                if (broadcast != null && !broadcast.isCancelled()) {
+                    broadcast.cancel(false);
+                    log.info("🗑️ activeBroadcasts에서 제거: {} (남은 {}개)", timerKey, activeBroadcasts.size());
+                }
 
-            ScheduledFuture<?> broadcast = activeBroadcasts.remove(timerKey);
-            if (broadcast != null && !broadcast.isCancelled()) {
-                broadcast.cancel(false);
-                log.info("🗑️ activeBroadcasts에서 제거: {} (남은 {}개)", timerKey, activeBroadcasts.size());
-            }
+                log.info("문제 {} 시간 종료! 타이머 및 브로드캐스트 제거됨", questionId);
+                broadcastQuestionTimeout(quizId, questionId);
+                checkAndStartNextQuestionAfterTimeout(quizId, questionId);
+            }, Instant.now().plus(10, ChronoUnit.SECONDS));
 
-            log.info("문제 {} 시간 종료! 타이머 및 브로드캐스트 제거됨", questionId);
+            broadcastQuestionStart(quizId, questionId);
 
-            // 타이머 종료 브로드캐스트
-            broadcastQuestionTimeout(quizId, questionId);
-            checkAndStartNextQuestionAfterTimeout(quizId, questionId);
-        }, Instant.now().plus(10, ChronoUnit.SECONDS));
-
-        // 문제 시작 브로드캐스트
-        broadcastQuestionStart(quizId, questionId);
+            return questionStartTime; // 맵에 저장할 값(문제 시작 시간)을 반환
+        });
     }
 
     /**
@@ -570,20 +570,16 @@ public class EventServiceImpl {
         Quiz quiz = quizRepository.findById(quizId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.QUIZ_NOT_FOUND));
 
-        // ★ 1. 사전 체크: 멱등성 보장을 위해 타이머 등록 로직을 실행하기 전에 퀴즈 상태를 먼저 확인합니다.
         LocalDateTime eventStartTime = quiz.getStartAt();
         LocalDateTime currentTime = LocalDateTime.now();
         if (currentTime.isAfter(eventStartTime) || currentTime.isEqual(eventStartTime)) {
             log.info("이미 시작되었거나 종료된 이벤트입니다. 대기 타이머를 시작하지 않습니다. - quizId: {}", quizId);
-            return; // 메서드를 즉시 종료하여 불필요한 작업을 막습니다.
+            return;
         }
 
-        // ★ 2. computeIfAbsent: 이제 이 블록은 'WAITING' 상태의 퀴즈에 대해서만 경합 상태 없이 실행됩니다.
-        waitingTimerBroadcasts.computeIfAbsent(quizId, id -> { // 'k'를 'id'로 변경하여 명확성을 높였습니다.
+        waitingTimerBroadcasts.computeIfAbsent(quizId, id -> {
             log.info("🚀 새로운 대기 타이머 브로드캐스트를 등록하고 맵에 저장합니다 - quizId: {}", id);
 
-            // 이 람다 함수는 반드시 ScheduledFuture<?> 타입을 반환해야 합니다.
-            // taskScheduler.scheduleAtFixedRate가 바로 ScheduledFuture 객체를 반환하므로, 그 결과를 그대로 return 합니다.
             return taskScheduler.scheduleAtFixedRate(() -> {
                 try {
                     // 매번 DB를 조회하는 대신, 미리 조회한 quiz 객체를 사용하여 효율을 높입니다.
