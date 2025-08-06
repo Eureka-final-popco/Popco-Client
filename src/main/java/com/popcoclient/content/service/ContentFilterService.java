@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.SearchHit;
 import org.springframework.data.elasticsearch.core.SearchHits;
@@ -242,10 +243,6 @@ public class ContentFilterService {
             log.info("=== Elasticsearch 쿼리 조건 ===");
             log.info("동적 필터로 검색할 ContentId 개수: {}", finalDynamicKeys.size());
 
-            List<String> compositeKeys = finalDynamicKeys.stream()
-                    .map(contentId -> contentId.getId() + "_" + contentId.getType())
-                    .collect(Collectors.toList());
-
             List<Long> contentIds = finalDynamicKeys.stream()
                     .map(ContentId::getId)
                     .collect(Collectors.toList());
@@ -253,8 +250,6 @@ public class ContentFilterService {
             dynamicFilterCriteria = new Criteria("contentId").in(contentIds);
 
             log.info("동적 필터 조건: contentId IN {}", contentIds);
-
-            Set<ContentId> finalDynamicKeysSet = new HashSet<>(finalDynamicKeys);
         }
 
         if (dynamicFilterCriteria != null && hasAnyStaticFilter) {
@@ -275,6 +270,11 @@ public class ContentFilterService {
 
         CriteriaQuery query = new CriteriaQuery(finalQueryCriteria);
         query.setPageable(pageable);
+
+        if(!anyDynamicFilterRequested.get()) {
+            query.addSort(Sort.by(Sort.Direction.DESC, "releaseDate"));
+            log.info("동적 필터가 없어, 기본 정렬을 최신순(releaseDate DESC)으로 설정했습니다.");
+        }
 
         SearchHits<ContentFilterDocument> searchHits = elasticsearchOperations.search(query, ContentFilterDocument.class);
         List<ContentFilterDocument> contentsFromEs = searchHits.get().map(SearchHit::getContent).collect(Collectors.toList());
