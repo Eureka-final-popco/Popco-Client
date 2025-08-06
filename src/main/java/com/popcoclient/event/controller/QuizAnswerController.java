@@ -58,7 +58,8 @@ public class QuizAnswerController {
     @Operation(summary = "이벤트 페이지 접근 시 브로드캐스트", description = "사용자가 이벤트 페이지에 접근하면서 실행, 브로드캐스트의 트리거")
     public ResponseEntity<ApiResponse<Void>> waitQuiz(@PathVariable Long quizId) {
         Long userId = jwtProvider.getRequiredUserId();
-        return ResponseEntity.ok(ApiResponse.success(quizAnswerService.startEventWaitingBroadcast(quizId)));
+        quizAnswerService.startEventWaitingBroadcast(quizId);
+        return ResponseEntity.ok(ApiResponse.success("대기 타이머 브로드캐스트 시작!", null));
     }
     /**
      * 🎯 답안 제출 API

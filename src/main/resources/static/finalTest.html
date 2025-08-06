@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>통합 퀴즈 테스트 페이지</title>
+</head>
+<body>
+<div id="app">
+    <!-- 연결 설정 영역 -->
+    <div id="config-section">
+        <h1>퀴즈 이벤트 통합 테스트</h1>
+        <div>
+            <label>Quiz ID: </label>
+            <input type="number" id="quizId" value="1" />
+        </div>
+        <div>
+            <label>JWT Token: </label>
+            <input type="text" id="jwtToken" placeholder="Bearer 토큰을 입력하세요" style="width: 400px;" />
+        </div>
+        <div>
+            <button onclick="connectAll()">전체 연결 시작</button>
+            <button onclick="disconnectAll()">전체 연결 해제</button>
+            <button onclick="startQuiz()">퀴즈 시작 (문제1)</button>
+        </div>
+    </div>
+
+    <!-- 연결 상태 영역 -->
+    <div id="status-section">
+        <h2>연결 상태</h2>
+        <p>WebSocket: <span id="ws-status">연결 안됨</span></p>
+        <p>SSE: <span id="sse-status">연결 안됨</span></p>
+        <p>현재 화면: <span id="current-screen">대기중</span></p>
+    </div>
+
+    <!-- 대기 화면 -->
+    <div id="waiting-screen">
+        <h2>이벤트 대기 중</h2>
+        <div id="countdown-timer">
+            <h3>이벤트 시작까지</h3>
+            <div style="font-size: 2em;">
+                <span id="hours">00</span>:
+                <span id="minutes">00</span>:
+                <span id="seconds">00</span>
+            </div>
+            <p>상태: <span id="quiz-status">WAITING</span></p>
+        </div>
+    </div>
+
+    <!-- 문제 화면 -->
+    <div id="question-screen" style="display: none;">
+        <h2 id="question-title">문제 1</h2>
+        <div id="question-content">
+            <h3 id="question-text">문제가 로딩 중입니다...</h3>
+            <div id="question-options"></div>
+            <div id="question-status">
+                <p>남은 시간: <span id="remaining-time">10</span>초</p>
+                <p>현재 생존자: <span id="current-survivors">0</span>명</p>
+                <p>최대 생존자: <span id="max-survivors">0</span>명</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 우승자 화면 -->
+    <div id="winner-screen" style="display: none;">
+        <h1 style="text-align: center; color: gold;">🎉 축하합니다! 🎉</h1>
+        <h2 style="text-align: center;" id="winner-name">우승자</h2>
+        <p style="text-align: center;" id="winner-message">우승하셨습니다!</p>
+    </div>
+
+    <!-- 우승자 없음 화면 -->
+    <div id="no-winner-screen" style="display: none;">
+        <h1 style="text-align: center; color: gray;">😢 아쉽네요!</h1>
+        <h2 style="text-align: center;">우승자가 없습니다</h2>
+        <p style="text-align: center;">다음 기회에 도전해보세요!</p>
+    </div>
+
+    <!-- 로그 영역 -->
+    <div id="log-section">
+        <h3>실시간 로그</h3>
+        <button onclick="clearLog()">로그 지우기</button>
+        <div id="log" style="border: 1px solid #ccc; height: 300px; overflow-y: auto; padding: 10px; font-family: monospace; font-size: 12px;">
+        </div>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.6.1/sockjs.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+
+<script>
+    // 전역 변수
+    let currentQuizId = null;
+    let currentQuestionId = null;
+    let stompClient = null;
+    let sseEventSource = null;
+    let subscriptions = {};
+
+    // 로그 함수
+    function addLog(message, type = 'info') {
+        const log = document.getElementById('log');
+        const time = new Date().toLocaleTimeString();
+        const color = type === 'error' ? 'red' : type === 'success' ? 'green' : 'black';
+        log.innerHTML += `<div style="color: ${color}">[${time}] ${message}</div>`;
+        log.scrollTop = log.scrollHeight;
+    }
+
+    function clearLog() {
+        document.getElementById('log').innerHTML = '';
+    }
+
+    // 상태 업데이트 함수들
+    function updateStatus(element, status) {
+        document.getElementById(element).textContent = status;
+    }
+
+    function showScreen(screenId) {
+        const screens = ['waiting-screen', 'question-screen', 'winner-screen', 'no-winner-screen'];
+        screens.forEach(screen => {
+            document.getElementById(screen).style.display = screen === screenId ? 'block' : 'none';
+        });
+        updateStatus('current-screen', screenId);
+    }
+
+    // 전체 연결 시작
+    function connectAll() {
+        const quizId = document.getElementById('quizId').value;
+        const jwtToken = document.getElementById('jwtToken').value;
+
+        if (!jwtToken.trim()) {
+            alert('JWT 토큰을 입력해주세요!');
+            return;
+        }
+
+        currentQuizId = quizId;
+        addLog('통합 연결 시작...', 'info');
+
+        connectWebSocket(jwtToken);
+        connectSSE(jwtToken);
+        startWaitingBroadcast(jwtToken);
+    }
+
+    // WebSocket 연결
+    function connectWebSocket(jwtToken) {
+        const socket = new SockJS('/ws-quiz');
+        stompClient = Stomp.over(socket);
+
+        const headers = {
+            'Authorization': jwtToken.startsWith('Bearer ') ? jwtToken : `Bearer ${jwtToken}`
+        };
+
+        stompClient.connect(headers, function() {
+            updateStatus('ws-status', '연결됨');
+            addLog('WebSocket 연결 성공', 'success');
+            subscribeToTopics();
+        }, function(error) {
+            updateStatus('ws-status', '연결 실패');
+            addLog(`WebSocket 연결 실패: ${error}`, 'error');
+        });
+    }
+
+    // SSE 연결
+    function connectSSE(jwtToken) {
+        const authHeader = jwtToken.startsWith('Bearer ') ? jwtToken : `Bearer ${jwtToken}`;
+
+        sseEventSource = new EventSource('/notifications/stream', {
+            headers: {
+                'Authorization': authHeader
+            }
+        });
+
+        sseEventSource.onopen = function() {
+            updateStatus('sse-status', '연결됨');
+            addLog('SSE 연결 성공', 'success');
+        };
+
+        sseEventSource.onmessage = function(event) {
+            addLog(`SSE 메시지: ${event.data}`, 'info');
+        };
+
+        sseEventSource.onerror = function(error) {
+            updateStatus('sse-status', '연결 실패');
+            addLog(`SSE 연결 실패: ${error}`, 'error');
+        };
+    }
+
+    // 대기 브로드캐스트 시작
+    function startWaitingBroadcast(jwtToken) {
+        const authHeader = jwtToken.startsWith('Bearer ') ? jwtToken : `Bearer ${jwtToken}`;
+
+        fetch(`/quizzes/${currentQuizId}/waiting`, {
+            method: 'POST',
+            headers: {
+                'Authorization': authHeader,
+                'Content-Type': 'application/json'
+            }
+        })
+            .then(response => response.json())
+            .then(data => {
+                addLog(`대기 브로드캐스트 시작: ${JSON.stringify(data)}`, 'success');
+            })
+            .catch(error => {
+                addLog(`대기 브로드캐스트 시작 실패: ${error}`, 'error');
+            });
+    }
+
+    // 토픽 구독
+    function subscribeToTopics() {
+        // 대기 타이머 구독
+        subscriptions.waiting = stompClient.subscribe(`/topic/quiz/${currentQuizId}/waiting`, function(message) {
+            const data = JSON.parse(message.body);
+            addLog(`대기 타이머: ${JSON.stringify(data)}`);
+            updateWaitingTimer(data);
+        });
+
+        // 문제 1, 2, 3 구독
+        for (let i = 1; i <= 3; i++) {
+            subscriptions[`question${i}`] = stompClient.subscribe(`/topic/quiz/${currentQuizId}/question/${i}`, function(message) {
+                const data = JSON.parse(message.body);
+                addLog(`문제 ${i} 메시지: ${JSON.stringify(data)}`);
+                handleQuestionMessage(i, data);
+            });
+        }
+    }
+
+    // 대기 타이머 업데이트
+    function updateWaitingTimer(data) {
+        if (data.quizStatus === 'WAITING') {
+            showScreen('waiting-screen');
+            document.getElementById('hours').textContent = String(data.remainingHour || 0).padStart(2, '0');
+            document.getElementById('minutes').textContent = String(data.remainingMin || 0).padStart(2, '0');
+            document.getElementById('seconds').textContent = String(data.remainingSec || 0).padStart(2, '0');
+            document.getElementById('quiz-status').textContent = data.quizStatus;
+        } else {
+            addLog(`이벤트 상태 변경: ${data.quizStatus}`, 'info');
+        }
+    }
+
+    // 문제 메시지 처리
+    function handleQuestionMessage(questionId, data) {
+        if (data.type === 'QUESTION_START') {
+            addLog(`문제 ${questionId} 시작!`, 'success');
+            loadQuestion(questionId);
+            showScreen('question-screen');
+            currentQuestionId = questionId;
+        } else if (data.type === 'QUESTION_TIMEOUT') {
+            addLog(`문제 ${questionId} 시간 종료!`, 'info');
+        } else if (data.type === 'WINNER_ANNOUNCED') {
+            addLog(`우승자 발표: ${data.winnerName}`, 'success');
+            showWinnerScreen(data.winnerName, data.message);
+        } else if (data.type === 'NO_WINNER') {
+            addLog('우승자 없음', 'info');
+            showNoWinnerScreen();
+        } else {
+            // 일반 상태 업데이트
+            updateQuestionStatus(data);
+        }
+    }
+
+    // 문제 로드
+    function loadQuestion(questionId) {
+        fetch(`/quizzes/${currentQuizId}/questions/${questionId}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    displayQuestion(questionId, data.data);
+                }
+            })
+            .catch(error => {
+                addLog(`문제 ${questionId} 로드 실패: ${error}`, 'error');
+            });
+    }
+
+    // 문제 표시
+    function displayQuestion(questionId, questionData) {
+        document.getElementById('question-title').textContent = `문제 ${questionId}`;
+        document.getElementById('question-text').textContent = questionData.content;
+
+        const optionsDiv = document.getElementById('question-options');
+        optionsDiv.innerHTML = '';
+
+        questionData.options.forEach((option, index) => {
+            const button = document.createElement('button');
+            button.textContent = `${index + 1}. ${option.content}`;
+            button.onclick = () => submitAnswer(questionId, index + 1);
+            button.style.display = 'block';
+            button.style.margin = '5px 0';
+            button.style.padding = '10px';
+            button.style.width = '100%';
+            optionsDiv.appendChild(button);
+        });
+    }
+
+    // 답안 제출
+    function submitAnswer(questionId, optionId) {
+        const jwtToken = document.getElementById('jwtToken').value;
+        const authHeader = jwtToken.startsWith('Bearer ') ? jwtToken : `Bearer ${jwtToken}`;
+
+        fetch(`/quizzes/${currentQuizId}/questions/${questionId}`, {
+            method: 'POST',
+            headers: {
+                'Authorization': authHeader,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ optionId: optionId })
+        })
+            .then(response => response.json())
+            .then(data => {
+                addLog(`답안 제출 결과: ${JSON.stringify(data)}`, data.success ? 'success' : 'error');
+            })
+            .catch(error => {
+                addLog(`답안 제출 실패: ${error}`, 'error');
+            });
+    }
+
+    // 문제 상태 업데이트
+    function updateQuestionStatus(data) {
+        if (data.remainingTime !== undefined) {
+            document.getElementById('remaining-time').textContent = data.remainingTime;
+        }
+        if (data.currentSurvivors !== undefined) {
+            document.getElementById('current-survivors').textContent = data.currentSurvivors;
+        }
+        if (data.maxSurvivors !== undefined) {
+            document.getElementById('max-survivors').textContent = data.maxSurvivors;
+        }
+    }
+
+    // 우승자 화면 표시
+    function showWinnerScreen(winnerName, message) {
+        document.getElementById('winner-name').textContent = winnerName;
+        document.getElementById('winner-message').textContent = message;
+        showScreen('winner-screen');
+    }
+
+    // 우승자 없음 화면 표시
+    function showNoWinnerScreen() {
+        showScreen('no-winner-screen');
+    }
+
+    // 퀴즈 시작
+    function startQuiz() {
+        fetch(`/quizzes/${currentQuizId}/start`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+            .then(response => response.json())
+            .then(data => {
+                addLog(`퀴즈 시작: ${JSON.stringify(data)}`, 'success');
+            })
+            .catch(error => {
+                addLog(`퀴즈 시작 실패: ${error}`, 'error');
+            });
+    }
+
+    // 전체 연결 해제
+    function disconnectAll() {
+        if (stompClient && stompClient.connected) {
+            Object.values(subscriptions).forEach(sub => {
+                if (sub) sub.unsubscribe();
+            });
+            stompClient.disconnect();
+            updateStatus('ws-status', '연결 해제됨');
+            addLog('WebSocket 연결 해제됨', 'info');
+        }
+
+        if (sseEventSource) {
+            sseEventSource.close();
+            updateStatus('sse-status', '연결 해제됨');
+            addLog('SSE 연결 해제됨', 'info');
+        }
+
+        subscriptions = {};
+    }
+</script>
+</body>
+</html>
