@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import java.util.HashMap;
 import java.util.Map;
 
-@RestControllerAdvice
+@RestControllerAdvice(basePackages = "com.popcoclient")
 public class GlobalExceptionHandler {
 
   private final Logger log = LoggerFactory.getLogger(getClass());
