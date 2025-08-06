@@ -243,10 +243,6 @@ public class ContentFilterService {
             log.info("=== Elasticsearch 쿼리 조건 ===");
             log.info("동적 필터로 검색할 ContentId 개수: {}", finalDynamicKeys.size());
 
-//            List<String> compositeKeys = finalDynamicKeys.stream()
-//                    .map(contentId -> contentId.getId() + "_" + contentId.getType())
-//                    .collect(Collectors.toList());
-
             List<Long> contentIds = finalDynamicKeys.stream()
                     .map(ContentId::getId)
                     .collect(Collectors.toList());
@@ -254,8 +250,6 @@ public class ContentFilterService {
             dynamicFilterCriteria = new Criteria("contentId").in(contentIds);
 
             log.info("동적 필터 조건: contentId IN {}", contentIds);
-
-//            Set<ContentId> finalDynamicKeysSet = new HashSet<>(finalDynamicKeys);
         }
 
         if (dynamicFilterCriteria != null && hasAnyStaticFilter) {
