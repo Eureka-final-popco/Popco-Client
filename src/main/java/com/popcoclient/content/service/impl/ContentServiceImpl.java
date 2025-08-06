@@ -15,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.data.domain.Pageable;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.*;
@@ -153,7 +154,8 @@ public class ContentServiceImpl implements ContentService {
     }
 
     @Override
-    public ContentDetailDto getContentDetail(Long id, String type) {
+    @Transactional(readOnly = true)
+    public ContentDetailDto getContentDetail(Long id, String type, Long userId) {
         ContentId contentId = new ContentId(id, type);
 
         // 기본 정보와 장르 ID 조회
@@ -163,19 +165,16 @@ public class ContentServiceImpl implements ContentService {
         // 장르 정보 조회
         List<Genre> genres = genreRepository.findByIdIn(content.getGenreIds());
 
-        // 출연진 정보 조회
-        contentRepository.findByIdWithCasts(contentId);
+        // 사용자 반응 정보 조회 (로그인한 경우에만)
+        ReactionType userReaction = null;
+        if (userId != null) {
+            userReaction = contentReactionRepository
+                    .findByUserIdAndContentId(userId, contentId)
+                    .map(ContentReaction::getReaction)
+                    .orElse(null);
+        }
 
-        // 제작진 정보 조회
-        contentRepository.findByIdWithCrews(contentId);
-
-        // 비디오 정보 조회
-        contentRepository.findByIdWithVideos(contentId);
-
-        // 시청 제공자 정보 조회
-        contentRepository.findByIdWithWatchProviders(contentId);
-
-        return ContentDetailDto.of(content, genres);
+        return ContentDetailDto.of(content, genres, userReaction);
     }
 
     @Override
