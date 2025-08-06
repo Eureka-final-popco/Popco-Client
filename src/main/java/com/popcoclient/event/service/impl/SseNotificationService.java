@@ -7,6 +7,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -26,18 +28,8 @@ public class SseNotificationService {
         return emitters.compute(clientId, (id, existingEmitter) -> {
             // 🔍 기존 연결이 있으면 상태 확인
             if (existingEmitter != null) {
-                try {
-                    existingEmitter.send(SseEmitter.event()
-                            .name("ping")
-                            .data("connection_test"));
-                    log.info("🔄 기존 SSE 연결 재사용 - clientId: {} (전체 {}개)", id, emitters.size());
-                    return existingEmitter; // 기존 연결 유지
-                } catch (Exception e) {
-                    log.warn("💀 기존 연결이 죽어있음, 새로 생성 - clientId: {}", id);
-                    // emitterIds에서도 제거
-                    emitterIds.remove(id);
-                    // 새 연결 생성을 위해 아래로 진행
-                }
+                log.info("🔄 기존 SSE 연결 재사용 시도 - clientId: {} (전체 {}개)", id, emitters.size());
+                    return existingEmitter;
             }
 
             // 🆕 새로운 연결 생성
@@ -94,9 +86,12 @@ public class SseNotificationService {
     }
     
     private void removeEmitter(String clientId) {
-        emitters.remove(clientId);
-        emitterIds.remove(clientId);
-        log.info("Removed SSE emitter for client: {}. Active connections: {}", clientId, emitters.size());
+        SseEmitter removedEmitter = emitters.remove(clientId);
+        boolean removed = emitterIds.remove(clientId);
+
+        if (removedEmitter != null || removed) {
+            log.info("🗑️ SSE emitter 제거 완료 - clientId: {} (남은 연결: {}개)", clientId, emitters.size());
+        }
     }
     
     public void broadcastNotification(String messageJson) {
@@ -116,7 +111,9 @@ public class SseNotificationService {
         }
         
         log.info("Broadcasting notification to {} clients", emitters.size());
-        
+
+        List<String> deadConnections = new ArrayList<>();
+
         // 모든 연결된 클라이언트에게 알림 전송
         emitterIds.forEach(clientId -> {
             SseEmitter emitter = emitters.get(clientId);
@@ -128,20 +125,33 @@ public class SseNotificationService {
                     log.debug("Notification sent to client: {}", clientId);
                 } catch (IOException e) {
                     log.error("Failed to send notification to client: {}", clientId, e);
-                    removeEmitter(clientId);
+                    deadConnections.add(clientId);
                 }
             }
         });
+
+        // 🧹 죽은 연결들 일괄 정리
+        deadConnections.forEach(this::removeEmitter);
+        if (!deadConnections.isEmpty()) {
+            log.info("🗑️ 죽은 연결 {}개 정리 완료", deadConnections.size());
+        }
     }
-    
+
     public void sendHeartbeat() {
+        if (emitters.isEmpty()) {
+            log.debug("No active connections for heartbeat");
+            return;
+        }
+
+        log.debug("💗 Sending heartbeat to {} clients", emitters.size());
+
         emitterIds.forEach(clientId -> {
             SseEmitter emitter = emitters.get(clientId);
             if (emitter != null) {
                 try {
                     emitter.send(SseEmitter.event()
-                        .name("heartbeat")
-                        .data("ping"));
+                            .name("heartbeat")
+                            .data("ping"));
                 } catch (IOException e) {
                     log.error("Failed to send heartbeat to client: {}", clientId, e);
                     removeEmitter(clientId);
