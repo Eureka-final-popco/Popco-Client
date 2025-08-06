@@ -21,14 +21,31 @@ public class SseNotificationService {
     // 활성 SSE 연결들을 저장
     private final ConcurrentHashMap<String, SseEmitter> emitters = new ConcurrentHashMap<>();
     private final CopyOnWriteArrayList<String> emitterIds = new CopyOnWriteArrayList<>();
-    
+
     public SseEmitter createEmitter(String clientId) {
-        SseEmitter emitter = emitters.computeIfAbsent(clientId, id -> {
+        return emitters.compute(clientId, (id, existingEmitter) -> {
+            // 🔍 기존 연결이 있으면 상태 확인
+            if (existingEmitter != null) {
+                try {
+                    existingEmitter.send(SseEmitter.event()
+                            .name("ping")
+                            .data("connection_test"));
+                    log.info("🔄 기존 SSE 연결 재사용 - clientId: {} (전체 {}개)", id, emitters.size());
+                    return existingEmitter; // 기존 연결 유지
+                } catch (Exception e) {
+                    log.warn("💀 기존 연결이 죽어있음, 새로 생성 - clientId: {}", id);
+                    // emitterIds에서도 제거
+                    emitterIds.remove(id);
+                    // 새 연결 생성을 위해 아래로 진행
+                }
+            }
+
+            // 🆕 새로운 연결 생성
             log.info("🆕 새로운 SSE 연결을 생성합니다 - clientId: {}", id);
 
-            SseEmitter newEmitter = new SseEmitter(30 * 60 * 1000L); // 30분 타임아웃
+            SseEmitter newEmitter = new SseEmitter(30 * 60 * 1000L);
 
-            // emitterIds에도 추가 (중복 체크)
+            // emitterIds에 추가 (중복 체크)
             if (!emitterIds.contains(id)) {
                 emitterIds.add(id);
             }
@@ -60,33 +77,20 @@ public class SseNotificationService {
                                 "timestamp", System.currentTimeMillis()
                         )));
 
-                // 🎯 추가로 환영 메시지도 전송
                 newEmitter.send(SseEmitter.event()
                         .name("welcome")
                         .data("환영합니다! 실시간 알림을 받을 준비가 되었습니다."));
+
+                log.info("✅ SSE connection established for client: {} (전체 {}개)", id, emitters.size());
             } catch (IOException e) {
                 log.error("Failed to send connection message to client: {}", id, e);
-                newEmitter.completeWithError(e);
-                // computeIfAbsent 내부에서 예외 발생 시 null 반환하여 맵에 저장되지 않도록
                 emitterIds.remove(id);
+                newEmitter.completeWithError(e);
                 throw new RuntimeException("SSE 연결 초기화 실패", e);
             }
 
-            return newEmitter;
+            return newEmitter; // 새 연결 반환
         });
-
-        // 이미 존재하는 연결인 경우
-        if (emitter != null) {
-            try {
-                emitter.send(SseEmitter.event()
-                        .name("reconnect")
-                        .data("기존 연결 재사용됨"));
-            } catch (IOException e) {
-                log.warn("기존 연결에 메시지 전송 실패: {}", clientId);
-            }
-        }
-
-        return emitter;
     }
     
     private void removeEmitter(String clientId) {
