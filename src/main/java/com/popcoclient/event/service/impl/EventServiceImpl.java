@@ -419,7 +419,17 @@ public class EventServiceImpl {
             QuizQuestionId nextQuestionKey = QuizQuestionId.of(nextQuestionId, quizId);
             if (!quizQuestionRepository.existsById(nextQuestionKey)) {
                 log.info("🏁 마지막 문제 완료! 퀴즈 종료");
-                // 우승자를 가려내야함 -> 어떻게???
+                int currentSurvivors = getTotalSurvivors(questionId);
+                if (currentSurvivors > 0) {
+                    // 생존자 중 1등을 우승자로 발표
+                    Long winnerId = getFirstPlaceSurvivor(questionId);
+                    if (winnerId != null) {
+                        announceWinner(quizId, questionId, winnerId, 1);
+                    }
+                } else {
+                    // 아무도 정답 못함 - 우승자 없음 발표
+                    announceNoWinner(quizId, questionId);
+                }
                 return;
             }
 
@@ -479,7 +489,10 @@ public class EventServiceImpl {
         saveCorrectAnswer(attempt, selectedOption, qualificationOrder, advanced);
 
         if (advanced) {
-            int totalSurvivors = getTotalSurvivors(questionId);
+            if (isLastQuestion(quizId, questionId) && qualificationOrder == 1) { // 우승자 결정 로직
+                announceWinner(quizId, questionId, userId, 1);
+            }
+            int totalSurvivors = getTotalSurvivors(questionId); // 1~2번 문제
             broadcastSurvivorUpdate(quizId, questionId, qualificationOrder.intValue(), totalSurvivors);
             return QuizSubmissionResultDto.survived(qualificationOrder.intValue(), totalSurvivors);
         } else {
@@ -616,6 +629,85 @@ public class EventServiceImpl {
         }
     }
 
+    /**
+     * 🏁 우승자 결정 및 브로드캐스트
+     */
+    private void announceWinner(Long quizId, Long questionId, Long winnerId, int winnerRank) {
+        try {
+            // 우승자 정보 조회
+            User winner = userRepository.findById(winnerId)
+                    .orElse(null);
+
+            String winnerName = winner != null ? winner.getName() : "익명";
+
+            String questionTopic = "/topic/quiz/" + quizId + "/question/" + questionId;
+            Map<String, Object> winnerMessage = Map.of(
+                    "type", "WINNER_ANNOUNCED",
+                    "winnerName", winnerName,
+                    "winnerRank", winnerRank,
+                    "message", String.format("🎉 축하합니다! %s님이 우승하셨습니다!", winnerName)
+            );
+
+            messagingTemplate.convertAndSend(questionTopic, winnerMessage);
+            log.info("🏆 우승자 발표 완료 - quizId: {}, winnerId: {}, winnerName: {}",
+                    quizId, winnerId, winnerName);
+
+        } catch (Exception e) {
+            log.error("우승자 발표 실패 - quizId: {}, questionId: {}", quizId, questionId, e);
+        }
+    }
+
+    private void announceNoWinner(Long quizId, Long questionId) {
+        try {
+            String questionTopic = "/topic/quiz/" + quizId + "/question/" + questionId;
+            Map<String, Object> noWinnerMessage = Map.of(
+                    "type", "NO_WINNER",
+                    "quizId", quizId,
+                    "questionId", questionId,
+                    "message", "😢 아쉽게도 우승자가 없습니다. 다음 기회에 도전해보세요!"
+            );
+
+            messagingTemplate.convertAndSend(questionTopic, noWinnerMessage);
+            log.info("💀 우승자 없음 발표 완료 - quizId: {}", quizId);
+
+        } catch (Exception e) {
+            log.error("우승자 없음 발표 실패 - quizId: {}, questionId: {}", quizId, questionId, e);
+        }
+    }
+
+    /**
+     * 🏆 Redis에서 1등 생존자 조회
+     */
+    private Long getFirstPlaceSurvivor(Long questionId) {
+        try {
+            String survivorKey = RedisKeys.survivorRanking(questionId);
+            Set<String> firstPlace = eventRedisTemplate.opsForZSet().range(survivorKey, 0, 0);
+
+            if (firstPlace != null && !firstPlace.isEmpty()) {
+                String userIdStr = firstPlace.iterator().next();
+                return Long.parseLong(userIdStr);
+            }
+
+            return null;
+        } catch (Exception e) {
+            log.error("1등 생존자 조회 실패 - questionId: {}", questionId, e);
+            return null;
+        }
+    }
+
+    /**
+     * 🏁 마지막 문제인지 확인
+     */
+    private boolean isLastQuestion(Long quizId, Long questionId) {
+        try {
+            Long nextQuestionId = questionId + 1;
+            QuizQuestionId nextQuestionKey = QuizQuestionId.of(nextQuestionId, quizId);
+            return !quizQuestionRepository.existsById(nextQuestionKey);
+        } catch (Exception e) {
+            log.error("마지막 문제 확인 실패 - quizId: {}, questionId: {}", quizId, questionId, e);
+            return false;
+        }
+    }
 
     // ===== 🛠️ 헬퍼 메서드들 =====
 
