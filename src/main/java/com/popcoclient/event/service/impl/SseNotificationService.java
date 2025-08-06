@@ -51,9 +51,14 @@ public class SseNotificationService {
             log.info("SSE connection established for client: {}", clientId);
         } catch (IOException e) {
             log.error("Failed to send connection message to client: {}", clientId, e);
+            emitter.completeWithError(e);
             removeEmitter(clientId);
+            return null;
         }
-        
+
+        emitters.put(clientId, emitter);
+        emitterIds.add(clientId);
+
         return emitter;
     }
     

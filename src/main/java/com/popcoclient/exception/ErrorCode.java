@@ -62,7 +62,10 @@ public enum ErrorCode {
   QUIZ_ID_MISMATCH_FOR_TODAY(HttpStatus.BAD_REQUEST,"QUIZ_ID_MISMATCH_FOR_TODAY", "퀴즈 아이디와 오늘 퀴즈 아이디가 맞지 않습니다."),
 
   // Quiz
-  QUIZ_NOT_FOUND(HttpStatus.NOT_FOUND, "QUIZ_NOT_FOUND", "존재하지 않는 이벤트 ID 입니다.");
+  QUIZ_NOT_FOUND(HttpStatus.NOT_FOUND, "QUIZ_NOT_FOUND", "존재하지 않는 이벤트 ID 입니다."),
+
+  // SSE
+  SSE_CONNECTION_ERROR(HttpStatus.SERVICE_UNAVAILABLE, "SSE_CONNECTION_ERROR", "SSE 연결 에러!");
 
   private final HttpStatus status;
   private final String code;
