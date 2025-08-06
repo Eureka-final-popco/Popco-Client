@@ -2,6 +2,7 @@ package com.popcoclient.content.dto.response;
 
 import com.popcoclient.content.entity.Content;
 import com.popcoclient.content.entity.Genre;
+import com.popcoclient.content.entity.enums.ReactionType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -31,8 +32,9 @@ public class ContentDetailDto {
     private List<CrewDto> crews;
     private List<VideoDto> videos;
     private List<WatchProviderDto> watchProviders;
+    private ReactionType userReaction;
 
-    public static ContentDetailDto of(Content content, List<Genre> genres) {
+    public static ContentDetailDto of(Content content, List<Genre> genres, ReactionType userReaction) {
         return ContentDetailDto.builder()
                 .id(content.getContentId().getId())
                 .type(content.getContentId().getType())
@@ -49,6 +51,7 @@ public class ContentDetailDto {
                 .crews(CrewDto.from(content.getCrews()))
                 .videos(VideoDto.from(content.getVideos()))
                 .watchProviders(WatchProviderDto.from(content.getWatchProviders()))
+                .userReaction(userReaction)
                 .build();
     }
 }

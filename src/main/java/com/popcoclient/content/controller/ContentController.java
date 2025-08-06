@@ -52,10 +52,21 @@ public class ContentController {
         return ResponseEntity.ok(ApiResponse.success("일간 랭킹 조회에 성공했습니다.", response));
     }
 
-    @Operation(summary = "콘텐츠 상세 조회", description = "콘텐츠 상세 정보를 조회할 수 있다.")
+    @Operation(summary = "콘텐츠 상세 조회", description = "콘텐츠 상세 정보를 조회할 수 있다. 로그인한 사용자의 경우 좋아요/싫어요 여부가 포함된다.")
     @GetMapping("/ids/{id}/types/{type}")
-    public ResponseEntity<ApiResponse<ContentDetailDto>> getContent(@PathVariable Long id, @PathVariable String type) {
-        ContentDetailDto response = contentService.getContentDetail(id, type);
+    public ResponseEntity<ApiResponse<ContentDetailDto>> getContent(
+            @PathVariable Long id,
+            @PathVariable String type) {
+
+        // 로그인 여부 확인
+        Long userId = null;
+        try {
+            userId = jwtProvider.getNullableUserId();
+        } catch (Exception e) {
+            // 로그인하지 않은 사용자도 조회 가능
+        }
+
+        ContentDetailDto response = contentService.getContentDetail(id, type, userId);
         return ResponseEntity.ok(ApiResponse.success("콘텐츠 상세 조회에 성공했습니다.", response));
     }
 
