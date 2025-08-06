@@ -10,6 +10,8 @@ import com.popcoclient.event.repository.*;
 import com.popcoclient.exception.BusinessException;
 import com.popcoclient.exception.ErrorCode;
 import com.popcoclient.user.entity.User;
+import com.popcoclient.user.entity.UserDetail;
+import com.popcoclient.user.repository.UserDetailRepository;
 import com.popcoclient.user.repository.UserRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -52,6 +54,7 @@ public class EventServiceImpl {
     private final Map<String, Long> activeTimers = new ConcurrentHashMap<>(); // key: "quizId:questionId", value: 시작시간
     private final Map<String, ScheduledFuture<?>> activeBroadcasts = new ConcurrentHashMap<>();
     private final Map<Long, ScheduledFuture<?>> waitingTimerBroadcasts = new ConcurrentHashMap<>();
+    private final UserDetailRepository userDetailRepository;
 
     public EventServiceImpl(
             DistributeLockServiceImpl lockService,
@@ -63,8 +66,8 @@ public class EventServiceImpl {
             UserRepository userRepository,
             QuizRepository quizRepository,
             SimpMessagingTemplate messagingTemplate,
-            TaskScheduler taskScheduler
-    ) {
+            TaskScheduler taskScheduler,
+            UserDetailRepository userDetailRepository) {
         this.lockService = lockService;
         this.eventRedisTemplate = eventRedisTemplate;
         this.userQuizAnswerRepository = userQuizAnswerRepository;
@@ -76,6 +79,7 @@ public class EventServiceImpl {
         this.messagingTemplate = messagingTemplate;
         this.taskScheduler = taskScheduler;
         this.submitAnswerScript = createSubmitAnswerScript();
+        this.userDetailRepository = userDetailRepository;
     }
 
     public Long getQuizId(){
@@ -617,10 +621,10 @@ public class EventServiceImpl {
     private void announceWinner(Long quizId, Long questionId, Long winnerId, int winnerRank) {
         try {
             // 우승자 정보 조회
-            User winner = userRepository.findById(winnerId)
+            UserDetail winner = userDetailRepository.findById(winnerId)
                     .orElse(null);
 
-            String winnerName = winner != null ? winner.getName() : "익명";
+            String winnerName = winner != null ? winner.getNickname() : "익명";
 
             String questionTopic = "/topic/quiz/" + quizId + "/question/" + questionId;
             Map<String, Object> winnerMessage = Map.of(
