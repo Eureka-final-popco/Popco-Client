@@ -14,10 +14,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 @RestController
@@ -34,9 +31,11 @@ public class SseController {
     @Operation(summary = "SSE 채널 구독 API", description = "프론트에서 new EventSource('/notifications/stream') 으로 이벤트 서버 연결, 이후 송신은 자동처리됨")
     @SecurityRequirement(name = "bearerAuth")
     @GetMapping(value = "/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public SseEmitter streamNotifications(HttpServletRequest request) {
+    public SseEmitter streamNotifications(
+            @RequestParam String token,
+            HttpServletRequest request) {
         // 1. 반환 타입을 ResponseEntity<?> 에서 SseEmitter 로 변경했습니다.
-        Long userId = jwtProvider.getRequiredUserId();
+        Long userId = Long.parseLong(jwtProvider.getUserIdFromToken(token));
         SseEmitter emitter = sseManagementService.createSseConnection(userId.toString(), request);
 
         // 2. createSseConnection에서 연결 실패 시 null을 반환하도록 수정했으므로, null 체크를 합니다.
