@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.io.IOException;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -22,42 +23,68 @@ public class SseNotificationService {
     private final CopyOnWriteArrayList<String> emitterIds = new CopyOnWriteArrayList<>();
     
     public SseEmitter createEmitter(String clientId) {
-        SseEmitter emitter = new SseEmitter(30 * 60 * 1000L); // 30분 타임아웃
-        
-        emitters.put(clientId, emitter);
-        emitterIds.add(clientId);
-        
-        // 연결 종료 처리
-        emitter.onCompletion(() -> {
-            log.info("SSE connection completed for client: {}", clientId);
-            removeEmitter(clientId);
-        });
-        
-        emitter.onTimeout(() -> {
-            log.info("SSE connection timed out for client: {}", clientId);
-            removeEmitter(clientId);
-        });
-        
-        emitter.onError((ex) -> {
-            log.error("SSE connection error for client: {}", clientId, ex);
-            removeEmitter(clientId);
-        });
-        
-        // 연결 확인 메시지 전송
-        try {
-            emitter.send(SseEmitter.event()
-                .name("connect")
-                .data("Connected to notification service"));
-            log.info("SSE connection established for client: {}", clientId);
-        } catch (IOException e) {
-            log.error("Failed to send connection message to client: {}", clientId, e);
-            emitter.completeWithError(e);
-            removeEmitter(clientId);
-            return null;
-        }
+        SseEmitter emitter = emitters.computeIfAbsent(clientId, id -> {
+            log.info("🆕 새로운 SSE 연결을 생성합니다 - clientId: {}", id);
 
-        emitters.put(clientId, emitter);
-        emitterIds.add(clientId);
+            SseEmitter newEmitter = new SseEmitter(30 * 60 * 1000L); // 30분 타임아웃
+
+            // emitterIds에도 추가 (중복 체크)
+            if (!emitterIds.contains(id)) {
+                emitterIds.add(id);
+            }
+
+            // 연결 종료 처리
+            newEmitter.onCompletion(() -> {
+                log.info("SSE connection completed for client: {}", id);
+                removeEmitter(id);
+            });
+
+            newEmitter.onTimeout(() -> {
+                log.info("SSE connection timed out for client: {}", id);
+                removeEmitter(id);
+            });
+
+            newEmitter.onError((ex) -> {
+                log.error("SSE connection error for client: {}", id, ex);
+                removeEmitter(id);
+            });
+
+            // 연결 확인 메시지 전송
+            try {
+                newEmitter.send(SseEmitter.event()
+                        .name("connect")
+                        .data(Map.of(
+                                "type", "CONNECTION_SUCCESS",
+                                "message", "SSE 연결 성공!",
+                                "clientId", id,
+                                "timestamp", System.currentTimeMillis()
+                        )));
+
+                // 🎯 추가로 환영 메시지도 전송
+                newEmitter.send(SseEmitter.event()
+                        .name("welcome")
+                        .data("환영합니다! 실시간 알림을 받을 준비가 되었습니다."));
+            } catch (IOException e) {
+                log.error("Failed to send connection message to client: {}", id, e);
+                newEmitter.completeWithError(e);
+                // computeIfAbsent 내부에서 예외 발생 시 null 반환하여 맵에 저장되지 않도록
+                emitterIds.remove(id);
+                throw new RuntimeException("SSE 연결 초기화 실패", e);
+            }
+
+            return newEmitter;
+        });
+
+        // 이미 존재하는 연결인 경우
+        if (emitter != null) {
+            try {
+                emitter.send(SseEmitter.event()
+                        .name("reconnect")
+                        .data("기존 연결 재사용됨"));
+            } catch (IOException e) {
+                log.warn("기존 연결에 메시지 전송 실패: {}", clientId);
+            }
+        }
 
         return emitter;
     }
