@@ -35,21 +35,6 @@ public class JwtAuthenticationFilter extends GenericFilterBean {
 
         String requestURI = ((HttpServletRequest) servletRequest).getRequestURI();
 
-//         if ((request.getMethod().equals("GET") &&
-//                 (requestURI.startsWith("/reviews/contents")
-//                         || requestURI.startsWith("/contents") || requestURI.startsWith("/reviews/weekly-trend")))
-//                 || requestURI.startsWith("/auth/login")
-//                 || requestURI.startsWith("/auth/refresh")
-//                 || requestURI.startsWith("/auth/kakao")
-//                 || requestURI.startsWith("/users/signup")
-//                 || requestURI.startsWith("/users/email")
-//                 || requestURI.startsWith("/swagger-ui")
-//                 || requestURI.startsWith("/v3/api-docs")
-//         )
-//         {
-//             chain.doFilter(servletRequest, servletResponse);
-//             return;
-//         }
         try {
             String accessToken = resolveAccessToken(request);
             String refreshToken = resolveRefreshToken(request);

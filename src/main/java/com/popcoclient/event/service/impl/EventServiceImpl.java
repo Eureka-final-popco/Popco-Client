@@ -38,7 +38,6 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public class EventServiceImpl {
 
-    // ===== 의존성 주입 =====
     private final DistributeLockServiceImpl lockService;
     private final @Qualifier("eventRedisTemplate") RedisTemplate<String, String> eventRedisTemplate;
     private final RedisScript<Long> submitAnswerScript;
@@ -51,7 +50,6 @@ public class EventServiceImpl {
     private final SimpMessagingTemplate messagingTemplate;
     private final TaskScheduler taskScheduler;
 
-    // ===== 타이머 관리 (메모리) =====
     private final Map<String, Long> activeTimers = new ConcurrentHashMap<>(); // key: "quizId:questionId", value: 시작시간
     private final Map<String, ScheduledFuture<?>> activeBroadcasts = new ConcurrentHashMap<>();
     private final Map<Long, ScheduledFuture<?>> waitingTimerBroadcasts = new ConcurrentHashMap<>();
@@ -109,7 +107,7 @@ public class EventServiceImpl {
                 .build();
     }
 
-    // ===== 📋 1. 답안 제출 API =====
+    // 답안 제출 API
     public QuizSubmissionResultDto submitAnswer(Long quizId, Long questionId, Long userId, Long optionId) {
         long startTime = System.currentTimeMillis();
         log.info("Answer submission started - quizId: {}, questionId: {}, userId: {}, optionId: {}",
@@ -124,7 +122,7 @@ public class EventServiceImpl {
         QuizOption selectedOption = validation.getSelectedOption();
         UserQuizAttempt attempt = validation.getAttempt();
 
-        // 🔐 2단계: 중복 제출 방지 락
+        // 중복 제출 방지 락
         String duplicateLockKey = DistributeLockServiceImpl.LockKeys.participantAnswer(questionId, userId);
         String lockValue = UUID.randomUUID().toString();
 
@@ -134,20 +132,20 @@ public class EventServiceImpl {
         }
 
         try {
-            // 🔍 3단계: 이미 답했는지 확인
+            // 이미 답했는지 확인
             QuizQuestionId questionKey = QuizQuestionId.of(questionId, quizId);
             boolean alreadyAnswered = userQuizAnswerRepository.existsByAttemptAndQuestionId(attempt, questionKey);
             if (alreadyAnswered) {
                 return QuizSubmissionResultDto.alreadySubmitted();
             }
 
-            // ✅ 4단계: 정답 여부 확인
+            // 정답 여부 확인
             if (!selectedOption.getIsCorrect()) {
                 saveWrongAnswer(attempt, selectedOption);
                 return QuizSubmissionResultDto.wrongAnswer();
             }
 
-            // 🏁 5단계: 정답자 선착순 처리
+            // 정답자 선착순 처리
             QuizSubmissionResultDto result = processCorrectAnswer(question, selectedOption, attempt, startTime);
 
             return result;
@@ -157,7 +155,7 @@ public class EventServiceImpl {
         }
     }
 
-    // ===== 📊 2. 퀴즈 상태 조회 API =====
+    // 퀴즈 상태 조회 API
     public QuizStatusResponseDto getQuizStatus(Long quizId, Long questionId) {
         try {
             // QuizQuestion 조회
@@ -198,7 +196,7 @@ public class EventServiceImpl {
         }
     }
 
-    // ===== 📈 3. 실시간 브로드캐스트 API =====
+    // 3. 실시간 브로드캐스트 API
     public void broadcastSurvivorUpdate(Long quizId, Long questionId, int latestRank, int totalSurvivors) {
         try {
             QuizStatusResponseDto currentStatus = getQuizStatus(quizId, questionId);
@@ -246,7 +244,7 @@ public class EventServiceImpl {
         messagingTemplate.convertAndSend(questionTopic, timer);
     }
 
-    // ===== 🏆 4. 생존자 순위 조회 API =====
+    // 생존자 순위 조회 API
     public SurvivorRankingResponse getSurvivorRanking(Long quizId, Long questionId, int page, int size) {
         try {
             String survivorKey = RedisKeys.survivorRanking(questionId);
@@ -289,15 +287,14 @@ public class EventServiceImpl {
         }
     }
 
-    // ===== 🚀 핵심 내부 로직들 =====
+    // 핵심
 
     /**
      * 다음 문제 준비 체크 및 시작
      */
     private void checkAndStartNextQuestion(Long quizId, Long questionId) {
-        log.info("🔍 다음 문제 체크 시작 - 현재 문제: {}", questionId);
 
-        // 🎯 현재 문제의 정원 확인
+        // 정원 확인
         QuizQuestionId currentQuestionKey = QuizQuestionId.of(questionId, quizId);
         QuizQuestion currentQuestion = quizQuestionRepository.findById(currentQuestionKey)
                 .orElseThrow(() -> new BusinessException(ErrorCode.QUIZ_NOT_FOUND));
@@ -305,10 +302,7 @@ public class EventServiceImpl {
         int currentSurvivors = getTotalSurvivors(questionId);
         int currentCapacity = currentQuestion.getFirstCapacity();
 
-        log.info("📊 현재 상황 - 생존자: {}/{}, 정원 달성: {}", currentSurvivors, currentCapacity, currentSurvivors >= currentCapacity);
-
         Long nextQuestionId = questionId + 1;
-        log.info("✅ 정원 달성! 다음 문제 {} 준비 중...", nextQuestionId);
 
         // 다음 문제가 존재하는지 확인
         QuizQuestionId nextQuestionKey = QuizQuestionId.of(nextQuestionId, quizId);
@@ -322,20 +316,16 @@ public class EventServiceImpl {
 
         String timerKey = quizId + ":" + nextQuestionId;
 
-        log.info("🔍 다음 문제 중복 시작 체크 - timerKey: {}, 이미 존재: {}",
-                timerKey, activeTimers.containsKey(timerKey));
-
         // 이미 시작된 문제는 중복 시작 방지
         if (!activeTimers.containsKey(timerKey)) {
             log.info("🚀 다음 문제 {} 시작", nextQuestionId);
 
             // 🕒 이전 라운드 타임 아웃 즉시 다음 문제 시작
             taskScheduler.schedule(() -> {
-                log.info("⏰ 문제 {} 시작 실행", nextQuestionId);
                 startQuestion(quizId, nextQuestionId);
             }, Instant.now());
         } else {
-            log.warn("⚠️ 문제 {} 이미 시작됨 - 중복 방지", nextQuestionId);
+            log.warn("문제 {} 이미 시작됨 - 중복 방지", nextQuestionId);
         }
     }
 
@@ -345,59 +335,50 @@ public class EventServiceImpl {
     private void startQuestion(Long quizId, Long questionId) {
         String timerKey = quizId + ":" + questionId;
 
-        // 메모리에 시작시간 저장
         activeTimers.computeIfAbsent(timerKey, k -> {
             long questionStartTime = System.currentTimeMillis();
             log.info("🚀 문제 {}를 새로 시작하고 타이머를 등록합니다.", questionId);
 
-            // --- 이 블록 안의 로직은 단 한 번만 실행됨이 보장됩니다 ---
-
-            // 1초마다 타이머 브로드캐스트 시작
+            // 1초마다 타이머 브로드캐스트
             ScheduledFuture<?> timerBroadcast = taskScheduler.scheduleAtFixedRate(() -> {
                 try {
                     QuizStatusResponseDto currentStatus = getQuizStatus(quizId, questionId);
                     String questionTopic = "/topic/quiz/" + quizId + "/question/" + questionId;
                     messagingTemplate.convertAndSend(questionTopic, currentStatus);
-                    log.debug("📡 문제 {} 브로드캐스트: {}초 남음", questionId, currentStatus.getRemainingTime());
                 } catch (Exception e) {
                     log.error("Failed to broadcast timer for question: {}", questionId, e);
                 }
             }, Instant.now().plus(1, ChronoUnit.SECONDS), Duration.ofSeconds(1));
 
             activeBroadcasts.put(timerKey, timerBroadcast);
-            log.info("✅ 문제 {} 브로드캐스트 저장: {} (전체 {}개)", questionId, timerKey, activeBroadcasts.size());
 
             // 10초 후 자동 종료
             taskScheduler.schedule(() -> {
-                log.info("⏰ 문제 {} 10초 타임아웃 실행", questionId);
                 activeTimers.remove(timerKey);
-                log.info("🗑️ activeTimers에서 제거: {} (남은 {}개)", timerKey, activeTimers.size());
 
                 ScheduledFuture<?> broadcast = activeBroadcasts.remove(timerKey);
                 if (broadcast != null && !broadcast.isCancelled()) {
                     broadcast.cancel(false);
-                    log.info("🗑️ activeBroadcasts에서 제거: {} (남은 {}개)", timerKey, activeBroadcasts.size());
                 }
 
-                log.info("문제 {} 시간 종료! 타이머 및 브로드캐스트 제거됨", questionId);
                 broadcastQuestionTimeout(quizId, questionId);
                 checkAndStartNextQuestionAfterTimeout(quizId, questionId);
             }, Instant.now().plus(10, ChronoUnit.SECONDS));
 
             broadcastQuestionStart(quizId, questionId);
 
-            return questionStartTime; // 맵에 저장할 값(문제 시작 시간)을 반환
+            return questionStartTime; // 문제 시작 시간 반환
         });
     }
 
     /**
-     * 🎯 문제1 시작 (퀴즈 시작 버튼으로 즉시 시작)
+     * 문제1 시작 (퀴즈 시작 버튼으로 즉시 시작)
      */
     public void startFirstQuestion(Long quizId) {
         Long questionId = 1L;
         String timerKey = quizId + ":" + questionId;
 
-        // 이미 시작되었으면 중복 방지
+        // 중복 방지
         if (activeTimers.containsKey(timerKey)) {
             log.warn("문제1 이미 시작됨 - quizId: {}", quizId);
             return;
@@ -405,7 +386,6 @@ public class EventServiceImpl {
 
         log.info("문제1 시작! 즉시 타이머 가동 - quizId: {}", quizId);
 
-        // 바로 문제 시작 (5초 대기 없음)
         startQuestion(quizId, questionId);
     }
 
@@ -454,19 +434,16 @@ public class EventServiceImpl {
         try {
             Long nextQuestionId = questionId + 1;
 
-            // 다음 문제가 존재하는지 확인
             QuizQuestionId nextQuestionKey = QuizQuestionId.of(nextQuestionId, quizId);
             if (!quizQuestionRepository.existsById(nextQuestionKey)) {
-                log.info("🏁 마지막 문제 완료! 퀴즈 종료");
                 int currentSurvivors = getTotalSurvivors(questionId);
                 if (currentSurvivors > 0) {
-                    // 생존자 중 1등을 우승자로 발표
                     Long winnerId = getFirstPlaceSurvivor(questionId);
                     if (winnerId != null) {
                         announceWinner(quizId, questionId, winnerId, 1);
                     }
                 } else {
-                    // 아무도 정답 못함 - 우승자 없음 발표
+                    // 아무도 정답 못함
                     announceNoWinner(quizId, questionId);
                 }
                 return;
@@ -475,21 +452,19 @@ public class EventServiceImpl {
             // 현재 생존자가 있는지 확인
             int currentSurvivors = getTotalSurvivors(questionId);
             if (currentSurvivors > 0) {
-                log.info("🚀 10초 타임아웃 - 생존자 {}명과 함께 다음 문제 {} 시작", currentSurvivors, nextQuestionId);
 
                 String timerKey = quizId + ":" + nextQuestionId;
                 if (!activeTimers.containsKey(timerKey)) {
                     taskScheduler.schedule(() -> {
-                        log.info("⏰ 타임아웃 후 - 문제 {} 시작 실행", nextQuestionId);
                         startQuestion(quizId, nextQuestionId);
                     }, Instant.now());
                 }
             } else {
-                log.info("💀 생존자가 없어서 퀴즈 종료");
+                log.info("생존자가 없어서 퀴즈 종료");
             }
 
         } catch (Exception e) {
-            log.error("❌ 타임아웃 후 다음 문제 시작 체크 실패", e);
+            log.error("타임아웃 후 다음 문제 시작 체크 실패", e);
         }
     }
 
@@ -504,7 +479,7 @@ public class EventServiceImpl {
         int firstCapacity = question.getFirstCapacity();
         long submissionTime = System.currentTimeMillis();
 
-        // 🚀 Redis Lua Script로 선착순 순서 결정
+        // Lua Script로 선착순 순서 결정
         List<String> keys = Arrays.asList(
                 RedisKeys.survivorRanking(questionId),
                 RedisKeys.submissionCount(questionId),
@@ -523,7 +498,6 @@ public class EventServiceImpl {
             return QuizSubmissionResultDto.error("시스템 오류가 발생했습니다.");
         }
 
-        // DB에 정답 저장
         boolean advanced = (qualificationOrder > 0 && qualificationOrder <= firstCapacity);
         saveCorrectAnswer(attempt, selectedOption, qualificationOrder, advanced);
 
@@ -556,22 +530,20 @@ public class EventServiceImpl {
     }
 
     /**
-     * ⏰ 이벤트 시작까지 남은 시간 조회
+     * 이벤트 시작까지 남은 시간 조회
      */
     public QuizWaitingResponseDto getEventTimer(Quiz quiz) {
         try {
             LocalDateTime currentTime = LocalDateTime.now();
-            LocalDateTime eventStartTime = quiz.getStartAt(); // Quiz 엔티티의 시작 시간 필드명에 맞게 수정 필요
+            LocalDateTime eventStartTime = quiz.getStartAt();
 
             Duration duration = Duration.between(currentTime, eventStartTime);
             long remainingSeconds = Math.max(0, duration.getSeconds());
 
-            // 이벤트 상태 판단
             boolean isEventStarted = currentTime.isAfter(eventStartTime) || currentTime.isEqual(eventStartTime);
             QuizStatus quizStatus;
 
             if (isEventStarted) {
-                // 이미 시작되었는지 확인 (첫 번째 문제가 활성화되어 있는지)
                 String firstQuestionTimerKey = quiz.getQuizId() + ":" + 1L;
                 if (activeTimers.containsKey(firstQuestionTimerKey)) {
                     quizStatus = QuizStatus.ACTIVE;
@@ -582,7 +554,6 @@ public class EventServiceImpl {
                 quizStatus = QuizStatus.WAITING;
             }
 
-            // 포맷된 시간 문자열 생성
             List<Long> formattedTime = formatRemainingTime(remainingSeconds);
 
             return QuizWaitingResponseDto.builder()
@@ -603,7 +574,7 @@ public class EventServiceImpl {
     }
 
     /**
-     * ⏰ 이벤트 대기 타이머 브로드캐스트 시작
+     * 이벤트 대기 타이머 브로드캐스트 시작
      */
     public void startEventWaitingBroadcast(Long quizId) {
         Quiz quiz = quizRepository.findById(quizId)
@@ -617,18 +588,14 @@ public class EventServiceImpl {
         }
 
         waitingTimerBroadcasts.computeIfAbsent(quizId, id -> {
-            log.info("🚀 새로운 대기 타이머 브로드캐스트를 등록하고 맵에 저장합니다 - quizId: {}", id);
 
             return taskScheduler.scheduleAtFixedRate(() -> {
                 try {
-                    // 매번 DB를 조회하는 대신, 미리 조회한 quiz 객체를 사용하여 효율을 높입니다.
                     QuizWaitingResponseDto timerInfo = getEventTimer(quiz);
                     String waitingTopic = "/topic/quiz/" + id + "/waiting";
                     messagingTemplate.convertAndSend(waitingTopic, timerInfo);
 
-                    // 이벤트가 시작되면 이 예약 작업 스스로를 중단시킵니다.
                     if (timerInfo.getQuizStatus() != QuizStatus.WAITING) {
-                        log.info("⏰ 이벤트 시작! 대기 타이머 브로드캐스트 중단 - quizId: {}", id);
                         stopEventWaitingBroadcast(id);
                     }
                 } catch (Exception e) {
@@ -639,23 +606,20 @@ public class EventServiceImpl {
     }
 
     /**
-     * ⏰ 이벤트 대기 타이머 브로드캐스트 중단
+     * 이벤트 대기 타이머 브로드캐스트 중단
      */
     public void stopEventWaitingBroadcast(Long quizId) {
         ScheduledFuture<?> broadcast = waitingTimerBroadcasts.remove(quizId);
         if (broadcast != null && !broadcast.isCancelled()) {
             broadcast.cancel(false);
-            log.info("🗑️ 대기 타이머 브로드캐스트 중단 - quizId: {} (남은 {}개)",
-                    quizId, waitingTimerBroadcasts.size());
         }
     }
 
     /**
-     * 🏁 우승자 결정 및 브로드캐스트
+     * 우승자 결정 및 브로드캐스트
      */
     private void announceWinner(Long quizId, Long questionId, Long winnerId, int winnerRank) {
         try {
-            // 우승자 정보 조회
             UserDetail winner = userDetailRepository.findById(winnerId)
                     .orElse(null);
 
@@ -666,11 +630,11 @@ public class EventServiceImpl {
                     "type", "WINNER_ANNOUNCED",
                     "winnerName", winnerName,
                     "winnerRank", winnerRank,
-                    "message", String.format("🎉 축하합니다! %s님이 우승하셨습니다!", winnerName)
+                    "message", String.format("축하합니다! %s님이 우승하셨습니다!", winnerName)
             );
 
             messagingTemplate.convertAndSend(questionTopic, winnerMessage);
-            log.info("🏆 우승자 발표 완료 - quizId: {}, winnerId: {}, winnerName: {}",
+            log.info("우승자 발표 완료 - quizId: {}, winnerId: {}, winnerName: {}",
                     quizId, winnerId, winnerName);
 
         } catch (Exception e) {
@@ -685,11 +649,10 @@ public class EventServiceImpl {
                     "type", "NO_WINNER",
                     "quizId", quizId,
                     "questionId", questionId,
-                    "message", "😢 아쉽게도 우승자가 없습니다. 다음 기회에 도전해보세요!"
+                    "message", "아쉽게도 우승자가 없습니다. 다음 기회에 도전해보세요!"
             );
 
             messagingTemplate.convertAndSend(questionTopic, noWinnerMessage);
-            log.info("💀 우승자 없음 발표 완료 - quizId: {}", quizId);
 
         } catch (Exception e) {
             log.error("우승자 없음 발표 실패 - quizId: {}, questionId: {}", quizId, questionId, e);
@@ -697,7 +660,7 @@ public class EventServiceImpl {
     }
 
     /**
-     * 🏆 Redis에서 1등 생존자 조회
+     * Redis에서 1등 생존자 조회
      */
     private Long getFirstPlaceSurvivor(Long questionId) {
         try {
@@ -717,7 +680,7 @@ public class EventServiceImpl {
     }
 
     /**
-     * 🏁 마지막 문제인지 확인
+     * 마지막 문제인지 확인
      */
     private boolean isLastQuestion(Long quizId, Long questionId) {
         try {
@@ -730,7 +693,7 @@ public class EventServiceImpl {
         }
     }
 
-    // ===== 🛠️ 헬퍼 메서드들 =====
+    // =====헬퍼 메서드=====
 
     private QuizSubmissionResultDto createErrorResult(QuizSubmissionResultDto.SubmissionStatus status, String message) {
         return QuizSubmissionResultDto.builder()
@@ -742,7 +705,6 @@ public class EventServiceImpl {
     }
 
     private QuizValidationResultDto validateAndLoadEntities(Long quizId, Long questionId, Long userId, Long optionId) {
-        // User 조회
         User user = userRepository.findById(userId).orElse(null);
         if (user == null) {
             return QuizValidationResultDto.invalid(
@@ -751,7 +713,6 @@ public class EventServiceImpl {
             );
         }
 
-        // Quiz 조회
         Quiz quiz = quizRepository.findById(quizId).orElse(null);
         if (quiz == null) {
             return QuizValidationResultDto.invalid(
@@ -760,7 +721,6 @@ public class EventServiceImpl {
             );
         }
 
-        // QuizQuestion 조회
         QuizQuestionId questionKey = QuizQuestionId.of(questionId, quizId);
         QuizQuestion question = quizQuestionRepository.findById(questionKey).orElse(null);
         if (question == null) {
@@ -770,7 +730,6 @@ public class EventServiceImpl {
             );
         }
 
-        // QuizOption 조회
         QuizOptionId qoId = QuizOptionId.of(optionId, questionId, quizId);
         QuizOption selectedOption = quizOptionRepository.findById(qoId).orElse(null);
         if (selectedOption == null) {
@@ -780,7 +739,6 @@ public class EventServiceImpl {
             );
         }
 
-        // UserQuizAttempt 조회 또는 생성
         UserQuizAttempt attempt = userQuizAttemptRepository
                 .findByQuizAndUser(quiz, user)
                 .orElseGet(() -> createNewAttempt(quiz, user));
@@ -853,15 +811,15 @@ public class EventServiceImpl {
                 local submissionTime = tonumber(ARGV[2])  -- 제출 시간
                 local firstCapacity = tonumber(ARGV[3])   -- 선착순 인원 제한
                 
-                -- 1. 중복 참여 확인
+                -- 중복 참여 확인
                 if redis.call('ZSCORE', survivorKey, userId) then
-                    return -1 -- 이미 참여함
+                    return -1
                 end
                 
-                -- 2. 원자적으로 순위 할당
+                -- 원자적으로 순위 할당
                 local currentRank = redis.call('INCR', countKey)
                 
-                -- 3. 정원 내 여부 확인
+                -- 정원 내 여부 확인
                 if currentRank <= firstCapacity then
                     -- 생존자 목록에 추가
                     redis.call('ZADD', survivorKey, submissionTime, userId)
@@ -871,7 +829,6 @@ public class EventServiceImpl {
                     redis.call('HSET', progressKey, 'totalSubmissions', currentRank)
                     redis.call('HSET', progressKey, 'survivors', redis.call('ZCARD', survivorKey))
                 
-                    -- TTL 설정
                     if currentRank == 1 then
                         redis.call('EXPIRE', survivorKey, 30)
                         redis.call('EXPIRE', countKey, 30)
