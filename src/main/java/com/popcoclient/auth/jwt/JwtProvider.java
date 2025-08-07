@@ -49,7 +49,6 @@ public class JwtProvider {
         return new UsernamePasswordAuthenticationToken(principal, "", authorities);
     }
 
-    // 로그인 안 하면 null을 반환하는 버전
     public Long getNullableUserId() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
@@ -69,7 +68,6 @@ public class JwtProvider {
         }
     }
 
-    // 로그인 필수일 때 사용하는 버전
     public Long getRequiredUserId() {
         Long userId = getNullableUserId();
         if (userId == null) {
@@ -113,14 +111,11 @@ public class JwtProvider {
     }
 
     public boolean validateRefreshToken(String token) {
-        // 기본적인 JWT 검증
         if (!validateToken(token, "REFRESH")) return false;
         String redisToken = "";
 
         try {
-            // token에서 userId 추출하기
             Long userId = Long.valueOf(getUserIdFromToken(token));
-            // Redis에 저장된 RefreshToken과 비교하기
             Optional<Token> validateToken = tokenRepository.findById(userId);
             if (validateToken.isPresent()) {
                 redisToken = validateToken.get().getRefreshToken();
@@ -137,7 +132,6 @@ public class JwtProvider {
             Claims claims = parseClaims(token);
             return claims.getSubject();
         } catch (ExpiredJwtException e) {
-            // 토큰이 만료되어도 클레임 내용을 가져올 수 있음
             return e.getClaims().getSubject();
         }
     }

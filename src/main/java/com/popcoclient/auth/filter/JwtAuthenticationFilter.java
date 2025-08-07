@@ -33,23 +33,6 @@ public class JwtAuthenticationFilter extends GenericFilterBean {
         HttpServletRequest request = (HttpServletRequest) servletRequest;
         HttpServletResponse response = (HttpServletResponse) servletResponse;
 
-        String requestURI = ((HttpServletRequest) servletRequest).getRequestURI();
-
-//         if ((request.getMethod().equals("GET") &&
-//                 (requestURI.startsWith("/reviews/contents")
-//                         || requestURI.startsWith("/contents") || requestURI.startsWith("/reviews/weekly-trend")))
-//                 || requestURI.startsWith("/auth/login")
-//                 || requestURI.startsWith("/auth/refresh")
-//                 || requestURI.startsWith("/auth/kakao")
-//                 || requestURI.startsWith("/users/signup")
-//                 || requestURI.startsWith("/users/email")
-//                 || requestURI.startsWith("/swagger-ui")
-//                 || requestURI.startsWith("/v3/api-docs")
-//         )
-//         {
-//             chain.doFilter(servletRequest, servletResponse);
-//             return;
-//         }
         try {
             String accessToken = resolveAccessToken(request);
             String refreshToken = resolveRefreshToken(request);
@@ -59,20 +42,18 @@ public class JwtAuthenticationFilter extends GenericFilterBean {
                     Authentication authentication = jwtTokenProvider.getAuthentication(accessToken);
                     SecurityContextHolder.getContext().setAuthentication(authentication);
                 } else {
-                    // 블랙리스트 된 토큰일 경우 401 응답 후 종료
                     response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                     response.setContentType("application/json");
                     response.getWriter().write("{\"code\":\"BLACKLISTED_TOKEN\"}");
                     return;
                 }
             } else if (refreshToken != null && jwtTokenProvider.validateToken(refreshToken, "REFRESH")) {
-                // 리프레시 토큰 유효하지만 액세스 토큰 만료된 경우 - 재발급 필요 표시
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 response.setContentType("application/json");
                 response.getWriter().write("{\"code\":\"ACCESS_TOKEN_EXPIRED\"}");
                 return;
             }
-            // 토큰 없거나 유효하지 않아도 인증 정보 없이 그냥 다음 필터/컨트롤러로 진행
+
             chain.doFilter(request, response);
 
         } catch (TokenExpiredException e) {
@@ -84,7 +65,6 @@ public class JwtAuthenticationFilter extends GenericFilterBean {
         }
     }
 
-    // Request Header에서 토큰 정보 추출
     private String resolveAccessToken(HttpServletRequest request) {
         String bearerToken = request.getHeader("Authorization");
         if (StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer ")) {
