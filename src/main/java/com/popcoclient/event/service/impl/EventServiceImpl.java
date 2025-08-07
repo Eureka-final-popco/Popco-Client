@@ -10,6 +10,8 @@ import com.popcoclient.event.repository.*;
 import com.popcoclient.exception.BusinessException;
 import com.popcoclient.exception.ErrorCode;
 import com.popcoclient.user.entity.User;
+import com.popcoclient.user.entity.UserDetail;
+import com.popcoclient.user.repository.UserDetailRepository;
 import com.popcoclient.user.repository.UserRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -29,6 +31,7 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
 @Service
 @Transactional
@@ -52,6 +55,7 @@ public class EventServiceImpl {
     private final Map<String, Long> activeTimers = new ConcurrentHashMap<>(); // key: "quizId:questionId", value: 시작시간
     private final Map<String, ScheduledFuture<?>> activeBroadcasts = new ConcurrentHashMap<>();
     private final Map<Long, ScheduledFuture<?>> waitingTimerBroadcasts = new ConcurrentHashMap<>();
+    private final UserDetailRepository userDetailRepository;
 
     public EventServiceImpl(
             DistributeLockServiceImpl lockService,
@@ -63,8 +67,8 @@ public class EventServiceImpl {
             UserRepository userRepository,
             QuizRepository quizRepository,
             SimpMessagingTemplate messagingTemplate,
-            TaskScheduler taskScheduler
-    ) {
+            TaskScheduler taskScheduler,
+            UserDetailRepository userDetailRepository) {
         this.lockService = lockService;
         this.eventRedisTemplate = eventRedisTemplate;
         this.userQuizAnswerRepository = userQuizAnswerRepository;
@@ -76,6 +80,7 @@ public class EventServiceImpl {
         this.messagingTemplate = messagingTemplate;
         this.taskScheduler = taskScheduler;
         this.submitAnswerScript = createSubmitAnswerScript();
+        this.userDetailRepository = userDetailRepository;
     }
 
     public Long getQuizId(){
@@ -206,6 +211,39 @@ public class EventServiceImpl {
         } catch (Exception e) {
             log.error("Failed to broadcast survivor update - quizId: {}, questionId: {}", quizId, questionId, e);
         }
+    }
+
+    public void startTimer(Long quizId) {
+        String timerKey = "quiz" + quizId + "timer";
+
+        activeTimers.computeIfAbsent(timerKey, key -> {
+            long startTime = System.currentTimeMillis();
+
+            // 1초마다 브로드캐스트
+            taskScheduler.scheduleAtFixedRate(() -> {
+                long elapsed = (System.currentTimeMillis() - startTime) / 1000;
+                int remainTime = 30 - (int)elapsed;
+
+                if (remainTime >= 0) {
+                    sendTimer(quizId, remainTime);
+                } else {
+                    sendTimer(quizId, 0);
+                    activeTimers.remove(timerKey);
+                }
+            }, Instant.now().plus(1, ChronoUnit.SECONDS), Duration.ofSeconds(1));
+
+            return startTime;
+        });
+    }
+
+    private void sendTimer(Long quizId, int remainTime) {
+        String questionTopic = "/topic/quiz/" + quizId + "/timer";
+        Map<String, Object> timer = Map.of(
+                "type", "Timer",
+                "quizId", quizId,
+                "remain", remainTime
+        );
+        messagingTemplate.convertAndSend(questionTopic, timer);
     }
 
     // ===== 🏆 4. 생존자 순위 조회 API =====
@@ -495,7 +533,8 @@ public class EventServiceImpl {
             }
             int totalSurvivors = getTotalSurvivors(questionId); // 1~2번 문제
             broadcastSurvivorUpdate(quizId, questionId, qualificationOrder.intValue(), totalSurvivors);
-            return QuizSubmissionResultDto.survived(qualificationOrder.intValue(), totalSurvivors);
+            UserDetail userDetail = userDetailRepository.findById(userId).orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+            return QuizSubmissionResultDto.survived(qualificationOrder.intValue(), totalSurvivors, userDetail.getNickname());
         } else {
             int finalSurvivors = Math.min(getTotalSurvivors(questionId), firstCapacity);
             return QuizSubmissionResultDto.tooLate(finalSurvivors);
@@ -617,10 +656,10 @@ public class EventServiceImpl {
     private void announceWinner(Long quizId, Long questionId, Long winnerId, int winnerRank) {
         try {
             // 우승자 정보 조회
-            User winner = userRepository.findById(winnerId)
+            UserDetail winner = userDetailRepository.findById(winnerId)
                     .orElse(null);
 
-            String winnerName = winner != null ? winner.getName() : "익명";
+            String winnerName = winner != null ? winner.getNickname() : "익명";
 
             String questionTopic = "/topic/quiz/" + quizId + "/question/" + questionId;
             Map<String, Object> winnerMessage = Map.of(

@@ -61,6 +61,16 @@ public class QuizAnswerController {
         quizAnswerService.startEventWaitingBroadcast(quizId);
         return ResponseEntity.ok(ApiResponse.success("대기 타이머 브로드캐스트 시작!", null));
     }
+
+    @GetMapping("/{quizId}/timer")
+    @SecurityRequirement(name = "bearerAuth")
+    @Operation(summary = "퀴즈 진행 통합 타이머", description = "1번문제부터 3번문제까지 실시간 타이머 공유")
+    public ResponseEntity<ApiResponse<Void>> broadCastTimer(@PathVariable Long quizId) {
+        Long userId = jwtProvider.getRequiredUserId();
+        quizAnswerService.startTimer(quizId);
+        return ResponseEntity.ok(ApiResponse.success("통합 타이머 시작", null));
+    }
+
     /**
      * 🎯 답안 제출 API
      */
