@@ -12,6 +12,7 @@ import lombok.NoArgsConstructor;
 public class QuizSubmissionResultDto {
 
     private SubmissionStatus status;        // 제출 결과 상태
+    private String nickname;
     private String message;                 // 결과 메시지
     private Integer rank;                   // 생존 시 순위 (선착순)
     private Integer totalSurvivors;         // 현재 총 생존자 수
@@ -46,10 +47,11 @@ public class QuizSubmissionResultDto {
     /**
      * 🏆 생존 성공
      */
-    public static QuizSubmissionResultDto survived(int rank, int totalSurvivors) {
+    public static QuizSubmissionResultDto survived(int rank, int totalSurvivors, String nickname) {
         return QuizSubmissionResultDto.builder()
                 .status(SubmissionStatus.SURVIVED)
                 .message(SubmissionStatus.SURVIVED.getDefaultMessage() + " (순위: " + rank + "등)")
+                .nickname(nickname)
                 .rank(rank)
                 .totalSurvivors(totalSurvivors)
                 .submissionTime(System.currentTimeMillis())

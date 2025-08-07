@@ -31,6 +31,7 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
 @Service
 @Transactional
@@ -210,6 +211,39 @@ public class EventServiceImpl {
         } catch (Exception e) {
             log.error("Failed to broadcast survivor update - quizId: {}, questionId: {}", quizId, questionId, e);
         }
+    }
+
+    public void startTimer(Long quizId) {
+        String timerKey = "quiz" + quizId + "timer";
+
+        activeTimers.computeIfAbsent(timerKey, key -> {
+            long startTime = System.currentTimeMillis();
+
+            // 1초마다 브로드캐스트
+            taskScheduler.scheduleAtFixedRate(() -> {
+                long elapsed = (System.currentTimeMillis() - startTime) / 1000;
+                int remainTime = 30 - (int)elapsed;
+
+                if (remainTime >= 0) {
+                    sendTimer(quizId, remainTime);
+                } else {
+                    sendTimer(quizId, 0);
+                    activeTimers.remove(timerKey);
+                }
+            }, Instant.now().plus(1, ChronoUnit.SECONDS), Duration.ofSeconds(1));
+
+            return startTime;
+        });
+    }
+
+    private void sendTimer(Long quizId, int remainTime) {
+        String questionTopic = "/topic/quiz/" + quizId + "/timer";
+        Map<String, Object> timer = Map.of(
+                "type", "Timer",
+                "quizId", quizId,
+                "remain", remainTime
+        );
+        messagingTemplate.convertAndSend(questionTopic, timer);
     }
 
     // ===== 🏆 4. 생존자 순위 조회 API =====
@@ -499,7 +533,8 @@ public class EventServiceImpl {
             }
             int totalSurvivors = getTotalSurvivors(questionId); // 1~2번 문제
             broadcastSurvivorUpdate(quizId, questionId, qualificationOrder.intValue(), totalSurvivors);
-            return QuizSubmissionResultDto.survived(qualificationOrder.intValue(), totalSurvivors);
+            UserDetail userDetail = userDetailRepository.findById(userId).orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+            return QuizSubmissionResultDto.survived(qualificationOrder.intValue(), totalSurvivors, userDetail.getNickname());
         } else {
             int finalSurvivors = Math.min(getTotalSurvivors(questionId), firstCapacity);
             return QuizSubmissionResultDto.tooLate(finalSurvivors);
