@@ -46,6 +46,8 @@ public class ContentFilterService {
             int page,
             int size
     ) {
+        log.info("### filterContents 메서드 호출됨. 받은 플랫폼 값: {}", platforms);
+
         Pageable pageable = PageRequest.of(page, size);
 
         List<Criteria> staticCriteriaList = new ArrayList<>();
@@ -55,7 +57,7 @@ public class ContentFilterService {
         }
 
         if (genres != null && !genres.isEmpty()) {
-            staticCriteriaList.add(new Criteria("genres").in(genres));
+            staticCriteriaList.add(new Criteria("genres.keyword").in(genres));
         }
 
         if (minRating != null || maxRating != null) {
@@ -328,6 +330,46 @@ public class ContentFilterService {
                                     log.warn("날짜 파싱 실패: contentId={}, releaseDate={}", doc.getContentId(), doc.getReleaseDate());
                                     return false;
                                 }
+                            }
+                        }
+
+                        if (platforms != null && !platforms.isEmpty()) {
+                            if (doc.getPlatforms() == null || doc.getPlatforms().isEmpty()) {
+                                log.debug("문서에 플랫폼 정보가 없어 제외: {}", docContentId);
+                                return false;
+                            }
+
+                            List<String> lowercaseDocPlatforms = doc.getPlatforms().stream()
+                                    .map(String::toLowerCase)
+                                    .collect(Collectors.toList());
+
+                            List<String> lowercaseRequestPlatforms = platforms.stream()
+                                    .map(String::toLowerCase)
+                                    .collect(Collectors.toList());
+
+                            if (Collections.disjoint(lowercaseDocPlatforms, lowercaseRequestPlatforms)) {
+                                log.debug("플랫폼 필터 조건에 맞지 않아 제외: {}", docContentId);
+                                return false;
+                            }
+                        }
+
+                        if (genres != null && !genres.isEmpty()) {
+                            if (doc.getGenres() == null || doc.getGenres().isEmpty()) {
+                                log.debug("문서에 장르 정보가 없어 제외: {}", docContentId);
+                                return false;
+                            }
+
+                            List<String> lowercaseDocGenres = doc.getGenres().stream()
+                                    .map(String::toLowerCase)
+                                    .collect(Collectors.toList());
+
+                            List<String> lowercaseRequestGenres = genres.stream()
+                                    .map(String::toLowerCase)
+                                    .collect(Collectors.toList());
+
+                            if (Collections.disjoint(lowercaseDocGenres, lowercaseRequestGenres)) {
+                                log.debug("장르 필터 조건에 맞지 않아 제외: {}", docContentId);
+                                return false;
                             }
                         }
 
