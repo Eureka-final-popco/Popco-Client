@@ -75,14 +75,7 @@ public class ContentFilterService {
         }
 
         if (platforms != null && !platforms.isEmpty()) {
-            List<String> lowercasePlatforms = platforms.stream()
-                    .map(String::toLowerCase)
-                    .collect(Collectors.toList());
-
-            log.info("요청받은 platforms 필터 값 (소문자로 변환됨): {}", lowercasePlatforms);
-
-            staticCriteriaList.add(new Criteria("platforms.keyword").in(lowercasePlatforms));
-            log.info("플랫폼 필터 적용: platforms.keyword IN {}", lowercasePlatforms);
+            staticCriteriaList.add(new Criteria("platforms.keyword").in(platforms));
         }
 
         if (minReleaseYear != null || maxReleaseYear != null) {
