@@ -13,4 +13,5 @@ public interface QuizRepository extends JpaRepository<Quiz, Long> {
     Optional<Quiz> findFirstByStartAtBetween(LocalDateTime start, LocalDateTime end);
     @Query("SELECT MAX(q.quizId) FROM Quiz q")
     Long findMaxId();
+
 }
