@@ -334,6 +334,11 @@ public class ContentFilterService {
                         }
 
                         if (platforms != null && !platforms.isEmpty()) {
+                            if (doc.getPlatforms() == null || doc.getPlatforms().isEmpty()) {
+                                log.debug("문서에 플랫폼 정보가 없어 제외: {}", docContentId);
+                                return false;
+                            }
+
                             List<String> lowercaseDocPlatforms = doc.getPlatforms().stream()
                                     .map(String::toLowerCase)
                                     .collect(Collectors.toList());
@@ -349,6 +354,11 @@ public class ContentFilterService {
                         }
 
                         if (genres != null && !genres.isEmpty()) {
+                            if (doc.getGenres() == null || doc.getGenres().isEmpty()) {
+                                log.debug("문서에 장르 정보가 없어 제외: {}", docContentId);
+                                return false;
+                            }
+
                             List<String> lowercaseDocGenres = doc.getGenres().stream()
                                     .map(String::toLowerCase)
                                     .collect(Collectors.toList());
