@@ -159,4 +159,26 @@ public class UtilServiceImpl {
 
         return distributionList;
     }
+
+    public static List<Integer> calcPerEventAvg(Integer myAction, Integer totalPersonaParticipations, Integer totalPersonaUsers, Integer maxEvents){
+        List<Integer> distributionList = new ArrayList<>();
+
+        if (totalPersonaUsers == 0) {
+            distributionList.add(myAction);
+            distributionList.add(0);
+            return distributionList;
+        }
+
+        // 평균 참여 횟수 = 총 참여 횟수 / 같은 페르소나 총 인원수
+        double avgParticipation = (double) totalPersonaParticipations / totalPersonaUsers;
+        int roundedAvg = (int) Math.ceil(avgParticipation);
+
+        // max 이벤트 횟수를 넘을 수 없음
+        int finalAvg = Math.min(roundedAvg, maxEvents);
+
+        distributionList.add(myAction);
+        distributionList.add(finalAvg);
+
+        return distributionList;
+    }
 }

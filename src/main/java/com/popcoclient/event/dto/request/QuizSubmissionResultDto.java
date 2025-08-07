@@ -20,7 +20,7 @@ public class QuizSubmissionResultDto {
     private boolean survived;               // 생존 여부
 
     /**
-     * 📊 답안 제출 결과 상태
+     * 답안 제출 결과 상태
      */
     public enum SubmissionStatus {
         SURVIVED("정답! 생존하셨습니다."),
@@ -42,10 +42,8 @@ public class QuizSubmissionResultDto {
         }
     }
 
-    // ===== 정적 팩토리 메서드들 =====
-
     /**
-     * 🏆 생존 성공
+     * 생존
      */
     public static QuizSubmissionResultDto survived(int rank, int totalSurvivors, String nickname) {
         return QuizSubmissionResultDto.builder()
@@ -60,7 +58,7 @@ public class QuizSubmissionResultDto {
     }
 
     /**
-     * ⏰ 정답이지만 늦음 (선착순 탈락)
+     * 선착순 탈락
      */
     public static QuizSubmissionResultDto tooLate(int totalSurvivors) {
         return QuizSubmissionResultDto.builder()
@@ -73,7 +71,7 @@ public class QuizSubmissionResultDto {
     }
 
     /**
-     * ❌ 오답
+     * 오답
      */
     public static QuizSubmissionResultDto wrongAnswer() {
         return QuizSubmissionResultDto.builder()
@@ -85,7 +83,7 @@ public class QuizSubmissionResultDto {
     }
 
     /**
-     * 🔄 이미 제출됨
+     * 이미 제출됨
      */
     public static QuizSubmissionResultDto alreadySubmitted() {
         return QuizSubmissionResultDto.builder()
@@ -97,7 +95,7 @@ public class QuizSubmissionResultDto {
     }
 
     /**
-     * 🔄 중복 제출
+     * 중복 제출
      */
     public static QuizSubmissionResultDto duplicate() {
         return QuizSubmissionResultDto.builder()
@@ -109,7 +107,7 @@ public class QuizSubmissionResultDto {
     }
 
     /**
-     * ⚠️ 시스템 에러
+     *  시스템 에러
      */
     public static QuizSubmissionResultDto error() {
         return QuizSubmissionResultDto.builder()
@@ -121,7 +119,7 @@ public class QuizSubmissionResultDto {
     }
 
     /**
-     * 🛠️ 커스텀 에러 메시지
+     * 커스텀 에러 메시지
      */
     public static QuizSubmissionResultDto error(String customMessage) {
         return QuizSubmissionResultDto.builder()

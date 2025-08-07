@@ -7,7 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * 📊 퀴즈 상태 응답 DTO
+ * 퀴즈 상태 응답 DTO
  */
 @Data
 @Builder

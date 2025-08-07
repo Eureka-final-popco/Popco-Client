@@ -20,15 +20,15 @@ public class DistributeLockServiceImpl {
 
     public DistributeLockServiceImpl(StringRedisTemplate lockRedisTemplate) {
         this.lockRedisTemplate = lockRedisTemplate;
-        this.lockScript = createLockScript();      // 직접 생성
-        this.unlockScript = createUnlockScript();  // 직접 생성
+        this.lockScript = createLockScript();
+        this.unlockScript = createUnlockScript();
     }
 
     /**
      * 분산 락 획득 (논블로킹)
      * @param lockKey 락 키
-     * @param lockValue 락 값 (보통 UUID)
-     * @param expireTimeSeconds 만료 시간 (초)
+     * @param lockValue 락 값
+     * @param expireTimeSeconds 만료 시간
      * @return 락 획득 성공 여부
      */
     public boolean tryLock(String lockKey, String lockValue, long expireTimeSeconds) {
@@ -39,9 +39,6 @@ public class DistributeLockServiceImpl {
                     lockValue,
                     String.valueOf(expireTimeSeconds)
             );
-
-            log.debug("Try lock - key: {}, value: {}, expire: {}s, success: {}",
-                    lockKey, lockValue, expireTimeSeconds, success);
 
             return Boolean.TRUE.equals(success);
         } catch (Exception e) {
