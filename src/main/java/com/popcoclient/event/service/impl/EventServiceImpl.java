@@ -476,6 +476,8 @@ public class EventServiceImpl {
         Long questionId = question.getQuestionId().getQuestionId();
         Long quizId = question.getQuestionId().getQuizId();
         Long userId = attempt.getUser().getUserId();
+        QuizOptionId.of(selectedOption.getOptionId().getOptionId(), selectedOption.getOptionId().getQuestionId(), selectedOption.getOptionId().getQuizId());
+
         int firstCapacity = question.getFirstCapacity();
         long submissionTime = System.currentTimeMillis();
 
@@ -504,6 +506,8 @@ public class EventServiceImpl {
         if (advanced) {
             if (isLastQuestion(quizId, questionId) && qualificationOrder == 1) { // 우승자 결정 로직
                 announceWinner(quizId, questionId, userId, 1);
+                UserDetail userDetail = userDetailRepository.findById(userId).orElseThrow(()->new BusinessException(ErrorCode.USER_NOT_FOUND));
+                return QuizSubmissionResultDto.survived(qualificationOrder.intValue(), 1, userDetail.getNickname());
             }
             int totalSurvivors = getTotalSurvivors(questionId); // 1~2번 문제
             broadcastSurvivorUpdate(quizId, questionId, qualificationOrder.intValue(), totalSurvivors);
