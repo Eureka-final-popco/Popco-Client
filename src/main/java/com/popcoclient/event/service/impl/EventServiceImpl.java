@@ -25,13 +25,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
 
 @Service
 @Transactional
@@ -50,7 +48,7 @@ public class EventServiceImpl {
     private final SimpMessagingTemplate messagingTemplate;
     private final TaskScheduler taskScheduler;
 
-    private final Map<String, Long> activeTimers = new ConcurrentHashMap<>(); // key: "quizId:questionId", value: 시작시간
+    private final Map<String, Long> activeTimers = new ConcurrentHashMap<>();
     private final Map<String, ScheduledFuture<?>> activeBroadcasts = new ConcurrentHashMap<>();
     private final Map<Long, ScheduledFuture<?>> waitingTimerBroadcasts = new ConcurrentHashMap<>();
     private final UserDetailRepository userDetailRepository;
@@ -107,7 +105,9 @@ public class EventServiceImpl {
                 .build();
     }
 
-    // 답안 제출 API
+    /**
+     *     답안 제출
+      */
     public QuizSubmissionResultDto submitAnswer(Long quizId, Long questionId, Long userId, Long optionId) {
         long startTime = System.currentTimeMillis();
         log.info("Answer submission started - quizId: {}, questionId: {}, userId: {}, optionId: {}",
@@ -132,20 +132,17 @@ public class EventServiceImpl {
         }
 
         try {
-            // 이미 답했는지 확인
             QuizQuestionId questionKey = QuizQuestionId.of(questionId, quizId);
             boolean alreadyAnswered = userQuizAnswerRepository.existsByAttemptAndQuestionId(attempt, questionKey);
             if (alreadyAnswered) {
                 return QuizSubmissionResultDto.alreadySubmitted();
             }
 
-            // 정답 여부 확인
             if (!selectedOption.getIsCorrect()) {
                 saveWrongAnswer(attempt, selectedOption);
                 return QuizSubmissionResultDto.wrongAnswer();
             }
 
-            // 정답자 선착순 처리
             QuizSubmissionResultDto result = processCorrectAnswer(question, selectedOption, attempt, startTime);
 
             return result;
@@ -155,19 +152,18 @@ public class EventServiceImpl {
         }
     }
 
-    // 퀴즈 상태 조회 API
+    /**
+     *     퀴즈 상태 조회
+     */
     public QuizStatusResponseDto getQuizStatus(Long quizId, Long questionId) {
         try {
-            // QuizQuestion 조회
             QuizQuestionId questionKey = QuizQuestionId.of(questionId, quizId);
             QuizQuestion question = quizQuestionRepository.findById(questionKey)
                     .orElseThrow(() -> new BusinessException(ErrorCode.QUIZ_NOT_FOUND));
 
-            // 현재 생존자 수 조회
             int currentSurvivors = getTotalSurvivors(questionId);
             int maxSurvivors = question.getFirstCapacity();
 
-            // 🕒 타이머 상태 계산 (메모리에서)
             String timerKey = quizId + ":" + questionId;
             Long startTime = activeTimers.get(timerKey);
 
@@ -177,7 +173,7 @@ public class EventServiceImpl {
 
             if (startTime != null) {
                 long elapsed = System.currentTimeMillis() - startTime;
-                remainingTime = Math.max(0, 10 - (int) (elapsed / 1000)); // 10초에서 경과시간 빼기
+                remainingTime = Math.max(0, 10 - (int) (elapsed / 1000));
             }
 
             return QuizStatusResponseDto.builder()
@@ -196,7 +192,9 @@ public class EventServiceImpl {
         }
     }
 
-    // 3. 실시간 브로드캐스트 API
+    /**
+     *     실시간 브로드캐스트
+     */
     public void broadcastSurvivorUpdate(Long quizId, Long questionId, int latestRank, int totalSurvivors) {
         try {
             QuizStatusResponseDto currentStatus = getQuizStatus(quizId, questionId);
@@ -217,7 +215,6 @@ public class EventServiceImpl {
         activeTimers.computeIfAbsent(timerKey, key -> {
             long startTime = System.currentTimeMillis();
 
-            // 1초마다 브로드캐스트
             taskScheduler.scheduleAtFixedRate(() -> {
                 long elapsed = (System.currentTimeMillis() - startTime) / 1000;
                 int remainTime = 30 - (int)elapsed;
@@ -244,7 +241,9 @@ public class EventServiceImpl {
         messagingTemplate.convertAndSend(questionTopic, timer);
     }
 
-    // 생존자 순위 조회 API
+    /**
+     *     생존자 순위 조회
+     */
     public SurvivorRankingResponse getSurvivorRanking(Long quizId, Long questionId, int page, int size) {
         try {
             String survivorKey = RedisKeys.survivorRanking(questionId);
@@ -287,14 +286,11 @@ public class EventServiceImpl {
         }
     }
 
-    // 핵심
-
     /**
      * 다음 문제 준비 체크 및 시작
      */
     private void checkAndStartNextQuestion(Long quizId, Long questionId) {
 
-        // 정원 확인
         QuizQuestionId currentQuestionKey = QuizQuestionId.of(questionId, quizId);
         QuizQuestion currentQuestion = quizQuestionRepository.findById(currentQuestionKey)
                 .orElseThrow(() -> new BusinessException(ErrorCode.QUIZ_NOT_FOUND));
@@ -304,7 +300,6 @@ public class EventServiceImpl {
 
         Long nextQuestionId = questionId + 1;
 
-        // 다음 문제가 존재하는지 확인
         QuizQuestionId nextQuestionKey = QuizQuestionId.of(nextQuestionId, quizId);
         if (!quizQuestionRepository.existsById(nextQuestionKey)) {
             log.info("마지막 문제 완료! 퀴즈 종료");
@@ -318,9 +313,9 @@ public class EventServiceImpl {
 
         // 이미 시작된 문제는 중복 시작 방지
         if (!activeTimers.containsKey(timerKey)) {
-            log.info("🚀 다음 문제 {} 시작", nextQuestionId);
+            log.info("다음 문제 {} 시작", nextQuestionId);
 
-            // 🕒 이전 라운드 타임 아웃 즉시 다음 문제 시작
+            // 이전 라운드 타임 아웃 즉시 다음 문제 시작
             taskScheduler.schedule(() -> {
                 startQuestion(quizId, nextQuestionId);
             }, Instant.now());
@@ -337,9 +332,8 @@ public class EventServiceImpl {
 
         activeTimers.computeIfAbsent(timerKey, k -> {
             long questionStartTime = System.currentTimeMillis();
-            log.info("🚀 문제 {}를 새로 시작하고 타이머를 등록합니다.", questionId);
+            log.info("문제 {}를 새로 시작하고 타이머를 등록합니다.", questionId);
 
-            // 1초마다 타이머 브로드캐스트
             ScheduledFuture<?> timerBroadcast = taskScheduler.scheduleAtFixedRate(() -> {
                 try {
                     QuizStatusResponseDto currentStatus = getQuizStatus(quizId, questionId);
@@ -352,7 +346,6 @@ public class EventServiceImpl {
 
             activeBroadcasts.put(timerKey, timerBroadcast);
 
-            // 10초 후 자동 종료
             taskScheduler.schedule(() -> {
                 activeTimers.remove(timerKey);
 
@@ -367,7 +360,7 @@ public class EventServiceImpl {
 
             broadcastQuestionStart(quizId, questionId);
 
-            return questionStartTime; // 문제 시작 시간 반환
+            return questionStartTime;
         });
     }
 
@@ -378,7 +371,6 @@ public class EventServiceImpl {
         Long questionId = 1L;
         String timerKey = quizId + ":" + questionId;
 
-        // 중복 방지
         if (activeTimers.containsKey(timerKey)) {
             log.warn("문제1 이미 시작됨 - quizId: {}", quizId);
             return;
@@ -449,7 +441,6 @@ public class EventServiceImpl {
                 return;
             }
 
-            // 현재 생존자가 있는지 확인
             int currentSurvivors = getTotalSurvivors(questionId);
             if (currentSurvivors > 0) {
 
@@ -481,7 +472,6 @@ public class EventServiceImpl {
         int firstCapacity = question.getFirstCapacity();
         long submissionTime = System.currentTimeMillis();
 
-        // Lua Script로 선착순 순서 결정
         List<String> keys = Arrays.asList(
                 RedisKeys.survivorRanking(questionId),
                 RedisKeys.submissionCount(questionId),
@@ -509,7 +499,7 @@ public class EventServiceImpl {
                 UserDetail userDetail = userDetailRepository.findById(userId).orElseThrow(()->new BusinessException(ErrorCode.USER_NOT_FOUND));
                 return QuizSubmissionResultDto.survived(qualificationOrder.intValue(), 1, userDetail.getNickname());
             }
-            int totalSurvivors = getTotalSurvivors(questionId); // 1~2번 문제
+            int totalSurvivors = getTotalSurvivors(questionId);
             broadcastSurvivorUpdate(quizId, questionId, qualificationOrder.intValue(), totalSurvivors);
             UserDetail userDetail = userDetailRepository.findById(userId).orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
             return QuizSubmissionResultDto.survived(qualificationOrder.intValue(), totalSurvivors, userDetail.getNickname());
@@ -697,8 +687,6 @@ public class EventServiceImpl {
         }
     }
 
-    // =====헬퍼 메서드=====
-
     private QuizSubmissionResultDto createErrorResult(QuizSubmissionResultDto.SubmissionStatus status, String message) {
         return QuizSubmissionResultDto.builder()
                 .status(status)
@@ -786,7 +774,7 @@ public class EventServiceImpl {
     }
 
     /**
-     * 남은 시간을 사용자 친화적 형식으로 포맷
+     * 남은 시간 포맷
      */
     private List<Long> formatRemainingTime(long seconds) {
         long hours = seconds / 3600;
