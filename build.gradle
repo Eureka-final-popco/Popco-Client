@@ -20,15 +20,6 @@ java {
     }
 }
 
-jar {
-    manifest {
-        attributes 'PopcoClientApplication': 'com.popcoclient.PopcoClientApplication'
-    }
-    from {
-        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
-    }
-}
-
 configurations {
     compileOnly {
         extendsFrom annotationProcessor
