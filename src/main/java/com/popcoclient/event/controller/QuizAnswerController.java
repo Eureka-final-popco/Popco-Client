@@ -18,9 +18,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-/**
- * 퀴즈 답안 제출 REST API 컨트롤러
- */
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/quizzes")

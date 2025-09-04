@@ -12,26 +12,22 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class QuizProgressUpdate {
 
-    // 기본 식별 정보
-    private Long quizId;                    // 퀴즈 ID
-    private Long questionId;                // 문제 ID
+    private Long quizId;
+    private Long questionId;
 
-    // 실시간 진행 상황
-    private int currentSurvivors;           // 현재 생존자 수
-    private int maxSurvivors;               // 최대 생존자 수 (firstCapacity)
-    private Integer latestRank;             // 가장 최근 통과자 순위
+    private int currentSurvivors;
+    private int maxSurvivors;
+    private Integer latestRank;
 
-    // 시간 및 상태 정보
-    private long timestamp;                 // 업데이트 시간 (밀리초)
-    private ProgressType type;              // 업데이트 타입
-    private String message;                 // 사용자에게 보여줄 메시지
+    private long timestamp;
+    private ProgressType type;
+    private String message;
 
-    // 추가 메타데이터 (선택적)
-    private Integer remainingTime;          // 남은 시간 (초)
-    private Double progressPercentage;      // 진행률 (0.0 ~ 100.0)
+    private Integer remainingTime;
+    private Double progressPercentage;
 
     /**
-     * 📊 진행 상황 업데이트 타입
+     * 진행 상황 업데이트
      */
     public enum ProgressType {
         PROGRESS_UPDATE("진행 상황 업데이트"),
@@ -51,10 +47,7 @@ public class QuizProgressUpdate {
         }
     }
 
-    // ===== 정적 팩토리 메서드들 =====
-
     /**
-     * 📊 조용한 진행률 업데이트 (알림 없음)
      * 프론트엔드에서 프로그레스 바만 업데이트
      */
     public static QuizProgressUpdate progressUpdate(Long quizId, Long questionId,
@@ -69,13 +62,13 @@ public class QuizProgressUpdate {
                 .maxSurvivors(maxSurvivors)
                 .timestamp(System.currentTimeMillis())
                 .type(ProgressType.PROGRESS_UPDATE)
-                .message(null)  // 메시지 없음 (조용한 업데이트)
+                .message(null)
                 .progressPercentage(progressPercentage)
                 .build();
     }
 
     /**
-     * 🏁 문제 완료 알림 (정원 충족)
+     * 문제 완료 알림 (정원 충족)
      */
     public static QuizProgressUpdate questionCompleted(Long quizId, Long questionId,
                                                        int finalSurvivors) {
@@ -95,7 +88,7 @@ public class QuizProgressUpdate {
     }
 
     /**
-     * ⏰ 시간 경고 알림
+     * 시간 경고 알림
      */
     public static QuizProgressUpdate timeWarning(Long quizId, Long questionId,
                                                  int remainingSeconds,
@@ -116,7 +109,7 @@ public class QuizProgressUpdate {
     }
 
     /**
-     * 🔴 정원 가득참 알림
+     * 정원 가득참 알림
      */
     public static QuizProgressUpdate capacityFull(Long quizId, Long questionId, int maxSurvivors) {
 

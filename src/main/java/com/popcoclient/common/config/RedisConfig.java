@@ -58,27 +58,17 @@ public class RedisConfig {
 
     private final NotificationSubscriber notificationSubscriber;
 
-//    @Bean
-//    public RedisConnectionFactory redisConnectionFactory() {
-//        RedisStandaloneConfiguration config = new RedisStandaloneConfiguration(host, port);
-//        config.setPassword(redisPassword);
-//        return new LettuceConnectionFactory(config);
-//    }
-
     @Bean
     public RedisTemplate<String, Object> redisTemplate() {
         RedisTemplate<String, Object> redisTemplate = new RedisTemplate<>();
         redisTemplate.setConnectionFactory(eventRedisConnectionFactory()); // redisConnectionFactory
 
-        // 일반적인 key:value의 경우 시리얼라이저
         redisTemplate.setKeySerializer(new StringRedisSerializer());
         redisTemplate.setValueSerializer(new StringRedisSerializer());
 
-        // Hash를 사용할 경우 시리얼라이저
         redisTemplate.setHashKeySerializer(new StringRedisSerializer());
         redisTemplate.setHashValueSerializer(new StringRedisSerializer());
 
-        // 모든 경우
         redisTemplate.setDefaultSerializer(new StringRedisSerializer());
 
         return redisTemplate;
@@ -98,26 +88,21 @@ public class RedisConfig {
 
         GenericObjectPoolConfig<Object> poolConfig = new GenericObjectPoolConfig<>();
 
-        // 풀 크기 설정
-        poolConfig.setMaxTotal(maxActive);           // 최대 연결 수
-        poolConfig.setMaxIdle(maxIdle);              // 최대 유휴 연결 수
-        poolConfig.setMinIdle(minIdle);              // 최소 유휴 연결 수
+        poolConfig.setMaxTotal(maxActive);
+        poolConfig.setMaxIdle(maxIdle);
+        poolConfig.setMinIdle(minIdle);
 
-        // 대기 및 타임아웃 설정
-        poolConfig.setMaxWaitMillis(maxWait);        // 연결 대기 최대 시간
-        poolConfig.setBlockWhenExhausted(true);      // 풀이 고갈되면 대기
+        poolConfig.setMaxWaitMillis(maxWait);
+        poolConfig.setBlockWhenExhausted(true);
 
-        // 연결 검증 설정 (성능 vs 안정성 트레이드오프)
-        poolConfig.setTestOnBorrow(true);            // 빌릴 때 검증
-        poolConfig.setTestOnReturn(true);            // 반환할 때 검증
-        poolConfig.setTestWhileIdle(true);           // 유휴 상태에서 주기적 검증
+        poolConfig.setTestOnBorrow(true);
+        poolConfig.setTestOnReturn(true);
+        poolConfig.setTestWhileIdle(true);
 
-        // 유휴 연결 관리
-        poolConfig.setTimeBetweenEvictionRunsMillis(30000);  // 30초마다 유휴 연결 정리
-        poolConfig.setMinEvictableIdleTimeMillis(60000);     // 60초 유휴 시 제거 대상
-        poolConfig.setNumTestsPerEvictionRun(3);             // 한 번에 검사할 연결 수
+        poolConfig.setTimeBetweenEvictionRunsMillis(30000);
+        poolConfig.setMinEvictableIdleTimeMillis(60000);
+        poolConfig.setNumTestsPerEvictionRun(3);
 
-        // JMX 모니터링 비활성화 (선택적)
         poolConfig.setJmxEnabled(false);
 
         LettucePoolingClientConfiguration clientConfig = LettucePoolingClientConfiguration.builder()
@@ -135,7 +120,6 @@ public class RedisConfig {
         RedisTemplate<String, String> template = new RedisTemplate<>();
         template.setConnectionFactory(eventRedisConnectionFactory());
 
-        // String 직렬화 (성능 최적화)
         StringRedisSerializer stringSerializer = new StringRedisSerializer();
         template.setKeySerializer(stringSerializer);
         template.setValueSerializer(stringSerializer);
@@ -145,20 +129,6 @@ public class RedisConfig {
         template.afterPropertiesSet();
         return template;
     }
-
-//    /**
-//     * Redis Pub/Sub용 MessageListenerContainer
-//     */
-//    @Bean
-//    public RedisMessageListenerContainer redisMessageListenerContainer() {
-//        RedisMessageListenerContainer container = new RedisMessageListenerContainer();
-//        container.setConnectionFactory(eventRedisConnectionFactory());
-//
-//        // 스레드 풀 설정 (동시성 처리를 위해)
-//        container.setTaskExecutor(Executors.newFixedThreadPool(10));
-//
-//        return container;
-//    }
 
     @Bean
     public MessageListenerAdapter notificationRedisMessageListenerAdapter() {
@@ -194,7 +164,7 @@ public class RedisConfig {
     @Bean
     public RedisCacheManager cacheManager() {
         RedisCacheConfiguration config = RedisCacheConfiguration.defaultCacheConfig()
-                .entryTtl(Duration.ofMinutes(30)) // 기본 TTL 30분
+                .entryTtl(Duration.ofMinutes(30))
                 .serializeKeysWith(RedisSerializationContext.SerializationPair.fromSerializer(new StringRedisSerializer()))
                 .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(new Jackson2JsonRedisSerializer<>(Object.class)))
                 .disableCachingNullValues();
@@ -210,7 +180,7 @@ public class RedisConfig {
     @Bean
     public RedisCacheConfiguration quizCacheConfiguration() {
         return RedisCacheConfiguration.defaultCacheConfig()
-                .entryTtl(Duration.ofMinutes(5)) // 퀴즈 이벤트는 2시간 캐시
+                .entryTtl(Duration.ofMinutes(5))
                 .serializeKeysWith(RedisSerializationContext.SerializationPair.fromSerializer(new StringRedisSerializer()))
                 .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(new Jackson2JsonRedisSerializer<>(Object.class)))
                 .prefixCacheNameWith("quiz:")

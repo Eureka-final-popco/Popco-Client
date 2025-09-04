@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
 @RequestMapping("/ws/test")
 public class WebSocketTestController {
     private final SimpMessagingTemplate messagingTemplate;
-    private final ObjectMapper objectMapper; // ObjectMapper
+    private final ObjectMapper objectMapper;
     private final EventServiceImpl quizService;
 
     @PostMapping("/broadcast")
@@ -45,7 +45,6 @@ public class WebSocketTestController {
         messagingTemplate.convertAndSend("/topic/quiz/123/question/2", jsonPayload2);
     }
 
-    // 동시성 처리 테스트
     @PostMapping("/concurrent-submit")
     public Map<String, Object> testConcurrentSubmit(
             @RequestParam(defaultValue = "500") int userCount,

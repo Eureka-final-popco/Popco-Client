@@ -24,6 +24,6 @@ public class NotificationMessageResponseDto {
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime sentTime;
     
-    private String targetAudience; // "ALL", "SPECIFIC_USERS" 등
+    private String targetAudience;
 
 }
