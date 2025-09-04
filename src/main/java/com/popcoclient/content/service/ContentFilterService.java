@@ -57,7 +57,7 @@ public class ContentFilterService {
         }
 
         if (genres != null && !genres.isEmpty()) {
-            staticCriteriaList.add(new Criteria("genres.keyword").in(genres));
+            staticCriteriaList.add(new Criteria("genres").in(genres));
         }
 
         if (minRating != null || maxRating != null) {
