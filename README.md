@@ -1,5 +1,10 @@
 # 🍿 POPCO
+<img width="272" height="192" alt="팝코 기본" src="https://github.com/user-attachments/assets/70d5410f-fbbe-4be6-aa1b-956a73375fae" />
 
+### 시연 영상
+[![팝코(PopCo) 프로젝트 시연 영상](https://www.youtube.com/watch?v=ioNng23DkIM0)](https://youtu.be/TDXbO8EXBr8)
+
+### 소개
 > 당신의 OTT 취향을 찾아주는 콘텐츠 추천 서비스
 
 POPCO는 사용자가 자신만의 OTT 콘텐츠 취향을 발견하고, 개인화된 추천을 통해 새로운 콘텐츠 경험을 제공하는 서비스입니다.  
