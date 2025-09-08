@@ -218,7 +218,6 @@ public class ContentServiceImpl implements ContentService {
                         .build())
                 .collect(Collectors.toList());
 
-        // 4. 변환된 DTO 리스트를 최종 DTO에 담아 반환
         return ContentListResponseDto_40.builder()
                 .contents(contentDtoList)
                 .build();

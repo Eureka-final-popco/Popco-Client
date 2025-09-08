@@ -1,6 +1,5 @@
 package com.popcoclient.event.service.impl;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
@@ -66,7 +65,7 @@ public class DistributeLockServiceImpl {
             }
 
             try {
-                Thread.sleep(50); // 50ms 대기 후 재시도
+                Thread.sleep(50);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 log.warn("Lock acquisition interrupted: {}", lockKey);
