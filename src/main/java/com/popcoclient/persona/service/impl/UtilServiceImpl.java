@@ -18,10 +18,10 @@ public class UtilServiceImpl {
 
         BigDecimal totalScore = score1.add(score2);
 
-        int finalScale = 2; // 최종적으로 보여줄 소수점 둘째 자리
+        int finalScale = 2; // 소수점 둘째 자리
         RoundingMode roundingMode = RoundingMode.HALF_UP;
 
-        // 합계가 0인 경우 (0으로 나누기 방지)
+        // 0으로 나누기 방지
         if (totalScore.compareTo(BigDecimal.ZERO) == 0) {
             resultMap.put("main_percentage", 0.0);
             resultMap.put("sub_percentage", 0.0);
@@ -89,17 +89,17 @@ public class UtilServiceImpl {
 
         for (UserDetail details : userDetails) {
             int age = currentYear - details.getBirthdate().getYear();
-            if (age < 20) {         // 0~19세
+            if (age < 20) {
                 ageBrackets[0]++;
-            } else if (age < 30) {  // 20대
+            } else if (age < 30) {
                 ageBrackets[1]++;
-            } else if (age < 40) {  // 30대
+            } else if (age < 40) {
                 ageBrackets[2]++;
-            } else if (age < 50) {  // 40대
+            } else if (age < 50) {
                 ageBrackets[3]++;
-            } else if (age < 60) {  // 50대
+            } else if (age < 60) {
                 ageBrackets[4]++;
-            } else {                // 60대 이상
+            } else {
                 ageBrackets[5]++;
             }
         }
@@ -156,6 +156,26 @@ public class UtilServiceImpl {
 
         distributionList.add(myAction);
         distributionList.add((int)roundedValue);
+
+        return distributionList;
+    }
+
+    public static List<Integer> calcPerEventAvg(Integer myAction, Integer totalPersonaParticipations, Integer totalPersonaUsers, Integer maxEvents){
+        List<Integer> distributionList = new ArrayList<>();
+
+        if (totalPersonaUsers == 0) {
+            distributionList.add(myAction);
+            distributionList.add(0);
+            return distributionList;
+        }
+
+        double avgParticipation = (double) totalPersonaParticipations / totalPersonaUsers;
+        int roundedAvg = (int) Math.ceil(avgParticipation);
+
+        int finalAvg = Math.min(roundedAvg, maxEvents);
+
+        distributionList.add(myAction);
+        distributionList.add(finalAvg);
 
         return distributionList;
     }

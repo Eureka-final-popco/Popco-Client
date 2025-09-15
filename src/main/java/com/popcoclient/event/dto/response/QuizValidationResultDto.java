@@ -15,21 +15,18 @@ import lombok.Data;
 @Builder
 public class QuizValidationResultDto {
 
-    // 검증 성공/실패 여부
     private boolean valid;
 
-    // 실패 시 에러 정보
     private QuizSubmissionResultDto.SubmissionStatus errorStatus;
     private String errorMessage;
 
-    // 성공 시 로드된 엔티티들
     private User user;
     private QuizQuestion question;
     private QuizOption selectedOption;
     private UserQuizAttempt attempt;
 
     /**
-     * ✅ 검증 성공 시 생성
+     * 검증 성공
      */
     public static QuizValidationResultDto valid(QuizQuestion question, QuizOption selectedOption,
                                              UserQuizAttempt attempt, User user) {
@@ -43,7 +40,7 @@ public class QuizValidationResultDto {
     }
 
     /**
-     * ❌ 검증 실패 시 생성
+     * 검증 실패
      */
     public static QuizValidationResultDto invalid(QuizSubmissionResultDto.SubmissionStatus status, String message) {
         return QuizValidationResultDto.builder()

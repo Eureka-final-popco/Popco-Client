@@ -17,8 +17,6 @@ public class HeartbeatScheduler {
     public void sendHeartbeat() {
         if (sseNotificationService.getActiveConnectionCount() > 0) {
             sseNotificationService.sendHeartbeat();
-            log.debug("Heartbeat sent to {} active connections", 
-                     sseNotificationService.getActiveConnectionCount());
         }
     }
 }

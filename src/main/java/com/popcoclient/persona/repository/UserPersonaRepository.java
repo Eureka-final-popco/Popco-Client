@@ -17,7 +17,7 @@ public interface UserPersonaRepository extends JpaRepository<UserPersona, UserPe
     @Query("SELECT up FROM UserPersona up WHERE up.score = " +
             "(SELECT MAX(up2.score) FROM UserPersona up2 WHERE up2.userPersonaId.userId = up.userPersonaId.userId)")
     List<UserPersona> findAllUsersMainPersonas();
-    List<UserPersona> findTop2ByUserPersonaId_UserIdOrderByScoreDesc(Long userId);
+    List<UserPersona> findTop2ByUserPersonaId_UserIdOrderByScoreDescPersonaAsc(Long userId);
 
     // Repository
     @Query("SELECT up FROM UserPersona up " +

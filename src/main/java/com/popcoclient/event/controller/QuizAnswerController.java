@@ -18,12 +18,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-/**
- * 🎯 퀴즈 답안 제출 REST API 컨트롤러
- * 
- * 실시간 퀴즈 이벤트에서 사용자의 답안 제출을 처리합니다.
- * 동시성 처리와 선착순 검증이 핵심 기능입니다.
- */
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/quizzes")
@@ -71,9 +65,6 @@ public class QuizAnswerController {
         return ResponseEntity.ok(ApiResponse.success("통합 타이머 시작", null));
     }
 
-    /**
-     * 🎯 답안 제출 API
-     */
     @PostMapping("/{quizId}/questions/{questionId}")
     @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "답안 제출", description = "")
@@ -86,9 +77,6 @@ public class QuizAnswerController {
         return ResponseEntity.ok(ApiResponse.success(quizAnswerService.submitAnswer(quizId, questionId, userId, request.getOptionId())));
     }
 
-    /**
-     * 📊 퀴즈 현재 상태 조회 API
-     */
     @Operation(summary = "퀴즈 현재 상태 조회", description = "현재 퀴즈의 진행 정보 (현재 생존자 수, 남은 시간) 을 조회하는 api")
     @GetMapping("/{quizId}/questions/{questionId}/status")
     public ResponseEntity<ApiResponse<QuizStatusResponseDto>> getQuizStatus(
@@ -98,9 +86,6 @@ public class QuizAnswerController {
         return ResponseEntity.ok(ApiResponse.success(quizAnswerService.getQuizStatus(quizId, questionId)));
     }
 
-    /**
-     * 🏆 현재 생존자 순위 조회 API
-     */
     @Operation(summary = "선착순 순위 조회", description = "사용자가 어떤 quiz 의 몇 번째 question 을 몇 등으로 통과했는지 조회하는 api")
     @SecurityRequirement(name = "bearerAuth")
     @GetMapping("/{quizId}/questions/{questionId}/survivors")

@@ -74,7 +74,7 @@ public class PersonaServiceImpl implements PersonaService {
     @Transactional(readOnly = true)
     @Override
     public MyPersonaResponseDto getPersona(Long userId) {
-        List<UserPersona> myPersonas = userPersonaRepository.findTop2ByUserPersonaId_UserIdOrderByScoreDesc(userId);
+        List<UserPersona> myPersonas = userPersonaRepository.findTop2ByUserPersonaId_UserIdOrderByScoreDescPersonaAsc(userId);
         Map<String, Double> calcMap = UtilServiceImpl.calculatePercentages(myPersonas.get(0).getScore(), myPersonas.get(1).getScore());
         Optional<Persona> mainOptPersona = personaRepository.findById(myPersonas.get(0).getUserPersonaId().getPersonaId());
         Optional<Persona> subOptPersona = personaRepository.findById(myPersonas.get(1).getUserPersonaId().getPersonaId());
@@ -172,8 +172,10 @@ public class PersonaServiceImpl implements PersonaService {
     public List<Integer> getEventDistribution(Long userId, List<Long> samePersonaUsersList) {
         Integer myParticipate = userQuizAttemptRepository.countByUser_UserId(userId);
         Integer perTotalParticipate = userQuizAttemptRepository.countByUser_UserIdIn(samePersonaUsersList);
+        long getEvents = quizRepository.count();
+        Integer intCount = (int) getEvents;
 
-        return UtilServiceImpl.calcPerAvg(myParticipate, perTotalParticipate, samePersonaUsersList.size());
+        return UtilServiceImpl.calcPerEventAvg(myParticipate, perTotalParticipate, samePersonaUsersList.size(),intCount);
     }
 
     public List<Integer> getReviewsDistribution(Long userId, List<Long> samePersonaUsersList) {

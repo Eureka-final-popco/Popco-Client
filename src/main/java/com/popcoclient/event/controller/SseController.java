@@ -22,7 +22,7 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 @RequiredArgsConstructor
 @Tag(name = "SSE", description = "알림 관련 API")
 @Slf4j
-@CrossOrigin(origins = "*") // 개발용, 운영에서는 구체적인 도메인 지정
+@CrossOrigin(origins = "*")
 public class SseController {
 
     private final SseNotificationManagementService sseManagementService;
@@ -34,21 +34,17 @@ public class SseController {
     public SseEmitter streamNotifications(
             @RequestParam String token,
             HttpServletRequest request) {
-        // 1. 반환 타입을 ResponseEntity<?> 에서 SseEmitter 로 변경했습니다.
         Long userId = Long.parseLong(jwtProvider.getUserIdFromToken(token));
         SseEmitter emitter = sseManagementService.createSseConnection(userId.toString(), request);
 
-        // 2. createSseConnection에서 연결 실패 시 null을 반환하도록 수정했으므로, null 체크를 합니다.
         if (emitter == null) {
             log.error("SseEmitter is null after creation for user: {}. Throwing exception to be handled globally.", userId);
 
-            // 3. GlobalExceptionHandler가 이 예외를 잡아서 적절한 JSON 에러 응답을 보내줄 것입니다.
             throw new BusinessException(ErrorCode.SSE_CONNECTION_ERROR);
         }
 
         log.info("Returning SseEmitter object directly for user {}", userId);
 
-        // 4. ResponseEntity 없이 SseEmitter 객체를 직접 반환합니다.
         return emitter;
     }
 
@@ -59,7 +55,6 @@ public class SseController {
         return ResponseEntity.ok(ApiResponse.success("SSE 연결 상태 조회 성공", status));
     }
 
-    // SseController.java에 추가할 테스트용 코드
     @GetMapping(value = "/test-stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public SseEmitter testStream() {
         log.info("### ENTERING /test-stream ENDPOINT ###");
