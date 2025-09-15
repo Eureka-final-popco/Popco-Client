@@ -63,31 +63,21 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
         return httpSecurity
-                // REST API이므로 basic auth 및 csrf 보안을 사용하지 않음
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .csrf(AbstractHttpConfigurer::disable)
                 .formLogin(AbstractHttpConfigurer::disable)
-                // JWT를 사용하기 때문에 세션을 사용하지 않음
                 .sessionManagement(sessionManagementConfigurer -> sessionManagementConfigurer
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests(authorize -> authorize
-                        // 해당 API에 대해서는 모든 요청을 허가
                         .requestMatchers(whiteList).permitAll()
-                        // 사용자 삭제는 관리자 권한만 가능
-//                        .requestMatchers(HttpMethod.DELETE, "/user").hasRole("ADMIN")
-//                        .requestMatchers("/members/role").hasRole("USER")
-                        // 이 밖에 모든 요청에 대해서 인증을 필요로 한다는 설정
-                        .anyRequest().permitAll())
-//                        .anyRequest().authenticated())
-                // JWT 인증을 위하여 직접 구현한 필터를 UsernamePasswordAuthenticationFilter 전에 실행
+                        .anyRequest().authenticated())
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();
     }
 
     @Bean
     public PasswordEncoder passwordEncoder() {
-        // BCrypt Encoder 사용
         return PasswordEncoderFactories.createDelegatingPasswordEncoder();
     }
 
@@ -106,7 +96,7 @@ public class SecurityConfig {
         configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration); // 모든 경로에 대해 위 설정 적용
+        source.registerCorsConfiguration("/**", configuration);
 
         return source;
     }

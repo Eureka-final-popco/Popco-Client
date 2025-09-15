@@ -45,7 +45,7 @@ public class AuthServiceImpl implements AuthService {
             throw new InvalidPasswordException("비밀번호가 올바르지 않습니다.");
         }
 
-        return ApiResponse.success("LOGIN", issueLoginResponse(user, response));
+        return ApiResponse.success("LOGIN", createLoginResponseWithCookie(user, response));
     }
 
     @Override
@@ -76,25 +76,19 @@ public class AuthServiceImpl implements AuthService {
 
         KakaoProfile.KakaoAccount account = kakaoProfile.getKakao_account();
 
-        // 이메일은 반드시 있어야 하므로 검사
         String email = account.getEmail();
         if (email == null || email.isBlank()) {
             throw new IllegalStateException("이메일 정보가 없습니다.");
         }
 
-        // 프로필은 선택 사항 → 없을 경우 기본값 "user" 사용
-        String nickname = Optional.ofNullable(account.getProfile())
-                .map(KakaoProfile.KakaoAccount.Profile::getNickname)
-                .orElse("user");
-
         Optional<User> userOpt = userRepository.findByEmail(email);
 
         if (userOpt.isPresent()) {
-            LoginResponseDto loginResponse = issueLoginResponse(userOpt.get(), response);
+            LoginResponseDto loginResponse = createLoginResponseWithCookie(userOpt.get(), response);
             return ApiResponse.success("LOGIN", loginResponse);
         } else {
             User user = saveNewUser(email);
-            LoginResponseDto firstLoginResponse = issueLoginResponse(user, response);
+            LoginResponseDto firstLoginResponse = createLoginResponseWithCookie(user, response);
             return ApiResponse.success("SIGNUP", firstLoginResponse);
         }
     }
@@ -104,13 +98,12 @@ public class AuthServiceImpl implements AuthService {
         return userRepository.save(user);
     }
 
-    private LoginResponseDto issueLoginResponse(User user, HttpServletResponse response) {
+    private LoginResponseDto createLoginResponseWithCookie(User user, HttpServletResponse response) {
         JwtToken jwt = jwtUtil.generateToken(user.getUserId());
         Cookie cookie = jwtUtil.setRefreshTokenCookie(jwt.getRefreshToken());
         response.addCookie(cookie);
         return buildLoginResponse(user, jwt);
     }
-
 
     private LoginResponseDto buildLoginResponse(User user, JwtToken token) {
         Optional<UserDetail> userDetailOpt = userDetailRepository.findById(user.getUserId());

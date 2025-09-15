@@ -47,7 +47,6 @@ public class JwtUtil {
         this.blackListRepository = blackListRepository;
     }
 
-    // Member 정보를 가지고 AccessToken, RefreshToken을 생성하기
     public JwtToken generateToken(Long userId) {
         Optional<Token> existingRefreshToken = tokenRepository.findById(userId);
         long now = (new Date()).getTime();
@@ -70,7 +69,6 @@ public class JwtUtil {
             tokenRepository.save(new Token(userId, refreshToken));
         }
 
-        // AccessToken 생성
         Date accessTokenExpire = new Date(now + ACCESS_TOKEN_EXPIRE_TIME);
         String accessToken = generateAccessToken(userId, role, accessTokenExpire);
 
@@ -82,15 +80,12 @@ public class JwtUtil {
     }
 
     public JwtToken refreshAccessToken(String refreshToken) {
-        // 1. RefreshToken 유효성 검사
         if (!jwtProvider.validateRefreshToken(refreshToken)) {
             throw new InvalidRefreshToken();
         }
 
-        // 2. RefreshToken에서 userId 추출
         Long userId = Long.valueOf(jwtProvider.getUserIdFromToken(refreshToken));
 
-        // 3. Redis에 저장된 RefreshToken 조회 및 일치 여부 확인
         Optional<Token> existingRefreshToken = tokenRepository.findById(userId);
         if (existingRefreshToken.isPresent()) {
             String storedRefreshToken = existingRefreshToken.get().getRefreshToken();
@@ -104,17 +99,14 @@ public class JwtUtil {
 
         String newRefreshToken = refreshToken;
         if (needNewRefreshToken) {
-            // 새 RefreshToken 생성 및 Redis에 저장
             newRefreshToken = generateRefreshToken(userId, new Date(now + REFRESH_TOKEN_EXPIRE_TIME));
             tokenRepository.deleteById(userId);
             tokenRepository.save(new Token(userId, newRefreshToken));
         }
 
-        // 5. 새 AccessToken 생성
         Date accessTokenExpire = new Date(now + ACCESS_TOKEN_EXPIRE_TIME);
         String newAccessToken = generateAccessToken(userId, "ROLE_USER", accessTokenExpire);
 
-        // 6. JwtToken 객체로 반환
         return JwtToken.builder()
                 .grantType(GRANT_TYPE)
                 .accessToken(newAccessToken)
@@ -136,15 +128,13 @@ public class JwtUtil {
         return (expirationTime - now) < THRESHOLD_TIME;
     }
 
-    // AccessToken & RefreshToken 재발급 할 때는 비밀번호가 필요 없음
-    // 이미 유효한 RefreshToken을 가지고 있다는 것이 인증된 사용자이므로
     private String generateAccessToken(Long userId, String authorities, Date expireDate) {
         return Jwts.builder()
-                .setSubject(String.valueOf(userId)) // 토큰 제목 (사용자 이름)
+                .setSubject(String.valueOf(userId))
                 .claim("auth", authorities)
-                .setExpiration(expireDate) // 토큰 만료 시간
-                .signWith(key, SignatureAlgorithm.HS256) // 지정된 키와 알고리즘으로 서명
-                .compact(); // 최종 JWT 문자열 생성 (header.payload.signature 구조);
+                .setExpiration(expireDate)
+                .signWith(key, SignatureAlgorithm.HS256)
+                .compact();
     }
 
     private String generateRefreshToken(Long userId, Date expireDate) {
@@ -161,7 +151,7 @@ public class JwtUtil {
         refreshTokenCookie.setHttpOnly(true);
         refreshTokenCookie.setPath("/");
         refreshTokenCookie.setMaxAge(REFRESH_TOKEN_EXPIRE_TIME);
-        refreshTokenCookie.setAttribute("SameSite", "Lax"); // CORS 대응을 위해 반드시 None
+        refreshTokenCookie.setAttribute("SameSite", "Lax");
         refreshTokenCookie.setSecure(false);
 
         return refreshTokenCookie;

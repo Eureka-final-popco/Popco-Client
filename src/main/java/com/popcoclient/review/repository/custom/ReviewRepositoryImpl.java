@@ -33,14 +33,12 @@ public class ReviewRepositoryImpl implements ReviewRepositoryCustom {
 
     private final JPAQueryFactory jpaQueryFactory;
 
-    // 로그인한 사용자면 작성자여부 판단, 비로그인은 False 반환
     private BooleanExpression reviewUserIdExist(Long userId) {
         if(userId == null)
             return Expressions.FALSE;
         return review.user.userId.eq(userId);
     }
 
-    // 로그인한 사용자면 좋아요 여부 판단, 비로그인은 False 반환
     private BooleanExpression reviewLikeUserIdExist(Long userId) {
         if(userId == null)
             return Expressions.FALSE;
@@ -52,7 +50,6 @@ public class ReviewRepositoryImpl implements ReviewRepositoryCustom {
                 .exists();
     }
 
-    // 로그인한 사용자면 리뷰 신고 여부 판단, 비로그인 False 반환
     private BooleanExpression reviewDeclarationUserIdExist(Long userId) {
         if(userId == null)
             return Expressions.FALSE;
@@ -64,7 +61,6 @@ public class ReviewRepositoryImpl implements ReviewRepositoryCustom {
                 .exists();
     }
 
-    // 리뷰 조회
     @Override
     public Page<ReviewResponseDto> findReviewList(Long userId, Content content, Pageable pageable, String sort) {
         OrderSpecifier<?> orderSpecifier;
