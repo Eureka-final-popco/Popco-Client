@@ -2,7 +2,6 @@ package com.popcoclient.declaration.service;
 
 import com.popcoclient.declaration.dto.request.DeclarationCreateRequestDto;
 import com.popcoclient.declaration.dto.response.DeclarationTypeResponseDto;
-import org.springframework.stereotype.Service;
 
 import java.util.List;
 

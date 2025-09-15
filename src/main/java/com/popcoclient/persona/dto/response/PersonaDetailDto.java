@@ -16,5 +16,5 @@ public class PersonaDetailDto {
     private BigDecimal score;
     private String description;
     private String tag;
-    private String personaGenre; // List<String> → String으로 변경
+    private String personaGenre;
 }

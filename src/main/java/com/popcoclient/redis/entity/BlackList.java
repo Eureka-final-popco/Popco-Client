@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 import lombok.ToString;
 import org.springframework.data.redis.core.RedisHash;
 
-@RedisHash(value = "blacklist", timeToLive = 60 * 60 * 12)  // 12시간 유지
+@RedisHash(value = "blacklist", timeToLive = 60 * 60 * 12)
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
