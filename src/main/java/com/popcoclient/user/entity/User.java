@@ -1,6 +1,5 @@
 package com.popcoclient.user.entity;
 
-import com.popcoclient.user.dto.request.UserSignupRequestDto;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
